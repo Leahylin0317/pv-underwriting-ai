@@ -1,0 +1,42 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Private or sensitive project data
+data/private/
+data/raw/
+data/uploads/
+data/official/
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Generated files
+outputs/
+reports/generated/
+logs/
