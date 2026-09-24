@@ -11,7 +11,9 @@ from app.contracts import (
     ProjectInfo,
     RiskFinding,
     UnderwritingCase,
+    UnderwritingDecision,
 )
+from app.decision import DecisionEngine
 from app.providers import (
     MaterialInput,
     OcrProvider,
@@ -32,17 +34,21 @@ def processing_status(total: int, failures: int) -> ProcessingStatus:
 
 
 class UnderwritingPipeline:
-    """协调Provider和规则引擎并组装核保案件。"""
+    """协调Provider、规则引擎和决策引擎并组装核保案件。"""
 
     def __init__(
         self,
         ocr_provider: OcrProvider,
         vision_provider: VisionProvider,
         rule_engine: RuleEngine | None = None,
+        decision_engine: DecisionEngine | None = None,
     ) -> None:
         self.ocr_provider = ocr_provider
         self.vision_provider = vision_provider
         self.rule_engine = RuleEngine() if rule_engine is None else rule_engine
+        self.decision_engine = (
+            DecisionEngine() if decision_engine is None else decision_engine
+        )
 
     def run(
         self,
@@ -56,7 +62,7 @@ class UnderwritingPipeline:
         findings, vision_trace = self._run_vision(materials)
         material_reviews, rule_trace = self._run_rules(material_models)
 
-        return UnderwritingCase(
+        case_without_decision = UnderwritingCase(
             schema_version="0.1.0",
             case_id=case_id,
             project=project,
@@ -70,6 +76,17 @@ class UnderwritingPipeline:
             decision=None,
             processing_trace=[ocr_trace, vision_trace, rule_trace],
         )
+
+        decision, decision_trace = self._run_decision(case_without_decision)
+
+        final_payload = case_without_decision.model_dump(mode="python")
+        final_payload["decision"] = decision
+        final_payload["processing_trace"] = [
+            *case_without_decision.processing_trace,
+            decision_trace,
+        ]
+
+        return UnderwritingCase.model_validate(final_payload)
 
     def _run_ocr(
         self,
@@ -153,6 +170,29 @@ class UnderwritingPipeline:
         return reviews, ProcessingTrace(
             step=ProcessingStep.RULE_ENGINE,
             provider="builtin-rule-engine",
+            model=None,
+            started_at=started_at,
+            finished_at=finished_at,
+            latency_ms=(perf_counter_ns() - started_ns) // 1_000_000,
+            status=ProcessingStatus.SUCCESS,
+            error_code=None,
+            error_message=None,
+        )
+
+    def _run_decision(
+        self,
+        case: UnderwritingCase,
+    ) -> tuple[UnderwritingDecision, ProcessingTrace]:
+        started_at = datetime.now(UTC)
+        started_ns = perf_counter_ns()
+
+        decision = self.decision_engine.decide(case)
+
+        finished_at = datetime.now(UTC)
+
+        return decision, ProcessingTrace(
+            step=ProcessingStep.DECISION,
+            provider="conservative-decision-engine",
             model=None,
             started_at=started_at,
             finished_at=finished_at,

@@ -1,4 +1,5 @@
 from app.contracts import (
+    DecisionType,
     Material,
     MaterialCategory,
     MaterialParseStatus,
@@ -94,7 +95,9 @@ def test_pipeline_builds_case_with_mock_provider_results() -> None:
     assert len(case.ocr_fields) == 1
     assert len(case.findings) == 1
     assert len(case.material_reviews) == 2
-    assert len(case.processing_trace) == 3
+    assert len(case.processing_trace) == 4
+    assert case.decision is not None
+    assert case.decision.decision is DecisionType.MANUAL_REVIEW
     assert all(
         trace.status is ProcessingStatus.SUCCESS
         for trace in case.processing_trace
@@ -126,6 +129,9 @@ def test_pipeline_keeps_running_when_ocr_provider_fails() -> None:
     assert ocr_trace.status is ProcessingStatus.FAILED
     assert ocr_trace.error_code == "OCR_PROVIDER_FAILURE"
     assert "sensitive upstream error details" not in (ocr_trace.error_message or "")
+    assert case.decision is not None
+    assert case.decision.decision is DecisionType.MANUAL_REVIEW
+    assert "SYS-PROVIDER-FAILURE" in case.decision.decisive_rule_ids
 
 
 def test_pipeline_marks_partially_failed_provider() -> None:
@@ -174,7 +180,9 @@ def test_pipeline_adds_request_more_review_for_poor_material() -> None:
     assert len(case.material_reviews) == 1
     assert case.material_reviews[0].action is MaterialReviewAction.REQUEST_MORE
     assert case.material_reviews[0].triggered_rule_ids == ["MAT-QUALITY-001"]
-
+    assert case.decision is not None
+    assert case.decision.decision is DecisionType.REQUEST_MORE
+    assert "MAT-QUALITY-001" in case.decision.decisive_rule_ids
     rule_trace = next(
         trace
         for trace in case.processing_trace
