@@ -50,7 +50,7 @@ __all__ = [
     "RiskCategory",
     "RiskFinding",
     "RiskSeverity",
+    "UnderwritingCase",
     "UnderwritingDecision",
     "WeatherProfile",
-    "UnderwritingCase",
 ]
