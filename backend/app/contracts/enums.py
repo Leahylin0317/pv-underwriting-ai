@@ -50,3 +50,64 @@ class DecisionType(StrEnum):
     CONDITIONAL_ACCEPT = "conditional_accept"
     REQUEST_MORE = "request_more"
     MANUAL_REVIEW = "manual_review"
+
+class ProjectType(StrEnum):
+    """支持的光伏项目类型。"""
+
+    ROOFTOP = "rooftop"
+    CARPORT = "carport"
+    UNSUPPORTED = "unsupported"
+    UNKNOWN = "unknown"
+
+
+class InstallationType(StrEnum):
+    """光伏项目安装载体类型。"""
+
+    COLOR_STEEL_ROOF = "color_steel_roof"
+    FLAT_ROOF = "flat_roof"
+    TILE_ROOF = "tile_roof"
+    CARPORT_ROOF = "carport_roof"
+    UNKNOWN = "unknown"
+
+
+class MaterialCategory(StrEnum):
+    """投保材料类别。"""
+
+    PANORAMA = "panorama"
+    ROOF_CONNECTION = "roof_connection"
+    PARAPET = "parapet"
+    WORKSHOP = "workshop"
+    FILING_CERTIFICATE = "filing_certificate"
+    GRID_CONNECTION_DOCUMENT = "grid_connection_document"
+    ELECTRICAL_GROUNDING = "electrical_grounding"
+    COMPONENT_NAMEPLATE = "component_nameplate"
+    INVERTER_NAMEPLATE = "inverter_nameplate"
+    COMBINER_BOX = "combiner_box"
+    MONITORING_OPTIONAL = "monitoring_optional"
+    OTHER = "other"
+
+
+class MaterialQualityStatus(StrEnum):
+    """材料质量检查状态。"""
+
+    USABLE = "usable"
+    POOR = "poor"
+    UNUSABLE = "unusable"
+    UNKNOWN = "unknown"
+
+
+class MaterialParseStatus(StrEnum):
+    """材料解析状态。"""
+
+    PENDING = "pending"
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    FAILED = "failed"
+
+
+class OcrValueStatus(StrEnum):
+    """OCR字段提取状态。"""
+
+    EXTRACTED = "extracted"
+    MISSING = "missing"
+    UNCERTAIN = "uncertain"
