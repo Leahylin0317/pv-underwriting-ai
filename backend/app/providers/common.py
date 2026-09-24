@@ -9,3 +9,5 @@ class MaterialInput:
 
     material: Material
     content: bytes
+class ProviderError(RuntimeError):
+    """Provider调用失败时抛出的已脱敏异常。"""

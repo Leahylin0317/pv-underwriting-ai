@@ -1,0 +1,133 @@
+from datetime import UTC, datetime
+from time import perf_counter_ns
+
+from app.contracts import (
+    OcrField,
+    ProcessingStatus,
+    ProcessingStep,
+    ProcessingTrace,
+    ProjectInfo,
+    RiskFinding,
+    UnderwritingCase,
+)
+from app.providers import (
+    MaterialInput,
+    OcrProvider,
+    ProviderError,
+    VisionProvider,
+)
+
+
+def processing_status(total: int, failures: int) -> ProcessingStatus:
+    """根据Provider调用失败数量生成处理状态。"""
+
+    if failures == 0:
+        return ProcessingStatus.SUCCESS
+    if total > 0 and failures == total:
+        return ProcessingStatus.FAILED
+    return ProcessingStatus.PARTIAL
+
+
+class UnderwritingPipeline:
+    """协调OCR和视觉Provider并组装核保案件。"""
+
+    def __init__(
+        self,
+        ocr_provider: OcrProvider,
+        vision_provider: VisionProvider,
+    ) -> None:
+        self.ocr_provider = ocr_provider
+        self.vision_provider = vision_provider
+
+    def run(
+        self,
+        *,
+        case_id: str,
+        project: ProjectInfo,
+        materials: list[MaterialInput],
+    ) -> UnderwritingCase:
+        ocr_fields, ocr_trace = self._run_ocr(materials)
+        findings, vision_trace = self._run_vision(materials)
+
+        return UnderwritingCase(
+            schema_version="0.1.0",
+            case_id=case_id,
+            project=project,
+            materials=[item.material for item in materials],
+            ocr_fields=ocr_fields,
+            findings=findings,
+            component_profile=None,
+            weather_profile=None,
+            catastrophe_assessment=None,
+            material_reviews=[],
+            decision=None,
+            processing_trace=[ocr_trace, vision_trace],
+        )
+
+    def _run_ocr(
+        self,
+        materials: list[MaterialInput],
+    ) -> tuple[list[OcrField], ProcessingTrace]:
+        started_at = datetime.now(UTC)
+        started_ns = perf_counter_ns()
+        fields: list[OcrField] = []
+        failures = 0
+
+        for material_input in materials:
+            try:
+                fields.extend(self.ocr_provider.extract(material_input))
+            except ProviderError:
+                failures += 1
+
+        finished_at = datetime.now(UTC)
+        status = processing_status(len(materials), failures)
+
+        return fields, ProcessingTrace(
+            step=ProcessingStep.OCR,
+            provider=self.ocr_provider.name,
+            model=self.ocr_provider.model_name,
+            started_at=started_at,
+            finished_at=finished_at,
+            latency_ms=(perf_counter_ns() - started_ns) // 1_000_000,
+            status=status,
+            error_code=None if failures == 0 else "OCR_PROVIDER_FAILURE",
+            error_message=(
+                None
+                if failures == 0
+                else f"{failures} of {len(materials)} material calls failed"
+            ),
+        )
+
+    def _run_vision(
+        self,
+        materials: list[MaterialInput],
+    ) -> tuple[list[RiskFinding], ProcessingTrace]:
+        started_at = datetime.now(UTC)
+        started_ns = perf_counter_ns()
+        findings: list[RiskFinding] = []
+        failures = 0
+
+        for material_input in materials:
+            try:
+                findings.extend(self.vision_provider.analyze(material_input))
+            except ProviderError:
+                failures += 1
+
+        finished_at = datetime.now(UTC)
+        status = processing_status(len(materials), failures)
+
+        return findings, ProcessingTrace(
+            step=ProcessingStep.VISION,
+            provider=self.vision_provider.name,
+            model=self.vision_provider.model_name,
+            started_at=started_at,
+            finished_at=finished_at,
+            latency_ms=(perf_counter_ns() - started_ns) // 1_000_000,
+            status=status,
+            error_code=None if failures == 0 else "VISION_PROVIDER_FAILURE",
+            error_message=(
+                None
+                if failures == 0
+                else f"{failures} of {len(materials)} material calls failed"
+            ),
+        )
