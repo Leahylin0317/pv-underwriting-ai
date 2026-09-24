@@ -1,5 +1,6 @@
 """Public data contracts used by the underwriting pipeline."""
 
+from .case import UnderwritingCase
 from .common import Bbox, ContractModel
 from .enums import (
     DecisionType,
@@ -51,4 +52,5 @@ __all__ = [
     "RiskSeverity",
     "UnderwritingDecision",
     "WeatherProfile",
+    "UnderwritingCase",
 ]
