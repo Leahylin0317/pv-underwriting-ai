@@ -2,6 +2,8 @@ from datetime import UTC, datetime
 from time import perf_counter_ns
 
 from app.contracts import (
+    Material,
+    MaterialReview,
     OcrField,
     ProcessingStatus,
     ProcessingStep,
@@ -16,6 +18,7 @@ from app.providers import (
     ProviderError,
     VisionProvider,
 )
+from app.rules import RuleEngine
 
 
 def processing_status(total: int, failures: int) -> ProcessingStatus:
@@ -29,15 +32,17 @@ def processing_status(total: int, failures: int) -> ProcessingStatus:
 
 
 class UnderwritingPipeline:
-    """协调OCR和视觉Provider并组装核保案件。"""
+    """协调Provider和规则引擎并组装核保案件。"""
 
     def __init__(
         self,
         ocr_provider: OcrProvider,
         vision_provider: VisionProvider,
+        rule_engine: RuleEngine | None = None,
     ) -> None:
         self.ocr_provider = ocr_provider
         self.vision_provider = vision_provider
+        self.rule_engine = RuleEngine() if rule_engine is None else rule_engine
 
     def run(
         self,
@@ -46,22 +51,24 @@ class UnderwritingPipeline:
         project: ProjectInfo,
         materials: list[MaterialInput],
     ) -> UnderwritingCase:
+        material_models = [item.material for item in materials]
         ocr_fields, ocr_trace = self._run_ocr(materials)
         findings, vision_trace = self._run_vision(materials)
+        material_reviews, rule_trace = self._run_rules(material_models)
 
         return UnderwritingCase(
             schema_version="0.1.0",
             case_id=case_id,
             project=project,
-            materials=[item.material for item in materials],
+            materials=material_models,
             ocr_fields=ocr_fields,
             findings=findings,
             component_profile=None,
             weather_profile=None,
             catastrophe_assessment=None,
-            material_reviews=[],
+            material_reviews=material_reviews,
             decision=None,
-            processing_trace=[ocr_trace, vision_trace],
+            processing_trace=[ocr_trace, vision_trace, rule_trace],
         )
 
     def _run_ocr(
@@ -130,4 +137,27 @@ class UnderwritingPipeline:
                 if failures == 0
                 else f"{failures} of {len(materials)} material calls failed"
             ),
+        )
+
+    def _run_rules(
+        self,
+        materials: list[Material],
+    ) -> tuple[list[MaterialReview], ProcessingTrace]:
+        started_at = datetime.now(UTC)
+        started_ns = perf_counter_ns()
+
+        reviews = self.rule_engine.evaluate_materials(materials)
+
+        finished_at = datetime.now(UTC)
+
+        return reviews, ProcessingTrace(
+            step=ProcessingStep.RULE_ENGINE,
+            provider="builtin-rule-engine",
+            model=None,
+            started_at=started_at,
+            finished_at=finished_at,
+            latency_ms=(perf_counter_ns() - started_ns) // 1_000_000,
+            status=ProcessingStatus.SUCCESS,
+            error_code=None,
+            error_message=None,
         )

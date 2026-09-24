@@ -3,6 +3,7 @@ from app.contracts import (
     MaterialCategory,
     MaterialParseStatus,
     MaterialQualityStatus,
+    MaterialReviewAction,
     OcrField,
     ProcessingStatus,
     ProcessingStep,
@@ -35,13 +36,14 @@ def project_info() -> ProjectInfo:
 def material_input(
     material_id: str,
     category: MaterialCategory,
+    quality_status: MaterialQualityStatus = MaterialQualityStatus.USABLE,
 ) -> MaterialInput:
     material = Material(
         material_id=material_id,
         category=category,
         file_name=f"{material_id}.jpg",
         media_type="image/jpeg",
-        quality_status=MaterialQualityStatus.USABLE,
+        quality_status=quality_status,
         quality_confidence=0.95,
         quality_issues=[],
         parse_status=MaterialParseStatus.SUCCESS,
@@ -91,7 +93,8 @@ def test_pipeline_builds_case_with_mock_provider_results() -> None:
     assert len(case.materials) == 2
     assert len(case.ocr_fields) == 1
     assert len(case.findings) == 1
-    assert len(case.processing_trace) == 2
+    assert len(case.material_reviews) == 2
+    assert len(case.processing_trace) == 3
     assert all(
         trace.status is ProcessingStatus.SUCCESS
         for trace in case.processing_trace
@@ -149,3 +152,32 @@ def test_pipeline_marks_partially_failed_provider() -> None:
     assert len(case.ocr_fields) == 1
     assert ocr_trace.status is ProcessingStatus.PARTIAL
     assert ocr_trace.error_message == "1 of 2 material calls failed"
+
+def test_pipeline_adds_request_more_review_for_poor_material() -> None:
+    pipeline = UnderwritingPipeline(
+        ocr_provider=MockOcrProvider(),
+        vision_provider=MockVisionProvider(),
+    )
+
+    case = pipeline.run(
+        case_id="case-004",
+        project=project_info(),
+        materials=[
+            material_input(
+                "material-poor",
+                MaterialCategory.PANORAMA,
+                MaterialQualityStatus.POOR,
+            ),
+        ],
+    )
+
+    assert len(case.material_reviews) == 1
+    assert case.material_reviews[0].action is MaterialReviewAction.REQUEST_MORE
+    assert case.material_reviews[0].triggered_rule_ids == ["MAT-QUALITY-001"]
+
+    rule_trace = next(
+        trace
+        for trace in case.processing_trace
+        if trace.step is ProcessingStep.RULE_ENGINE
+    )
+    assert rule_trace.status is ProcessingStatus.SUCCESS
