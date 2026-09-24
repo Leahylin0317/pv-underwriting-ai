@@ -9,7 +9,10 @@ from .enums import (
     MaterialCategory,
     MaterialParseStatus,
     MaterialQualityStatus,
+    MaterialReviewAction,
     OcrValueStatus,
+    ProcessingStatus,
+    ProcessingStep,
     ProjectType,
     ResistanceLevel,
     RiskCategory,
@@ -17,6 +20,7 @@ from .enums import (
 )
 from .findings import RiskFinding
 from .inputs import Material, OcrField, ProjectInfo
+from .outputs import MaterialReview, ProcessingTrace, UnderwritingDecision
 from .profiles import CatastropheAssessment, ComponentProfile, WeatherProfile
 
 __all__ = [
@@ -32,13 +36,19 @@ __all__ = [
     "MaterialCategory",
     "MaterialParseStatus",
     "MaterialQualityStatus",
+    "MaterialReview",
+    "MaterialReviewAction",
     "OcrField",
     "OcrValueStatus",
+    "ProcessingStatus",
+    "ProcessingStep",
+    "ProcessingTrace",
     "ProjectInfo",
     "ProjectType",
     "ResistanceLevel",
     "RiskCategory",
     "RiskFinding",
     "RiskSeverity",
+    "UnderwritingDecision",
     "WeatherProfile",
 ]

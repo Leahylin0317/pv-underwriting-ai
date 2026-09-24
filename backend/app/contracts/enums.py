@@ -129,3 +129,34 @@ class ExpectedLossRisk(StrEnum):
     HIGH = "high"
     CRITICAL = "critical"
     UNKNOWN = "unknown"
+
+class MaterialReviewAction(StrEnum):
+    """规则引擎对单份材料的处理动作。"""
+
+    PASS = "pass"
+    WARNING = "warning"
+    SURCHARGE = "surcharge"
+    REJECT = "reject"
+    CONDITIONAL = "conditional"
+    REQUEST_MORE = "request_more"
+    NOT_APPLICABLE = "not_applicable"
+
+
+class ProcessingStep(StrEnum):
+    """核保流水线处理步骤。"""
+
+    MATERIAL_PARSE = "material_parse"
+    OCR = "ocr"
+    VISION = "vision"
+    COMPONENT_LOOKUP = "component_lookup"
+    WEATHER_LOOKUP = "weather_lookup"
+    RULE_ENGINE = "rule_engine"
+    DECISION = "decision"
+
+
+class ProcessingStatus(StrEnum):
+    """单个处理步骤的运行状态。"""
+
+    SUCCESS = "success"
+    PARTIAL = "partial"
+    FAILED = "failed"
