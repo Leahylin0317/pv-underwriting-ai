@@ -111,3 +111,21 @@ class OcrValueStatus(StrEnum):
     EXTRACTED = "extracted"
     MISSING = "missing"
     UNCERTAIN = "uncertain"
+
+class ResistanceLevel(StrEnum):
+    """组件综合抗灾能力等级。"""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    UNKNOWN = "unknown"
+
+
+class ExpectedLossRisk(StrEnum):
+    """自然灾害预期损失风险等级。"""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+    UNKNOWN = "unknown"
