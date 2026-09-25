@@ -9,6 +9,7 @@ from app.contracts import (
 )
 from app.pipeline import UnderwritingPipeline
 from app.providers import MaterialInput, MockOcrProvider, MockVisionProvider
+from app.reports import generate_markdown_report
 
 
 def create_material(
@@ -27,6 +28,7 @@ def create_material(
         quality_issues=[],
         parse_status=MaterialParseStatus.SUCCESS,
     )
+
     return MaterialInput(
         material=material,
         content=b"mock-file-content",
@@ -77,15 +79,27 @@ def main() -> None:
 
     output_directory = Path("outputs")
     output_directory.mkdir(parents=True, exist_ok=True)
-    output_path = output_directory / "mock_case_result.json"
-    output_path.write_text(
+
+    json_output_path = output_directory / "mock_case_result.json"
+    json_output_path.write_text(
         case.model_dump_json(indent=2),
         encoding="utf-8",
     )
 
-    decision = case.decision.decision.value if case.decision is not None else "none"
+    report_output_path = output_directory / "mock_underwriting_report.md"
+    report_output_path.write_text(
+        generate_markdown_report(case),
+        encoding="utf-8",
+    )
 
-    print(f"Generated: {output_path.resolve()}")
+    decision = (
+        case.decision.decision.value
+        if case.decision is not None
+        else "none"
+    )
+
+    print(f"JSON generated: {json_output_path.resolve()}")
+    print(f"Report generated: {report_output_path.resolve()}")
     print(f"Decision: {decision}")
     print(f"OCR fields: {len(case.ocr_fields)}")
     print(f"Risk findings: {len(case.findings)}")
