@@ -46,9 +46,13 @@ def pdf_bytes() -> bytes:
     document = pymupdf.open()
 
     try:
-        document.new_page(
-            width=100,
-            height=100,
+        page = document.new_page(
+            width=300,
+            height=200,
+        )
+        page.insert_text(
+            (30, 60),
+            "Filing certificate test",
         )
         return document.tobytes()
     finally:
@@ -252,11 +256,13 @@ def test_rejects_corrupt_image_before_provider_call(
     assert provider.received_input is None
 
 
-def test_rejects_pdf_for_ocr_extraction(
+def test_accepts_pdf_for_ocr_extraction(
     override_ocr_provider: ProviderOverride,
 ) -> None:
     provider = RecordingOcrProvider()
     override_ocr_provider(provider)
+
+    content = pdf_bytes()
 
     response = client.post(
         "/api/v1/ocr/extract",
@@ -267,20 +273,40 @@ def test_rejects_pdf_for_ocr_extraction(
         files={
             "file": (
                 "filing.pdf",
-                pdf_bytes(),
+                content,
                 "application/pdf",
             )
         },
     )
 
-    assert response.status_code == 415
-    assert response.json() == {
-        "detail": (
-            "OCR extraction supports only "
-            "JPEG and PNG images"
-        )
-    }
-    assert provider.received_input is None
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert len(result) == 1
+    assert (
+        result[0]["material_id"]
+        == "material-pdf-001"
+    )
+
+    assert provider.received_input is not None
+
+    material = provider.received_input.material
+
+    assert (
+        material.category
+        is MaterialCategory.FILING_CERTIFICATE
+    )
+    assert material.file_name == "filing.pdf"
+    assert (
+        material.media_type
+        == "application/pdf"
+    )
+    assert material.sha256 is not None
+    assert (
+        provider.received_input.content
+        == content
+    )
 
 
 def test_sanitizes_provider_failure(

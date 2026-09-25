@@ -56,9 +56,13 @@ def pdf_bytes() -> bytes:
     document = pymupdf.open()
 
     try:
-        document.new_page(
-            width=100,
-            height=100,
+        page = document.new_page(
+            width=300,
+            height=200,
+        )
+        page.insert_text(
+            (30, 60),
+            "Filing certificate test",
         )
         return document.tobytes()
     finally:
@@ -71,9 +75,7 @@ def project_payload() -> dict:
         "insured_name": "示例制造企业有限公司",
         "project_entity": "示例新能源有限公司",
         "project_type": "rooftop",
-        "installation_type": (
-            "color_steel_roof"
-        ),
+        "installation_type": "color_steel_roof",
         "site_address": "广东省示例市示例区",
         "province": "广东省",
         "city": "示例市",
@@ -509,7 +511,7 @@ def test_rejects_duplicate_uploaded_files(
     assert vision_provider.received_inputs == []
 
 
-def test_rejects_pdf_until_page_rendering_is_added(
+def test_accepts_pdf_for_ocr_processing(
     override_real_providers: ProviderOverride,
 ) -> None:
     ocr_provider = RecordingOcrProvider()
@@ -519,6 +521,8 @@ def test_rejects_pdf_until_page_rendering_is_added(
         ocr_provider,
         vision_provider,
     )
+
+    content = pdf_bytes()
 
     manifest = {
         "case_id": "case-pdf-001",
@@ -546,18 +550,46 @@ def test_rejects_pdf_until_page_rendering_is_added(
         files={
             "files": (
                 "filing.pdf",
-                pdf_bytes(),
+                content,
                 "application/pdf",
             )
         },
     )
 
-    assert response.status_code == 415
-    assert response.json()["detail"][
-        "file_index"
-    ] == 1
-    assert ocr_provider.received_inputs == []
-    assert vision_provider.received_inputs == []
+    assert response.status_code == 200
+
+    result = response.json()
+
+    assert len(result["materials"]) == 1
+    assert (
+        result["materials"][0]["media_type"]
+        == "application/pdf"
+    )
+    assert (
+        result["materials"][0]["file_name"]
+        == "filing.pdf"
+    )
+
+    assert len(
+        ocr_provider.received_inputs
+    ) == 1
+    assert len(
+        vision_provider.received_inputs
+    ) == 1
+
+    assert (
+        ocr_provider
+        .received_inputs[0]
+        .material
+        .media_type
+        == "application/pdf"
+    )
+    assert (
+        ocr_provider
+        .received_inputs[0]
+        .content
+        == content
+    )
 
 
 def test_records_provider_failure_without_leaking_details(

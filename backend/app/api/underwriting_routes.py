@@ -35,6 +35,7 @@ from .schemas import RealAnalyzeManifest
 router = APIRouter()
 
 REAL_PIPELINE_MEDIA_TYPES = {
+    "application/pdf",
     "image/jpeg",
     "image/png",
 }
@@ -181,7 +182,7 @@ def _build_material_inputs(
                 detail={
                     "message": (
                         "Real underwriting currently "
-                        "supports only JPEG and PNG images"
+                        "supports only JPEG, PNG and PDF files"
                     ),
                     "file_index": index,
                     "file_name": (
@@ -201,7 +202,7 @@ def _build_material_inputs(
                 ),
                 detail={
                     "message": (
-                        "Uploaded image could not "
+                        "Uploaded material could not "
                         "be inspected"
                     ),
                     "file_index": index,
@@ -259,7 +260,7 @@ async def analyze_uploaded_case(
         list[UploadFile],
         File(
             description=(
-                "投保材料图片，顺序必须与 "
+                "投保材料文件，顺序必须与 "
                 "manifest.materials 保持一致"
             )
         ),

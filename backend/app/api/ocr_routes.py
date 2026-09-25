@@ -22,6 +22,7 @@ from app.providers import (
     CompatibleOcrProvider,
     MaterialInput,
     OcrProvider,
+    PdfPageOcrProvider,
     ProviderError,
 )
 from app.settings import (
@@ -32,13 +33,14 @@ from app.settings import (
 router = APIRouter()
 
 OCR_MEDIA_TYPES = {
+    "application/pdf",
     "image/jpeg",
     "image/png",
 }
 
 
 def get_ocr_provider() -> OcrProvider:
-    """根据本地环境配置创建真实 OCR Provider。"""
+    """根据本地环境配置创建支持图片和 PDF 的真实 OCR Provider。"""
 
     try:
         settings = VlmSettings.from_environment()
@@ -50,8 +52,12 @@ def get_ocr_provider() -> OcrProvider:
             detail="OCR provider is not configured",
         ) from exc
 
-    return CompatibleOcrProvider(
+    image_provider = CompatibleOcrProvider(
         settings=settings,
+    )
+
+    return PdfPageOcrProvider(
+        delegate=image_provider,
     )
 
 
@@ -70,7 +76,7 @@ async def extract_uploaded_image_text(
         File(
             description=(
                 "需要进行文字识别和字段提取的 "
-                "JPEG 或 PNG 图片"
+                "JPEG、PNG 或 PDF 文件"
             )
         ),
     ],
@@ -88,7 +94,7 @@ async def extract_uploaded_image_text(
         ),
     ] = MaterialCategory.COMPONENT_NAMEPLATE,
 ) -> list[OcrField]:
-    """检查上传图片并调用真实模型提取 OCR 字段。"""
+    """检查上传材料并调用真实模型提取 OCR 字段。"""
 
     try:
         content = await file.read()
@@ -119,7 +125,7 @@ async def extract_uploaded_image_text(
             ),
             detail=(
                 "OCR extraction supports only "
-                "JPEG and PNG images"
+                "JPEG, PNG and PDF files"
             ),
         )
 
@@ -132,7 +138,7 @@ async def extract_uploaded_image_text(
                 status.HTTP_422_UNPROCESSABLE_CONTENT
             ),
             detail=(
-                "Uploaded image could not be inspected"
+                "Uploaded material could not be inspected"
             ),
         )
 

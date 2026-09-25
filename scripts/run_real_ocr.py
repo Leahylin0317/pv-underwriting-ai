@@ -16,6 +16,7 @@ from app.contracts import (
 from app.providers import (
     CompatibleOcrProvider,
     MaterialInput,
+    PdfPageOcrProvider,
     ProviderError,
 )
 from app.settings import (
@@ -24,6 +25,7 @@ from app.settings import (
 )
 
 SUPPORTED_MEDIA_TYPES = {
+    "application/pdf",
     "image/jpeg",
     "image/png",
 }
@@ -31,12 +33,14 @@ SUPPORTED_MEDIA_TYPES = {
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="使用真实多模态模型识别一张光伏投保材料图片。",
+        description=(
+            "使用真实多模态模型识别一份光伏投保材料。"
+        ),
     )
     parser.add_argument(
-        "image",
+        "material",
         type=Path,
-        help="待识别的 JPEG 或 PNG 图片路径。",
+        help="待识别的 JPEG、PNG 或 PDF 文件路径。",
     )
     parser.add_argument(
         "--category",
@@ -63,10 +67,10 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def detect_media_type(
-    image_path: Path,
+    material_path: Path,
 ) -> str:
     media_type, _ = mimetypes.guess_type(
-        image_path.name
+        material_path.name
     )
 
     if media_type == "image/jpg":
@@ -77,7 +81,7 @@ def detect_media_type(
             sorted(SUPPORTED_MEDIA_TYPES)
         )
         raise ValueError(
-            "不支持的图片格式："
+            "不支持的材料格式："
             f"{media_type or 'unknown'}；"
             f"当前支持：{supported}"
         )
@@ -87,8 +91,8 @@ def detect_media_type(
 
 def main() -> int:
     arguments = parse_arguments()
-    image_path = (
-        arguments.image
+    material_path = (
+        arguments.material
         .expanduser()
         .resolve()
     )
@@ -98,21 +102,21 @@ def main() -> int:
         .resolve()
     )
 
-    if not image_path.is_file():
+    if not material_path.is_file():
         print(
-            f"图片不存在：{image_path}",
+            f"材料不存在：{material_path}",
             file=sys.stderr,
         )
         return 1
 
     try:
-        content = image_path.read_bytes()
+        content = material_path.read_bytes()
 
         if not content:
-            raise ValueError("图片文件为空")
+            raise ValueError("材料文件为空")
 
         media_type = detect_media_type(
-            image_path
+            material_path
         )
         settings = (
             VlmSettings.from_environment()
@@ -123,7 +127,7 @@ def main() -> int:
             category=MaterialCategory(
                 arguments.category
             ),
-            file_name=image_path.name,
+            file_name=material_path.name,
             media_type=media_type,
             sha256=hashlib.sha256(
                 content
@@ -146,12 +150,15 @@ def main() -> int:
             content=content,
         )
 
-        provider = CompatibleOcrProvider(
+        image_provider = CompatibleOcrProvider(
             settings=settings,
+        )
+        provider = PdfPageOcrProvider(
+            delegate=image_provider,
         )
 
         print(f"Model: {provider.model_name}")
-        print(f"Image: {image_path}")
+        print(f"Material: {material_path}")
         print(f"Media type: {media_type}")
         print(
             f"Category: {material.category.value}"
@@ -166,6 +173,7 @@ def main() -> int:
             "model": provider.model_name,
             "material_id": material.material_id,
             "file_name": material.file_name,
+            "media_type": material.media_type,
             "category": material.category.value,
             "field_count": len(fields),
             "fields": [

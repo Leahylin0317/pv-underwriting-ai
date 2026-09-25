@@ -3,6 +3,7 @@ from .ocr import (
     CompatibleOcrProvider,
     MockOcrProvider,
     OcrProvider,
+    PdfPageOcrProvider,
 )
 from .vision import (
     CompatibleVisionProvider,
@@ -17,6 +18,7 @@ __all__ = [
     "MockOcrProvider",
     "MockVisionProvider",
     "OcrProvider",
+    "PdfPageOcrProvider",
     "ProviderError",
     "VisionProvider",
 ]

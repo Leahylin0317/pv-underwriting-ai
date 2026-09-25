@@ -1,5 +1,6 @@
 import base64
 import json
+import math
 from typing import Any, Self
 
 import httpx
@@ -8,6 +9,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationError,
+    field_validator,
     model_validator,
 )
 
@@ -28,6 +30,13 @@ SUPPORTED_IMAGE_TYPES = {
 }
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.65
+
+BBOX_COORDINATE_FIELDS = (
+    "x_min",
+    "y_min",
+    "x_max",
+    "y_max",
+)
 
 CATEGORY_FIELD_GUIDANCE = {
     MaterialCategory.FILING_CERTIFICATE: (
@@ -94,6 +103,8 @@ bbox 能够可靠定位时必须包含：
 x_min、y_min、x_max、y_max、coordinate_space。
 坐标必须是 0 到 1 之间的归一化小数。
 coordinate_space 必须固定为 normalized_0_1。
+如果不能返回正确的归一化坐标，请将 bbox 返回为 null。
+不得返回像素坐标。
 
 如果没有识别到可靠字段，返回：
 {"fields": []}
@@ -121,29 +132,65 @@ class OcrFieldPayload(BaseModel):
     bbox: Bbox | None = None
     evidence_text: str | None = None
 
-    @model_validator(mode="before")
+    @field_validator(
+        "bbox",
+        mode="before",
+    )
     @classmethod
-    def add_default_coordinate_space(
+    def sanitize_optional_bbox(
         cls,
         value: Any,
     ) -> Any:
-        if not isinstance(value, dict):
-            return value
+        if value is None:
+            return None
 
-        bbox = value.get("bbox")
+        if not isinstance(value, dict):
+            return None
+
+        coordinates: dict[str, float] = {}
+
+        for field_name in BBOX_COORDINATE_FIELDS:
+            coordinate = value.get(field_name)
+
+            if (
+                isinstance(coordinate, bool)
+                or not isinstance(
+                    coordinate,
+                    (int, float),
+                )
+            ):
+                return None
+
+            normalized_coordinate = float(
+                coordinate
+            )
+
+            if (
+                not math.isfinite(
+                    normalized_coordinate
+                )
+                or normalized_coordinate < 0.0
+                or normalized_coordinate > 1.0
+            ):
+                return None
+
+            coordinates[field_name] = (
+                normalized_coordinate
+            )
 
         if (
-            not isinstance(bbox, dict)
-            or "coordinate_space" in bbox
+            coordinates["x_min"]
+            >= coordinates["x_max"]
+            or coordinates["y_min"]
+            >= coordinates["y_max"]
         ):
-            return value
+            return None
 
         return {
-            **value,
-            "bbox": {
-                **bbox,
-                "coordinate_space": "normalized_0_1",
-            },
+            **coordinates,
+            "coordinate_space": (
+                "normalized_0_1"
+            ),
         }
 
     @model_validator(mode="after")
