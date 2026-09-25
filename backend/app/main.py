@@ -5,6 +5,7 @@ from fastapi.openapi.utils import get_openapi
 
 from app.api import (
     ocr_router,
+    report_router,
     router,
     underwriting_router,
 )
@@ -18,6 +19,7 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(ocr_router)
 app.include_router(underwriting_router)
+app.include_router(report_router)
 
 
 def _set_file_array_binary(
