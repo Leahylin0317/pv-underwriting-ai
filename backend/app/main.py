@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from app.api import router
+from app.api import ocr_router, router
 
 app = FastAPI(
     title="分布式光伏财产险 AI 智能核保",
@@ -12,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(router)
+app.include_router(ocr_router)
 
 
 def custom_openapi() -> dict[str, Any]:
@@ -29,13 +30,43 @@ def custom_openapi() -> dict[str, Any]:
         routes=app.routes,
     )
 
-    request_schema = openapi_schema["paths"]["/api/v1/files/inspect"]["post"][
+    request_schema = openapi_schema[
+        "paths"
+    ][
+        "/api/v1/files/inspect"
+    ][
+        "post"
+    ][
         "requestBody"
-    ]["content"]["multipart/form-data"]["schema"]
-    component_name = request_schema["$ref"].rsplit("/", maxsplit=1)[-1]
-    file_items = openapi_schema["components"]["schemas"][component_name]["properties"][
+    ][
+        "content"
+    ][
+        "multipart/form-data"
+    ][
+        "schema"
+    ]
+
+    component_name = request_schema[
+        "$ref"
+    ].rsplit(
+        "/",
+        maxsplit=1,
+    )[-1]
+
+    file_items = openapi_schema[
+        "components"
+    ][
+        "schemas"
+    ][
+        component_name
+    ][
+        "properties"
+    ][
         "files"
-    ]["items"]
+    ][
+        "items"
+    ]
+
     file_items["format"] = "binary"
 
     app.openapi_schema = openapi_schema
