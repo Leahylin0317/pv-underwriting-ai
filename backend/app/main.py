@@ -1,4 +1,7 @@
+from typing import Any
+
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 
 from app.api import router
 
@@ -9,3 +12,34 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+
+def custom_openapi() -> dict[str, Any]:
+    """Add the binary hint required by Swagger UI for multiple file inputs."""
+
+    if app.openapi_schema is not None:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        openapi_version=app.openapi_version,
+        summary=app.summary,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    request_schema = openapi_schema["paths"]["/api/v1/files/inspect"]["post"][
+        "requestBody"
+    ]["content"]["multipart/form-data"]["schema"]
+    component_name = request_schema["$ref"].rsplit("/", maxsplit=1)[-1]
+    file_items = openapi_schema["components"]["schemas"][component_name]["properties"][
+        "files"
+    ]["items"]
+    file_items["format"] = "binary"
+
+    app.openapi_schema = openapi_schema
+    return openapi_schema
+
+
+app.openapi = custom_openapi
