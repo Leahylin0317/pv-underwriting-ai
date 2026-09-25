@@ -1,5 +1,9 @@
 from .common import MaterialInput, ProviderError
-from .ocr import MockOcrProvider, OcrProvider
+from .ocr import (
+    CompatibleOcrProvider,
+    MockOcrProvider,
+    OcrProvider,
+)
 from .vision import (
     CompatibleVisionProvider,
     MockVisionProvider,
@@ -7,6 +11,7 @@ from .vision import (
 )
 
 __all__ = [
+    "CompatibleOcrProvider",
     "CompatibleVisionProvider",
     "MaterialInput",
     "MockOcrProvider",
