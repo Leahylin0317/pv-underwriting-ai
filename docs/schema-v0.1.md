@@ -223,7 +223,7 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | material\_id | string | 是 | 被审核材料编号 |
-| action | enum | 是 | pass、warning、surcharge、reject、conditional、request\_more、not\_applicable |
+| action | enum | 是 | pass、warning、surcharge、recommend_reject、conditional、request\_more、not\_applicable |
 | triggered\_rule\_ids | string\[] | 是 | 命中的业务规则 |
 | finding\_ids | string\[] | 是 | 引用的风险点 |
 | ocr\_field\_ids | string\[] | 是 | 引用的 OCR 字段 |
@@ -235,7 +235,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| decision | enum | 是 | accept、reject、surcharge、conditional\_accept、request\_more、manual\_review |
+| decision | enum | 是 | accept、recommend_reject、surcharge、conditional\_accept、request\_more、manual\_review |
 | decisive\_rule\_ids | string\[] | 是 | 决定最终结论的规则 |
 | reasons | string\[] | 是 | 综合判断理由 |
 | conditions | string\[] | 是 | 附加承保条件 |
@@ -245,7 +245,7 @@
 
 决策优先级暂定：
 
-1\. `reject`
+1\. `recommend_reject`
 2\. `request\_more`
 3\. `manual\_review`
 4\. `surcharge`

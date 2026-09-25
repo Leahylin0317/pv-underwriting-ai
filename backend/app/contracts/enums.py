@@ -45,7 +45,7 @@ class DecisionType(StrEnum):
     """综合核保结论类型。"""
 
     ACCEPT = "accept"
-    REJECT = "reject"
+    RECOMMEND_REJECT = "recommend_reject"
     SURCHARGE = "surcharge"
     CONDITIONAL_ACCEPT = "conditional_accept"
     REQUEST_MORE = "request_more"
@@ -136,7 +136,7 @@ class MaterialReviewAction(StrEnum):
     PASS = "pass"
     WARNING = "warning"
     SURCHARGE = "surcharge"
-    REJECT = "reject"
+    RECOMMEND_REJECT = "recommend_reject"
     CONDITIONAL = "conditional"
     REQUEST_MORE = "request_more"
     NOT_APPLICABLE = "not_applicable"
