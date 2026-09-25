@@ -80,3 +80,22 @@ def test_mock_analyze_rejects_empty_materials() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_mock_report_returns_downloadable_markdown() -> None:
+    response = client.post(
+        "/api/v1/reports/mock",
+        json=analyze_payload(),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/markdown")
+    assert response.headers["content-disposition"] == (
+        'attachment; filename="underwriting-report.md"'
+    )
+    assert response.text.startswith(
+        "# 分布式光伏财产险 AI 核保报告"
+    )
+    assert "建议结论：**转人工复核**" in response.text
+    assert "site-panorama.jpg" in response.text
+    assert "临近水体" in response.text

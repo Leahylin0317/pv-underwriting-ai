@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile, status
 
 from app.contracts import UnderwritingCase
 from app.intake import MAX_FILES_PER_REQUEST, FileInspectionResult, inspect_file
 from app.pipeline import UnderwritingPipeline
 from app.providers import MaterialInput, MockOcrProvider, MockVisionProvider
+from app.reports import generate_markdown_report
 
 from .schemas import MockAnalyzeRequest
 
@@ -15,6 +16,26 @@ _mock_pipeline = UnderwritingPipeline(
     ocr_provider=MockOcrProvider(),
     vision_provider=MockVisionProvider(),
 )
+
+
+class MarkdownResponse(Response):
+    media_type = "text/markdown"
+
+
+def _run_mock_analysis(request: MockAnalyzeRequest) -> UnderwritingCase:
+    material_inputs = [
+        MaterialInput(
+            material=material,
+            content=b"mock-file-content",
+        )
+        for material in request.materials
+    ]
+
+    return _mock_pipeline.run(
+        case_id=request.case_id,
+        project=request.project,
+        materials=material_inputs,
+    )
 
 
 @router.get("/health", tags=["system"])
@@ -72,16 +93,27 @@ async def inspect_uploaded_files(
 def analyze_mock(request: MockAnalyzeRequest) -> UnderwritingCase:
     """使用 Mock Provider 执行一次完整核保流程。"""
 
-    material_inputs = [
-        MaterialInput(
-            material=material,
-            content=b"mock-file-content",
-        )
-        for material in request.materials
-    ]
+    return _run_mock_analysis(request)
 
-    return _mock_pipeline.run(
-        case_id=request.case_id,
-        project=request.project,
-        materials=material_inputs,
+
+@router.post(
+    "/api/v1/reports/mock",
+    response_class=MarkdownResponse,
+    tags=["reports"],
+)
+def download_mock_report(
+    request: MockAnalyzeRequest,
+) -> MarkdownResponse:
+    """执行 Mock 核保流程并返回可下载的 Markdown 报告。"""
+
+    case = _run_mock_analysis(request)
+    report = generate_markdown_report(case)
+
+    return MarkdownResponse(
+        content=report,
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="underwriting-report.md"'
+            )
+        },
     )
