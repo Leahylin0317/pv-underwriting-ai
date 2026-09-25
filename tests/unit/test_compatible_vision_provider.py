@@ -111,6 +111,10 @@ def test_calls_compatible_api_and_converts_findings() -> None:
         assert request_body["model"] == (
             "example-vision-model"
         )
+        assert request_body["enable_thinking"] is False
+        assert request_body["response_format"] == {
+            "type": "json_object"
+        }
 
         image_url = request_body[
             "messages"
@@ -170,6 +174,69 @@ def test_calls_compatible_api_and_converts_findings() -> None:
     assert (
         findings[1].requires_manual_review
         is True
+    )
+
+
+def test_defaults_bbox_coordinate_space() -> None:
+    def handler(
+        _request: httpx.Request,
+    ) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "findings": [
+                                        {
+                                            "category": (
+                                                "minor_shading"
+                                            ),
+                                            "label": "轻微遮挡",
+                                            "detection_status": (
+                                                "detected"
+                                            ),
+                                            "severity": "low",
+                                            "confidence": 0.8,
+                                            "bbox": {
+                                                "x_min": 0.1,
+                                                "y_min": 0.2,
+                                                "x_max": 0.4,
+                                                "y_max": 0.6,
+                                            },
+                                            "evidence_text": (
+                                                "组件表面存在线状阴影"
+                                            ),
+                                            "requires_manual_review": (
+                                                False
+                                            ),
+                                        }
+                                    ]
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            },
+        )
+
+    provider = CompatibleVisionProvider(
+        make_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    findings = provider.analyze(
+        make_material_input()
+    )
+
+    assert len(findings) == 1
+    assert findings[0].bbox is not None
+    assert (
+        findings[0].bbox.coordinate_space
+        == "normalized_0_1"
     )
 
 
@@ -273,6 +340,65 @@ def test_rejects_invalid_model_response() -> None:
         provider.analyze(
             make_material_input()
         )
+
+
+def test_reports_safe_validation_location() -> None:
+    invalid_category = "invented-secret-category"
+
+    def handler(
+        _request: httpx.Request,
+    ) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "findings": [
+                                        {
+                                            "category": (
+                                                invalid_category
+                                            ),
+                                            "label": "错误类别",
+                                            "detection_status": (
+                                                "detected"
+                                            ),
+                                            "severity": "low",
+                                            "confidence": 0.8,
+                                            "bbox": None,
+                                            "evidence_text": (
+                                                "测试错误类别"
+                                            ),
+                                            "requires_manual_review": (
+                                                False
+                                            ),
+                                        }
+                                    ]
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            },
+        )
+
+    provider = CompatibleVisionProvider(
+        make_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(
+        ProviderError,
+        match=r"findings\.0\.category:enum",
+    ) as exc_info:
+        provider.analyze(
+            make_material_input()
+        )
+
+    assert invalid_category not in str(exc_info.value)
 
 
 def test_rejects_invalid_confidence_threshold() -> None:

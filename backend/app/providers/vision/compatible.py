@@ -8,6 +8,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationError,
+    model_validator,
 )
 
 from app.contracts import (
@@ -35,17 +36,48 @@ RISK_CATEGORY_VALUES = "、".join(
 )
 
 SYSTEM_PROMPT = f"""你是分布式光伏财产险的图片风险识别模块。
-只根据图片中能够观察到的证据进行判断，不得猜测或补充图片外的信息。
-返回一个 JSON 对象，顶层字段固定为 findings。
-findings 是数组，每个元素必须包含：
-category、label、detection_status、severity、confidence、bbox、evidence_text、requires_manual_review。
-category 只能是以下风险类别之一：{RISK_CATEGORY_VALUES}。
+只根据图片中能够直接观察到的证据进行判断，不得猜测或补充图片外的信息。
+必须返回一个合法的 JSON 对象，顶层字段固定为 findings。
+findings 必须是数组。
+
+每个风险点只能包含以下字段：
+category、label、detection_status、severity、confidence、bbox、
+evidence_text、requires_manual_review。
+
+category 只能是以下风险类别之一：
+{RISK_CATEGORY_VALUES}。
+
+风险类别边界：
+- minor_shading：组件表面存在面积较小的阴影或轻微实物遮挡。
+- severe_shading：组件存在明显的大面积、持续性遮挡。
+- flammable_material：组件或电气设备附近可见纸箱、木材、干草、
+  包装物等明确的可燃物堆积。
+- 屋瓦、苔藓、污渍、远处植被不能直接判定为 flammable_material。
+- hazardous_material：必须能看到危险化学品、气瓶、油品容器或明确标识。
+- mountain_environment：项目现场本身位于山地，远处背景山体不算。
+- missing_parapet_or_guardrail：仅适用于平屋顶、检修平台或通道，
+  不能因为斜屋顶没有护栏就直接判定风险。
+- 无法确定风险类别时返回 uncertain，并要求人工复核。
+- 不允许把图片中没有出现的风险写入 findings。
+
 detection_status 只能是 detected 或 uncertain。
 severity 只能是 info、low、medium、high、critical、unknown。
 confidence 必须是 0 到 1 之间的小数。
-bbox 无法可靠定位时返回 null；能够定位时使用 0 到 1 的归一化坐标。
-如果没有发现风险，返回 {{"findings": []}}。
-不要返回 Markdown，不要返回 JSON 以外的解释。
+requires_manual_review 必须是 true 或 false。
+
+bbox 无法可靠定位时必须返回 null。
+bbox 能够可靠定位时必须是 JSON 对象，并且必须包含：
+x_min、y_min、x_max、y_max、coordinate_space。
+坐标必须是 0 到 1 之间的归一化小数。
+coordinate_space 必须固定为 normalized_0_1。
+
+如果没有发现风险，返回：
+{{"findings": []}}
+
+不要输出未发现的风险。
+不要返回 Markdown。
+不要返回代码块。
+不要返回 JSON 以外的说明。
 """
 
 
@@ -63,6 +95,31 @@ class VisionFindingPayload(BaseModel):
     bbox: Bbox | None = None
     evidence_text: str = Field(min_length=1)
     requires_manual_review: bool
+
+    @model_validator(mode="before")
+    @classmethod
+    def add_default_coordinate_space(
+        cls,
+        value: Any,
+    ) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        bbox = value.get("bbox")
+
+        if (
+            not isinstance(bbox, dict)
+            or "coordinate_space" in bbox
+        ):
+            return value
+
+        return {
+            **value,
+            "bbox": {
+                **bbox,
+                "coordinate_space": "normalized_0_1",
+            },
+        }
 
 
 class VisionResponsePayload(BaseModel):
@@ -155,6 +212,7 @@ class CompatibleVisionProvider(VisionProvider):
                                 "请检查这份光伏投保图片。"
                                 "材料类别："
                                 f"{material_input.material.category.value}。"
+                                "请按照 JSON 格式返回识别结果。"
                             ),
                         },
                         {
@@ -167,6 +225,10 @@ class CompatibleVisionProvider(VisionProvider):
                 },
             ],
             "temperature": 0,
+            "enable_thinking": False,
+            "response_format": {
+                "type": "json_object",
+            },
         }
 
         try:
@@ -231,21 +293,31 @@ class CompatibleVisionProvider(VisionProvider):
                 content
             )
 
-            return (
-                VisionResponsePayload
-                .model_validate_json(json_text)
-            )
-
         except (
             json.JSONDecodeError,
             KeyError,
             IndexError,
             TypeError,
-            ValidationError,
         ) as exc:
             raise ProviderError(
                 "vision provider returned "
                 "an invalid response"
+            ) from exc
+
+        try:
+            return (
+                VisionResponsePayload
+                .model_validate_json(json_text)
+            )
+
+        except ValidationError as exc:
+            summary = self._validation_error_summary(
+                exc
+            )
+
+            raise ProviderError(
+                "vision provider returned invalid "
+                f"response fields: {summary}"
             ) from exc
 
     @staticmethod
@@ -269,6 +341,27 @@ class CompatibleVisionProvider(VisionProvider):
         return stripped[
             first_brace:last_brace + 1
         ]
+
+    @staticmethod
+    def _validation_error_summary(
+        error: ValidationError,
+    ) -> str:
+        issues: list[str] = []
+
+        for item in error.errors(
+            include_url=False,
+            include_context=False,
+            include_input=False,
+        )[:5]:
+            location = ".".join(
+                str(part)
+                for part in item["loc"]
+            )
+            issues.append(
+                f"{location}:{item['type']}"
+            )
+
+        return ", ".join(issues) or "unknown validation error"
 
     def _to_risk_findings(
         self,
