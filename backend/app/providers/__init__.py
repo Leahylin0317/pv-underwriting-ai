@@ -10,6 +10,7 @@ from .vision import (
     MockVisionProvider,
     VisionProvider,
 )
+from .weather import OpenMeteoWeatherProvider, WeatherProvider
 
 __all__ = [
     "CompatibleOcrProvider",
@@ -18,7 +19,9 @@ __all__ = [
     "MockOcrProvider",
     "MockVisionProvider",
     "OcrProvider",
+    "OpenMeteoWeatherProvider",
     "PdfPageOcrProvider",
     "ProviderError",
     "VisionProvider",
+    "WeatherProvider",
 ]

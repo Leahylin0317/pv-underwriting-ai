@@ -150,6 +150,7 @@ class ProcessingStep(StrEnum):
     VISION = "vision"
     COMPONENT_LOOKUP = "component_lookup"
     WEATHER_LOOKUP = "weather_lookup"
+    CATASTROPHE_ASSESSMENT = "catastrophe_assessment"
     RULE_ENGINE = "rule_engine"
     DECISION = "decision"
 

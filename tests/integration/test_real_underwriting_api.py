@@ -6,6 +6,7 @@ import pymupdf
 import pytest
 from app.api.ocr_routes import get_ocr_provider
 from app.api.routes import get_vision_provider
+from app.api.weather_dependencies import get_weather_provider
 from app.contracts import (
     DetectionStatus,
     MaterialCategory,
@@ -16,6 +17,7 @@ from app.contracts import (
     RiskCategory,
     RiskFinding,
     RiskSeverity,
+    WeatherProfile,
 )
 from app.main import app
 from app.providers import (
@@ -23,6 +25,7 @@ from app.providers import (
     OcrProvider,
     ProviderError,
     VisionProvider,
+    WeatherProvider,
 )
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -242,6 +245,31 @@ class FailingOcrProvider(OcrProvider):
         )
 
 
+class StaticWeatherProvider(WeatherProvider):
+    @property
+    def name(self) -> str:
+        return "static-weather-provider"
+
+    def lookup(
+        self,
+        *,
+        longitude: float,
+        latitude: float,
+    ) -> WeatherProfile:
+        return WeatherProfile(
+            longitude=longitude,
+            latitude=latitude,
+            historical_max_wind_m_s=30.0,
+            historical_max_hail_mm=20.0,
+            historical_max_snow_load_pa=3000.0,
+            observation_start="2021-01-01",
+            observation_end="2025-12-31",
+            source_name="integration-test-weather",
+            source_url=None,
+            retrieved_at="2026-09-26T00:00:00+00:00",
+        )
+
+
 @pytest.fixture
 def override_real_providers() -> Iterator[
     ProviderOverride
@@ -256,6 +284,11 @@ def override_real_providers() -> Iterator[
             get_vision_provider
         )
     )
+    original_weather_override = (
+        app.dependency_overrides.get(
+            get_weather_provider
+        )
+    )
 
     def apply_override(
         ocr_provider: OcrProvider,
@@ -268,6 +301,10 @@ def override_real_providers() -> Iterator[
         app.dependency_overrides[
             get_vision_provider
         ] = lambda: vision_provider
+
+        app.dependency_overrides[
+            get_weather_provider
+        ] = lambda: StaticWeatherProvider()
 
     yield apply_override
 
@@ -290,6 +327,16 @@ def override_real_providers() -> Iterator[
         app.dependency_overrides[
             get_vision_provider
         ] = original_vision_override
+
+    if original_weather_override is None:
+        app.dependency_overrides.pop(
+            get_weather_provider,
+            None,
+        )
+    else:
+        app.dependency_overrides[
+            get_weather_provider
+        ] = original_weather_override
 
 
 def test_runs_complete_real_underwriting_pipeline(
@@ -343,7 +390,7 @@ def test_runs_complete_real_underwriting_pipeline(
     assert len(result["ocr_fields"]) == 1
     assert len(result["findings"]) == 1
     assert len(result["material_reviews"]) == 2
-    assert len(result["processing_trace"]) == 5
+    assert len(result["processing_trace"]) == 7
 
     assert (
         result["ocr_fields"][0]["field_name"]
@@ -395,6 +442,19 @@ def test_runs_complete_real_underwriting_pipeline(
         component_trace["provider"]
         == "local-component-catalog"
     )
+
+    assert result["weather_profile"] is not None
+    assert result["weather_profile"]["historical_max_wind_m_s"] == 30.0
+    assert result["catastrophe_assessment"] is not None
+    assert result["catastrophe_assessment"]["expected_loss_risk"] == "low"
+    assert result["catastrophe_assessment"]["requires_manual_review"] is False
+
+    weather_trace = next(
+        trace
+        for trace in result["processing_trace"]
+        if trace["step"] == ProcessingStep.WEATHER_LOOKUP
+    )
+    assert weather_trace["status"] == ProcessingStatus.SUCCESS
 
 
     assert len(

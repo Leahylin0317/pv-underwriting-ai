@@ -82,6 +82,7 @@ PROCESSING_STEP_LABELS = {
     ProcessingStep.VISION: "图片风险识别",
     ProcessingStep.COMPONENT_LOOKUP: "组件参数查询",
     ProcessingStep.WEATHER_LOOKUP: "气象数据查询",
+    ProcessingStep.CATASTROPHE_ASSESSMENT: "灾害风险评估",
     ProcessingStep.RULE_ENGINE: "规则判断",
     ProcessingStep.DECISION: "综合决策",
 }

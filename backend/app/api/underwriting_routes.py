@@ -11,6 +11,7 @@ from fastapi import (
 )
 from pydantic import ValidationError
 
+from app.catastrophe import CatastropheAssessmentEngine
 from app.contracts import (
     Material,
     MaterialParseStatus,
@@ -26,6 +27,7 @@ from app.providers import (
     MaterialInput,
     OcrProvider,
     VisionProvider,
+    WeatherProvider,
 )
 from app.providers.component import (
     ComponentProvider,
@@ -37,6 +39,7 @@ from .component_dependencies import (
 from .ocr_routes import get_ocr_provider
 from .routes import get_vision_provider
 from .schemas import RealAnalyzeManifest
+from .weather_dependencies import get_weather_provider
 
 router = APIRouter()
 
@@ -272,6 +275,10 @@ async def analyze_uploaded_case(
         ComponentProvider,
         Depends(get_component_provider),
     ],
+    weather_provider: Annotated[
+        WeatherProvider,
+        Depends(get_weather_provider),
+    ],
     files: Annotated[
         list[UploadFile],
         File(
@@ -344,6 +351,10 @@ async def analyze_uploaded_case(
         vision_provider=vision_provider,
         component_provider=(
             component_provider
+        ),
+        weather_provider=weather_provider,
+        catastrophe_engine=(
+            CatastropheAssessmentEngine()
         ),
     )
 

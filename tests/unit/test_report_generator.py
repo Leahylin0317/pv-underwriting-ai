@@ -114,6 +114,19 @@ def test_generates_readable_markdown_report() -> None:
     assert "图片风险识别" in report
 
 
+
+def test_renders_catastrophe_assessment_trace_label() -> None:
+    case = make_case()
+    trace_payload = case.processing_trace[0].model_dump(mode="python")
+    trace_payload["step"] = "catastrophe_assessment"
+    trace = type(case.processing_trace[0]).model_validate(trace_payload)
+    report = generate_markdown_report(
+        case.model_copy(update={"processing_trace": [trace]})
+    )
+
+    assert "灾害风险评估" in report
+
+
 def test_handles_case_without_decision_or_results() -> None:
     case = make_case(include_decision=False).model_copy(
         update={

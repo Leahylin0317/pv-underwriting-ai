@@ -52,9 +52,13 @@ class DecisionEngine:
                 missing_requirements.extend(review.missing_requirements)
             elif review.action is not MaterialReviewAction.PASS:
                 reasons.extend(review.reasons)
-                warnings.append(
-                    f"材料 {review.material_id} 存在尚未自动处理的审核动作"
-                )
+                warnings.append(f"材料 {review.material_id} 存在尚未自动处理的审核动作")
+
+        assessment = case.catastrophe_assessment
+        if assessment is not None and assessment.requires_manual_review:
+            rule_ids.extend(assessment.triggered_rule_ids)
+            reasons.append(assessment.explanation)
+            warnings.extend(assessment.factors)
 
         provider_failed = any(
             trace.status in {ProcessingStatus.PARTIAL, ProcessingStatus.FAILED}
