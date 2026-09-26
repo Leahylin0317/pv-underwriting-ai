@@ -343,7 +343,7 @@ def test_runs_complete_real_underwriting_pipeline(
     assert len(result["ocr_fields"]) == 1
     assert len(result["findings"]) == 1
     assert len(result["material_reviews"]) == 2
-    assert len(result["processing_trace"]) == 4
+    assert len(result["processing_trace"]) == 5
 
     assert (
         result["ocr_fields"][0]["field_name"]
@@ -357,6 +357,45 @@ def test_runs_complete_real_underwriting_pipeline(
         result["decision"]["decision"]
         == "manual_review"
     )
+
+    assert (
+        result["component_profile"]
+        is not None
+    )
+    assert (
+        result["component_profile"][
+            "component_model"
+        ]
+        == "PV-MODULE-580W"
+    )
+    assert (
+        result["component_profile"][
+            "source_name"
+        ]
+    )
+    assert (
+        result["component_profile"][
+            "match_confidence"
+        ]
+        == 1.0
+    )
+
+    component_trace = next(
+        trace
+        for trace in result["processing_trace"]
+        if trace["step"]
+        == ProcessingStep.COMPONENT_LOOKUP
+    )
+
+    assert (
+        component_trace["status"]
+        == ProcessingStatus.SUCCESS
+    )
+    assert (
+        component_trace["provider"]
+        == "local-component-catalog"
+    )
+
 
     assert len(
         ocr_provider.received_inputs

@@ -27,7 +27,13 @@ from app.providers import (
     OcrProvider,
     VisionProvider,
 )
+from app.providers.component import (
+    ComponentProvider,
+)
 
+from .component_dependencies import (
+    get_component_provider,
+)
 from .ocr_routes import get_ocr_provider
 from .routes import get_vision_provider
 from .schemas import RealAnalyzeManifest
@@ -58,7 +64,9 @@ def _validation_error_summary(
 
         issues.append(
             {
-                "location": location or "manifest",
+                "location": (
+                    location or "manifest"
+                ),
                 "type": item["type"],
             }
         )
@@ -77,7 +85,8 @@ def _parse_manifest(
     except ValidationError as exc:
         raise HTTPException(
             status_code=(
-                status.HTTP_422_UNPROCESSABLE_CONTENT
+                status
+                .HTTP_422_UNPROCESSABLE_CONTENT
             ),
             detail={
                 "message": (
@@ -124,7 +133,9 @@ def _build_material_inputs(
     ],
 ) -> list[MaterialInput]:
     seen_sha256: set[str] = set()
-    material_inputs: list[MaterialInput] = []
+    material_inputs: list[
+        MaterialInput
+    ] = []
 
     for index, (
         material_manifest,
@@ -182,7 +193,8 @@ def _build_material_inputs(
                 detail={
                     "message": (
                         "Real underwriting currently "
-                        "supports only JPEG, PNG and PDF files"
+                        "supports only JPEG, PNG and "
+                        "PDF files"
                     ),
                     "file_index": index,
                     "file_name": (
@@ -256,6 +268,10 @@ async def analyze_uploaded_case(
         VisionProvider,
         Depends(get_vision_provider),
     ],
+    component_provider: Annotated[
+        ComponentProvider,
+        Depends(get_component_provider),
+    ],
     files: Annotated[
         list[UploadFile],
         File(
@@ -275,7 +291,7 @@ async def analyze_uploaded_case(
         ),
     ],
 ) -> UnderwritingCase:
-    """使用真实 OCR 和视觉模型执行完整核保流水线。"""
+    """使用真实模型和组件目录执行完整核保流水线。"""
 
     parsed_manifest = _parse_manifest(
         manifest
@@ -299,7 +315,8 @@ async def analyze_uploaded_case(
     ):
         raise HTTPException(
             status_code=(
-                status.HTTP_422_UNPROCESSABLE_CONTENT
+                status
+                .HTTP_422_UNPROCESSABLE_CONTENT
             ),
             detail={
                 "message": (
@@ -325,6 +342,9 @@ async def analyze_uploaded_case(
     pipeline = UnderwritingPipeline(
         ocr_provider=ocr_provider,
         vision_provider=vision_provider,
+        component_provider=(
+            component_provider
+        ),
     )
 
     return pipeline.run(
