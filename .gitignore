@@ -40,3 +40,8 @@ data/official/
 outputs/
 reports/generated/
 logs/
+
+# Python packaging
+*.egg-info/
+build/
+dist/
