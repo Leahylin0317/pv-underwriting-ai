@@ -1,6 +1,21 @@
+import json
+from pathlib import Path
+
+from pydantic import (
+    TypeAdapter,
+    ValidationError,
+)
+
 from app.contracts import ComponentProfile
 
+from ..common import ProviderError
 from .base import ComponentProvider
+
+_COMPONENT_PROFILE_LIST_ADAPTER = (
+    TypeAdapter(
+        list[ComponentProfile]
+    )
+)
 
 
 def normalize_component_model(
@@ -51,6 +66,49 @@ class CatalogComponentProvider(
             catalog[normalized_model] = profile
 
         self._catalog = catalog
+
+    @classmethod
+    def from_json_file(
+        cls,
+        path: str | Path,
+    ) -> "CatalogComponentProvider":
+        """从 UTF-8 JSON 文件加载组件目录。"""
+
+        catalog_path = Path(path)
+
+        try:
+            raw_text = catalog_path.read_text(
+                encoding="utf-8-sig"
+            )
+        except (
+            OSError,
+            UnicodeError,
+        ) as exc:
+            raise ProviderError(
+                "component catalog could not be read"
+            ) from exc
+
+        try:
+            raw_payload = json.loads(raw_text)
+
+            profiles = (
+                _COMPONENT_PROFILE_LIST_ADAPTER
+                .validate_python(raw_payload)
+            )
+        except (
+            json.JSONDecodeError,
+            ValidationError,
+        ) as exc:
+            raise ProviderError(
+                "component catalog is invalid"
+            ) from exc
+
+        try:
+            return cls(profiles=profiles)
+        except ValueError as exc:
+            raise ProviderError(
+                "component catalog is invalid"
+            ) from exc
 
     @property
     def name(self) -> str:
