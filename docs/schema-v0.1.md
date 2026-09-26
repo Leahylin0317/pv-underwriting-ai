@@ -258,7 +258,7 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| step | string | 是 | material\_parse、ocr、vision、component\_lookup、weather\_lookup、rule\_engine、decision |
+| step | string | 是 | material\_parse、ocr、vision、component\_lookup、weather\_lookup、catastrophe\_assessment、rule\_engine、decision |
 | provider | string | 是 | 执行模块或外部服务 |
 | model | string 或 null | 否 | 模型名称和版本 |
 | started\_at | datetime | 是 | 开始时间 |
