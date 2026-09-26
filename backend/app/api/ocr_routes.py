@@ -25,6 +25,9 @@ from app.providers import (
     PdfPageOcrProvider,
     ProviderError,
 )
+from app.providers.routing import (
+    RoutedOcrProvider,
+)
 from app.settings import (
     ProviderConfigurationError,
     VlmSettings,
@@ -56,8 +59,12 @@ def get_ocr_provider() -> OcrProvider:
         settings=settings,
     )
 
-    return PdfPageOcrProvider(
+    pdf_provider = PdfPageOcrProvider(
         delegate=image_provider,
+    )
+
+    return RoutedOcrProvider(
+        delegate=pdf_provider,
     )
 
 

@@ -33,6 +33,9 @@ from app.providers import (
     ProviderError,
     VisionProvider,
 )
+from app.providers.routing import (
+    RoutedVisionProvider,
+)
 from app.reports import generate_markdown_report
 from app.settings import (
     ProviderConfigurationError,
@@ -65,12 +68,18 @@ def get_vision_provider() -> VisionProvider:
         settings = VlmSettings.from_environment()
     except ProviderConfigurationError as exc:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=(
+                status.HTTP_503_SERVICE_UNAVAILABLE
+            ),
             detail="Vision provider is not configured",
         ) from exc
 
-    return CompatibleVisionProvider(
+    image_provider = CompatibleVisionProvider(
         settings=settings,
+    )
+
+    return RoutedVisionProvider(
+        delegate=image_provider,
     )
 
 
@@ -232,7 +241,9 @@ async def analyze_uploaded_image(
             status_code=(
                 status.HTTP_422_UNPROCESSABLE_CONTENT
             ),
-            detail="Uploaded image could not be inspected",
+            detail=(
+                "Uploaded image could not be inspected"
+            ),
         )
 
     material = Material(
@@ -297,7 +308,7 @@ def download_mock_report(
         content=report,
         headers={
             "Content-Disposition": (
-                'attachment; '
+                "attachment; "
                 'filename="underwriting-report.md"'
             )
         },
