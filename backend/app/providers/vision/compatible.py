@@ -20,7 +20,11 @@ from app.contracts import (
 )
 from app.settings import VlmSettings
 
-from ..common import MaterialInput, ProviderError
+from ..common import (
+    MaterialInput,
+    ProviderError,
+    post_with_connect_retry,
+)
 from .base import VisionProvider
 
 SUPPORTED_IMAGE_TYPES = {
@@ -37,6 +41,7 @@ RISK_CATEGORY_VALUES = "、".join(
 
 SYSTEM_PROMPT = f"""你是分布式光伏财产险的图片风险识别模块。
 只根据图片中能够直接观察到的证据进行判断，不得猜测或补充图片外的信息。
+材料类别用于限定可判断范围；不要把没有拍到、看不清或被遮挡的区域判为未发现。
 必须返回一个合法的 JSON 对象，顶层字段固定为 findings。
 findings 必须是数组。
 
@@ -60,7 +65,7 @@ category 只能是以下风险类别之一：
 - 无法确定风险类别时返回 uncertain，并要求人工复核。
 - 不允许把图片中没有出现的风险写入 findings。
 
-detection_status 只能是 detected 或 uncertain。
+detection_status 只能是 detected、not_detected、uncertain 或 not_applicable。
 severity 只能是 info、low、medium、high、critical、unknown。
 confidence 必须是 0 到 1 之间的小数。
 requires_manual_review 必须是 true 或 false。
@@ -71,10 +76,40 @@ x_min、y_min、x_max、y_max、coordinate_space。
 坐标必须是 0 到 1 之间的归一化小数。
 coordinate_space 必须固定为 normalized_0_1。
 
-如果没有发现风险，返回：
-{{"findings": []}}
+对于 panorama 全景照，必须分别检查以下 8 类拒保环境，并为每类返回一项状态：
+agriculture_environment、forest_environment、livestock_environment、
+fishery_environment、water_adjacent_environment、tidal_flat_environment、
+mountain_environment、desertification_environment。
+只有画面覆盖充分且能够排除该类风险时才能返回 not_detected；画面未覆盖、模糊、
+夜拍或证据不足时返回 uncertain，并说明需要补拍的视角。
+对其他材料只检查该材料能支持判断的风险类别。已检查且视野充分但未发现风险时，
+返回对应类别的 not_detected；不适用的类别可省略或标记 not_applicable。
+每张受检图片都必须返回一项 image_quality：清晰、光线足且覆盖检查区域时为 not_detected；
+模糊、过暗、关键区域裁切或视角不符时为 detected；无法确认时为 uncertain。图片质量不足
+时不得把风险项判为 not_detected。
+屋顶连接处必须评估安装载体并返回 installation_type，并检查可见连接件松脱、锈蚀或缺失
+（roof_connection_abnormal）；组件照片只检查肉眼可见的破裂、缺角或明显脱层
+（module_damage），不得推断电气性能或热斑；逆变器照片检查外壳破损、严重锈蚀、
+裸露线缆或明确故障指示（inverter_abnormal）。电气接地照片只检查可见断开、裸露或
+严重腐蚀（electrical_grounding_abnormal），不能仅凭外观宣称接地电阻合格。
+组件表面照片（component_surface）还要检查组件背板鼓包、明显变色和表面破损；照片未展示背面时
+不得推断背板状态。屋顶连接处照片需检查可见支架锈蚀、变形和防水层损坏；这些阶段二发现只作为
+风险提示和人工复核依据，不要自行推导费率。
+女儿墙照片必须评估
+missing_parapet_or_guardrail 与 drainage_abnormal；车间照片必须评估易燃物和危险品；
+汇流箱照片必须评估 combiner_box_seal_abnormal、combiner_box_fuse_abnormal、
+surge_protector_abnormal。
+电气系统照片如能清晰看到线缆，必须检查是否裸露且无保护（unprotected_cable）；若存在，应明确
+报告可见证据。车间照片还要识别危险工艺（dangerous_process）、洁净车间（cleanroom）及消防
+设施缺失或异常（fire_protection_absent）；环境未拍到或证据不足时必须返回 uncertain。
+监控区域材料必须评估监控是否有效覆盖光伏阵列（monitoring_effective_coverage）；仅凭摄像头存在
+不能认定覆盖有效，需结合覆盖示意或画面证据，无法确认时返回 uncertain。
+如果屋顶连接处照片中直接可见涉水、农业、林地、畜牧、渔业、滩涂、山地或沙化环境，必须返回
+对应环境类别；未拍到完整周边时不得据此返回 not_detected。
+installation_type 用于报告照片观察到的安装载体（彩钢瓦屋顶、平屋顶、瓦片屋顶、车棚顶）。
+严重遮挡、通道阻塞、缺少女儿墙/护栏、排水异常、易燃物和危险品均需明确返回状态。
 
-不要输出未发现的风险。
+不要将未检查的项目伪装成 not_detected。
 不要返回 Markdown。
 不要返回代码块。
 不要返回 JSON 以外的说明。
@@ -195,6 +230,10 @@ class CompatibleVisionProvider(VisionProvider):
             f"data:{material_input.material.media_type};"
             f"base64,{encoded_image}"
         )
+        quality_preflight = (
+            "、".join(material_input.material.quality_issues)
+            or "未发现明显预检异常；这不等于图片质量已通过"
+        )
 
         request_body = {
             "model": self.model_name,
@@ -212,6 +251,8 @@ class CompatibleVisionProvider(VisionProvider):
                                 "请检查这份光伏投保图片。"
                                 "材料类别："
                                 f"{material_input.material.category.value}。"
+                                "文件预检质量提示："
+                                f"{quality_preflight}。"
                                 "请按照 JSON 格式返回识别结果。"
                             ),
                         },
@@ -233,12 +274,17 @@ class CompatibleVisionProvider(VisionProvider):
 
         try:
             with httpx.Client(
-                timeout=(
-                    self._settings.timeout_seconds
+                timeout=httpx.Timeout(
+                    self._settings.timeout_seconds,
+                    connect=min(
+                        self._settings.timeout_seconds,
+                        15.0,
+                    ),
                 ),
                 transport=self._transport,
             ) as client:
-                response = client.post(
+                response = post_with_connect_retry(
+                    client,
                     (
                         f"{self._settings.base_url}"
                         "/chat/completions"
@@ -257,9 +303,24 @@ class CompatibleVisionProvider(VisionProvider):
 
                 response.raise_for_status()
 
+        except httpx.ConnectTimeout as exc:
+            raise ProviderError(
+                "vision provider connection timed out"
+            ) from exc
+
+        except httpx.ReadTimeout as exc:
+            raise ProviderError(
+                "vision provider response timed out"
+            ) from exc
+
         except httpx.TimeoutException as exc:
             raise ProviderError(
                 "vision provider request timed out"
+            ) from exc
+
+        except httpx.ConnectError as exc:
+            raise ProviderError(
+                "vision provider connection failed"
             ) from exc
 
         except httpx.HTTPStatusError as exc:
@@ -375,12 +436,6 @@ class CompatibleVisionProvider(VisionProvider):
             response_payload.findings,
             start=1,
         ):
-            if item.detection_status in {
-                DetectionStatus.NOT_DETECTED,
-                DetectionStatus.NOT_APPLICABLE,
-            }:
-                continue
-
             low_confidence = (
                 item.confidence
                 < self._confidence_threshold
@@ -388,7 +443,7 @@ class CompatibleVisionProvider(VisionProvider):
 
             detection_status = (
                 DetectionStatus.UNCERTAIN
-                if low_confidence
+                if low_confidence and item.detection_status is not DetectionStatus.NOT_APPLICABLE
                 else item.detection_status
             )
 

@@ -12,6 +12,18 @@ from .enums import (
 )
 
 
+class PackageAssessment(ContractModel):
+    """赛题演示所需材料和全景视角覆盖情况。"""
+
+    image_count: int = Field(ge=0)
+    panorama_count: int = Field(ge=0)
+    has_filing_certificate: bool
+    has_front_level_panorama: bool
+    has_overhead_panorama: bool
+    missing_material_categories: list[str] = Field(default_factory=list)
+    missing_requirements: list[str]
+
+
 class MaterialReview(ContractModel):
     """规则引擎对单份材料的审核结果。"""
 
@@ -25,11 +37,21 @@ class MaterialReview(ContractModel):
     requires_manual_review: bool
 
 
+class RuleExplanation(ContractModel):
+    """用户可读的规则触发条件和处理作用。"""
+
+    rule_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    trigger: str = Field(min_length=1)
+    effect: str = Field(min_length=1)
+
+
 class UnderwritingDecision(ContractModel):
     """整单综合核保意见。"""
 
     decision: DecisionType
     decisive_rule_ids: list[str]
+    rule_explanations: list[RuleExplanation] = Field(default_factory=list)
     reasons: list[str]
     conditions: list[str]
     warnings: list[str]

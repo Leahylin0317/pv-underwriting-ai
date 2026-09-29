@@ -17,7 +17,11 @@ from app.contracts import (
     MaterialQualityStatus,
     OcrField,
 )
-from app.intake import inspect_file
+from app.intake import (
+    MAX_FILE_SIZE_BYTES,
+    inspect_file,
+    read_upload_limited,
+)
 from app.providers import (
     CompatibleOcrProvider,
     MaterialInput,
@@ -104,7 +108,7 @@ async def extract_uploaded_image_text(
     """检查上传材料并调用真实模型提取 OCR 字段。"""
 
     try:
-        content = await file.read()
+        content = await read_upload_limited(file)
     finally:
         await file.close()
 
@@ -115,6 +119,11 @@ async def extract_uploaded_image_text(
     )
 
     if inspection.status != "accepted":
+        if "file_too_large" in inspection.issues:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail=f"Maximum file size is {MAX_FILE_SIZE_BYTES} bytes",
+            )
         raise HTTPException(
             status_code=(
                 status.HTTP_422_UNPROCESSABLE_CONTENT

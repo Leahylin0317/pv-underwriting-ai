@@ -221,6 +221,59 @@ def test_calls_compatible_api_and_converts_fields() -> None:
     )
 
 
+def test_coerces_json_boolean_and_number_values_to_text() -> None:
+    response_content = json.dumps(
+        {
+            "fields": [
+                {
+                    "field_name": "watermark_present",
+                    "raw_value": True,
+                    "normalized_value": True,
+                    "value_status": "extracted",
+                    "confidence": 0.98,
+                    "evidence_text": True,
+                },
+                {
+                    "field_name": "watermark_latitude",
+                    "raw_value": 23.0123,
+                    "normalized_value": 23.0123,
+                    "value_status": "extracted",
+                    "confidence": 0.91,
+                },
+            ]
+        }
+    )
+
+    def handler(
+        _request: httpx.Request,
+    ) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": response_content,
+                        }
+                    }
+                ]
+            },
+        )
+
+    provider = CompatibleOcrProvider(
+        make_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    fields = provider.extract(make_material_input())
+
+    assert fields[0].raw_value == "true"
+    assert fields[0].normalized_value == "true"
+    assert fields[0].evidence_text == "true"
+    assert fields[1].raw_value == "23.0123"
+    assert fields[1].normalized_value == "23.0123"
+
+
 def test_skips_non_image_material_without_calling_api() -> None:
     def handler(
         _request: httpx.Request,

@@ -47,7 +47,7 @@ def test_uses_default_sample_catalog(
         "component_catalog.sample.json"
     )
     assert provider.lookup(
-        "PV-MODULE-580W"
+        "JAM66D42-580/MB"
     ) is not None
 
 

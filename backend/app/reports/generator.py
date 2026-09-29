@@ -1,15 +1,17 @@
-from app.contracts import UnderwritingCase
+from app.contracts import RuleExplanation, UnderwritingCase
 from app.contracts.enums import (
     DecisionType,
     DetectionStatus,
     InstallationType,
     MaterialCategory,
     MaterialReviewAction,
+    OcrValueStatus,
     ProcessingStatus,
     ProcessingStep,
     ProjectType,
     RiskSeverity,
 )
+from app.rules.explanations import explain_rule
 
 DECISION_LABELS = {
     DecisionType.ACCEPT: "建议承保",
@@ -44,9 +46,11 @@ MATERIAL_CATEGORY_LABELS = {
     MaterialCategory.GRID_CONNECTION_DOCUMENT: "并网材料",
     MaterialCategory.ELECTRICAL_GROUNDING: "电气接地",
     MaterialCategory.COMPONENT_NAMEPLATE: "组件铭牌",
+    MaterialCategory.COMPONENT_SURFACE: "组件表面照片",
     MaterialCategory.INVERTER_NAMEPLATE: "逆变器铭牌",
     MaterialCategory.COMBINER_BOX: "汇流箱",
     MaterialCategory.MONITORING_OPTIONAL: "监控材料",
+    MaterialCategory.EQUIPMENT_INVENTORY: "设备清单",
     MaterialCategory.OTHER: "其他材料",
 }
 
@@ -58,6 +62,29 @@ MATERIAL_ACTION_LABELS = {
     MaterialReviewAction.CONDITIONAL: "建议附加条件",
     MaterialReviewAction.REQUEST_MORE: "补充材料",
     MaterialReviewAction.NOT_APPLICABLE: "不适用",
+}
+
+OCR_FIELD_LABELS = {
+    "project_name": "项目名称",
+    "project_entity": "项目单位",
+    "insured_name": "被保险人",
+    "insured_address": "被保险地址",
+    "site_address": "项目地址",
+    "component_model": "组件型号",
+    "inverter_model": "逆变器型号",
+    "rated_power_w": "额定功率（W）",
+    "serial_number": "序列号",
+    "grid_connection_date": "并网日期",
+    "grounding_resistance_ohm": "接地电阻（Ω）",
+    "inspection_date": "检测日期",
+    "inspection_result": "检测结论",
+    "monitoring_present": "监控系统状态",
+}
+
+OCR_STATUS_LABELS = {
+    OcrValueStatus.EXTRACTED: "已提取",
+    OcrValueStatus.MISSING: "缺失",
+    OcrValueStatus.UNCERTAIN: "不确定",
 }
 
 DETECTION_STATUS_LABELS = {
@@ -79,6 +106,7 @@ RISK_SEVERITY_LABELS = {
 PROCESSING_STEP_LABELS = {
     ProcessingStep.MATERIAL_PARSE: "材料解析",
     ProcessingStep.OCR: "文字识别",
+    ProcessingStep.EQUIPMENT_INVENTORY: "设备清单解析",
     ProcessingStep.VISION: "图片风险识别",
     ProcessingStep.COMPONENT_LOOKUP: "组件参数查询",
     ProcessingStep.WEATHER_LOOKUP: "气象数据查询",
@@ -91,6 +119,33 @@ PROCESSING_STATUS_LABELS = {
     ProcessingStatus.SUCCESS: "成功",
     ProcessingStatus.PARTIAL: "部分成功",
     ProcessingStatus.FAILED: "失败",
+}
+
+PROCESSING_STEP_PURPOSE = {
+    ProcessingStep.MATERIAL_PARSE: "检查文件可读性并提取材料基础信息",
+    ProcessingStep.OCR: "从文档或图片提取可核对的文字字段",
+    ProcessingStep.EQUIPMENT_INVENTORY: "解析设备清单并识别设备型号和数量",
+    ProcessingStep.VISION: "识别图像中的风险观察，不单独决定整单结论",
+    ProcessingStep.COMPONENT_LOOKUP: "查询组件型号和抗灾参数来源",
+    ProcessingStep.WEATHER_LOOKUP: "查询项目坐标对应的历史气象指标",
+    ProcessingStep.CATASTROPHE_ASSESSMENT: "比较组件额定能力与历史灾害指标",
+    ProcessingStep.RULE_ENGINE: "把材料事实与确定性规则逐项比对",
+    ProcessingStep.DECISION: "按固定优先顺序汇总材料动作和评估结果",
+}
+
+RESISTANCE_LABELS = {
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "unknown": "未知",
+}
+
+LOSS_RISK_LABELS = {
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "critical": "严重",
+    "unknown": "未评估",
 }
 
 
@@ -116,7 +171,39 @@ def _bullet_section(title: str, values: list[str]) -> list[str]:
     return lines
 
 
-def generate_markdown_report(case: UnderwritingCase) -> str:
+def _rule_explanation_lines(
+    rule_ids: list[str], explanation_by_id: dict[str, RuleExplanation]
+) -> list[str]:
+    if not rule_ids:
+        return ["- 命中规则：无"]
+
+    lines = []
+    for rule_id in rule_ids:
+        explanation = explanation_by_id.get(rule_id) or explain_rule(rule_id)
+        lines.append(
+            f"- **{rule_id}｜{explanation.title}**："
+            f"触发条件：{_table_cell(explanation.trigger)}；"
+            f"处理作用：{_table_cell(explanation.effect)}"
+        )
+    return lines
+
+
+def _decision_priority_explanation(decision: DecisionType) -> str:
+    return {
+        DecisionType.RECOMMEND_REJECT: "命中建议拒保条件，因此输出建议拒保。",
+        DecisionType.REQUEST_MORE: "未先命中建议拒保条件，但存在必需信息或材料缺口，因此输出补充材料。",
+        DecisionType.MANUAL_REVIEW: "未先命中建议拒保或补充材料条件，但存在需人工核实事项，因此转人工复核。",
+        DecisionType.SURCHARGE: "前序拒保、补充材料和人工复核条件均未触发，规则命中加费建议。",
+        DecisionType.CONDITIONAL_ACCEPT: "前序更高优先级条件均未触发，规则命中附条件承保建议。",
+        DecisionType.ACCEPT: "前序风险、资料缺口和人工复核条件均未触发，规则输出建议承保。",
+    }[decision]
+
+
+def generate_markdown_report(
+    case: UnderwritingCase,
+    *,
+    human_reviews: list[dict[str, str]] | None = None,
+) -> str:
     """把结构化核保案件转换为便于业务人员阅读的 Markdown 报告。"""
 
     project = case.project
@@ -134,11 +221,13 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
         f"| 项目名称 | {_table_cell(project.project_name)} |",
         f"| 被保险人 | {_table_cell(project.insured_name)} |",
         f"| 项目单位 | {_table_cell(project.project_entity)} |",
+        f"| 企业所属行业 | {_table_cell(project.industry_name)} |",
         f"| 项目类型 | {PROJECT_TYPE_LABELS[project.project_type]} |",
         f"| 安装类型 | {INSTALLATION_TYPE_LABELS[project.installation_type]} |",
         f"| 项目地址 | {_table_cell(project.site_address)} |",
         f"| 组件型号 | {_table_cell(project.component_model)} |",
         f"| 计划起保日期 | {_table_cell(project.proposed_start_date)} |",
+        f"| 被保险地址 | {_table_cell(project.insured_address)} |",
         "",
         "## 2. 综合核保意见",
         "",
@@ -152,6 +241,7 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
                 "",
             ]
         )
+
     else:
         decision = case.decision
 
@@ -178,17 +268,168 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
         )
         lines.extend(_bullet_section("风险提示", decision.warnings))
 
+    if case.package_assessment is not None:
+        package = case.package_assessment
+        lines.extend(
+            [
+                "### 材料包完整性",
+                "",
+                f"- 图片材料：{package.image_count} 张；全景照：{package.panorama_count} 张",
+                (
+                    f"- 备案证：{'已提供' if package.has_filing_certificate else '缺失'}；"
+                    f"正面平视：{'已标注' if package.has_front_level_panorama else '未确认'}；"
+                    f"俯拍：{'已标注' if package.has_overhead_panorama else '未确认'}"
+                ),
+                "- 待补充：" + ("；".join(package.missing_requirements) or "无"),
+                "",
+            ]
+        )
+
     material_by_id = {
         material.material_id: material
         for material in case.materials
     }
+    explanation_by_id = {
+        item.rule_id: item
+        for item in (case.decision.rule_explanations if case.decision else [])
+    }
+    lines.extend(
+        [
+            "## 判断过程与追溯",
+            "",
+            "- **模型与规则分工：** OCR/视觉模型提供字段提取、风险观察和证据文字；模型置信度是参考分数，尚未经过概率校准。材料动作和整单建议由程序规则汇总，模型不直接生成整单结论。",
+            "- **整单汇总顺序：** 建议拒保 → 补充材料 → 转人工复核 → 建议加费 → 附条件承保 → 建议承保；按顺序选择首个成立的结果。",
+            "",
+        ]
+    )
+    if case.decision is None:
+        lines.extend(["- 当前尚未生成整单结论。", ""])
+    else:
+        decision = case.decision
+        lines.extend(
+            [
+                f"- **本案结论：** {DECISION_LABELS[decision.decision]}。{_decision_priority_explanation(decision.decision)}",
+                "- **参与整单汇总的规则：**",
+                *[
+                    f"  {line}"
+                    for line in _rule_explanation_lines(
+                        decision.decisive_rule_ids,
+                        explanation_by_id,
+                    )
+                ],
+                "",
+            ]
+        )
+
+    findings_by_id = {item.finding_id: item for item in case.findings}
+    ocr_fields_by_id = {item.field_id: item for item in case.ocr_fields}
+    lines.extend(["### 单份材料的证据链", ""])
+    if case.material_reviews:
+        for review in case.material_reviews:
+            material = material_by_id.get(review.material_id)
+            material_name = material.file_name if material is not None else review.material_id
+            lines.extend(
+                [
+                    f"#### {_table_cell(material_name)} → {MATERIAL_ACTION_LABELS[review.action]}",
+                    "",
+                    "- 规则理由：" + ("；".join(review.reasons) or "未提供文字理由"),
+                    "- 命中规则：",
+                    *[
+                        f"  {line}"
+                        for line in _rule_explanation_lines(
+                            review.triggered_rule_ids,
+                            explanation_by_id,
+                        )
+                    ],
+                    "- 关联视觉证据：",
+                ]
+            )
+            if review.finding_ids:
+                for finding_id in review.finding_ids:
+                    finding = findings_by_id.get(finding_id)
+                    if finding is None:
+                        lines.append(f"  - {finding_id}：引用记录未找到。")
+                        continue
+                    lines.append(
+                        f"  - {finding_id}｜{_table_cell(finding.label)}｜"
+                        f"{DETECTION_STATUS_LABELS[finding.detection_status]}｜"
+                        f"证据：{_table_cell(finding.evidence_text)}｜"
+                        f"参考置信度：{finding.confidence:.2f}（未校准）"
+                    )
+            else:
+                lines.append("  - 无直接关联的视觉发现。")
+            lines.append("- 关联 OCR 字段：")
+            if review.ocr_field_ids:
+                for field_id in review.ocr_field_ids:
+                    field = ocr_fields_by_id.get(field_id)
+                    if field is None:
+                        lines.append(f"  - {field_id}：引用记录未找到。")
+                        continue
+                    field_label = OCR_FIELD_LABELS.get(field.field_name, field.field_name)
+                    lines.append(
+                        f"  - {field_id}｜{field_label}｜原文：{_table_cell(field.raw_value)}｜"
+                        f"规范值：{_table_cell(field.normalized_value)}｜"
+                        f"状态：{OCR_STATUS_LABELS[field.value_status]}｜"
+                        f"参考置信度：{field.confidence:.2f}（未校准）"
+                    )
+            else:
+                lines.append("  - 无直接关联的 OCR 字段。")
+            lines.append("")
+    else:
+        lines.extend(["- 当前没有生成逐份材料审核记录。", ""])
+
+    if case.catastrophe_assessment is not None:
+        lines.extend(
+            [
+                "### 自然灾害评估引用的规则",
+                "",
+                *[
+                    f"  {line}"
+                    for line in _rule_explanation_lines(
+                        case.catastrophe_assessment.triggered_rule_ids,
+                        explanation_by_id,
+                    )
+                ],
+                "",
+            ]
+        )
+
+    lines.extend(["### 自动处理步骤及其用途", ""])
+    if case.processing_trace:
+        for trace in case.processing_trace:
+            step_name = PROCESSING_STEP_LABELS[trace.step]
+            purpose = PROCESSING_STEP_PURPOSE[trace.step]
+            detail = (
+                f"{step_name}：{purpose}；执行方 {_table_cell(trace.provider)}"
+                f"；模型 {_table_cell(trace.model)}；状态 {PROCESSING_STATUS_LABELS[trace.status]}"
+                f"；耗时 {trace.latency_ms} ms。"
+            )
+            if trace.error_code or trace.error_message:
+                detail += f" 留痕错误：{_table_cell(trace.error_code)} {_table_cell(trace.error_message)}。"
+            if trace.status in {ProcessingStatus.PARTIAL, ProcessingStatus.FAILED}:
+                detail += " 该步骤未完整执行，因此整单会提示人工复核。"
+            lines.append(f"- {detail}")
+    else:
+        lines.append("- 当前没有自动处理留痕。")
+    lines.append("")
+
+    reviewed_finding_ids = {
+        finding_id
+        for review in case.material_reviews
+        for finding_id in review.finding_ids
+    }
+    report_findings = (
+        [item for item in case.findings if item.finding_id in reviewed_finding_ids]
+        if case.material_reviews
+        else case.findings
+    )
 
     lines.extend(
         [
             "## 3. 材料审核结果",
             "",
-            "| 文件 | 材料类别 | 审核动作 | 人工复核 | 原因 |",
-            "| --- | --- | --- | --- | --- |",
+            "| 文件 | 材料类别 | 审核动作 | 命中规则 | 人工复核 | 原因 |",
+            "| --- | --- | --- | --- | --- | --- |",
         ]
     )
 
@@ -204,33 +445,9 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
                 f"| {_table_cell(material.file_name)} "
                 f"| {MATERIAL_CATEGORY_LABELS[material.category]} "
                 f"| {MATERIAL_ACTION_LABELS[review.action]} "
+                f"| {_table_cell('、'.join(review.triggered_rule_ids) or '无')} "
                 f"| {manual_review} "
                 f"| {_table_cell(reasons)} |"
-            )
-    else:
-        lines.append("| 无 | 无 | 无 | 无 | 无 |")
-
-    lines.extend(
-        [
-            "",
-            "## 4. 图片风险识别结果",
-            "",
-            "| 材料 | 风险点 | 状态 | 严重程度 | 置信度 | 判断依据 |",
-            "| --- | --- | --- | --- | --- | --- |",
-        ]
-    )
-
-    if case.findings:
-        for finding in case.findings:
-            material = material_by_id[finding.material_id]
-
-            lines.append(
-                f"| {_table_cell(material.file_name)} "
-                f"| {_table_cell(finding.label)} "
-                f"| {DETECTION_STATUS_LABELS[finding.detection_status]} "
-                f"| {RISK_SEVERITY_LABELS[finding.severity]} "
-                f"| {finding.confidence:.2f} "
-                f"| {_table_cell(finding.evidence_text)} |"
             )
     else:
         lines.append("| 无 | 无 | 无 | 无 | 无 | 无 |")
@@ -238,7 +455,175 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
     lines.extend(
         [
             "",
-            "## 5. 处理留痕",
+            "## 4. OCR 字段提取结果",
+            "",
+            "| 材料 | 字段 | 状态 | 原文 | 标准化结果 | 识别参考分数（未校准） | 位置 |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+
+    if case.ocr_fields:
+        for field in case.ocr_fields:
+            material = material_by_id[field.material_id]
+            location = (
+                "未定位"
+                if field.bbox is None
+                else (
+                    f"({field.bbox.x_min:.2f}, {field.bbox.y_min:.2f})-"
+                    f"({field.bbox.x_max:.2f}, {field.bbox.y_max:.2f})"
+                )
+            )
+            lines.append(
+                f"| {_table_cell(material.file_name)} "
+                f"| {_table_cell(OCR_FIELD_LABELS.get(field.field_name, field.field_name))} "
+                f"| {OCR_STATUS_LABELS[field.value_status]} "
+                f"| {_table_cell(field.raw_value)} "
+                f"| {_table_cell(field.normalized_value)} "
+                f"| {field.confidence:.2f} "
+                f"| {location} |"
+            )
+    else:
+        lines.append("| 无 | 无 | 无 | 无 | 无 | 无 | 无 |")
+
+    if case.equipment_inventory:
+        lines.extend(
+            [
+                "",
+                "## 设备清单结构化结果",
+                "",
+                "| 来源 | 工作表/行 | 类别 | 名称 | 品牌 | 型号/规格 | 数量 | 单价 | 合计 |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+            ]
+        )
+        for item in case.equipment_inventory:
+            source = material_by_id[item.source_material_id]
+            specification = item.specification or ""
+            if item.normalized_component_model:
+                specification += f"（识别型号：{item.normalized_component_model}"
+                if item.rated_power_w is not None:
+                    specification += f"，{item.rated_power_w:g} W"
+                specification += "）"
+            lines.append(
+                f"| {_table_cell(source.file_name)} "
+                f"| {_table_cell(f'{item.worksheet_name}/{item.row_number}')} "
+                f"| {_table_cell(item.item_category)} "
+                f"| {_table_cell(item.item_name)} "
+                f"| {_table_cell(item.manufacturer)} "
+                f"| {_table_cell(specification)} "
+                f"| {_table_cell(item.quantity)} "
+                f"| {_table_cell(item.unit_price)} "
+                f"| {_table_cell(item.total_price)} |"
+            )
+        lines.append("")
+
+    lines.extend(
+        [
+            "",
+            "## 5. 图片风险识别结果",
+            "",
+            "| 材料 | 风险点 | 状态 | 严重程度 | 识别参考分数（未校准） | 位置 | 判断依据 |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+
+    if report_findings:
+        for finding in report_findings:
+            material = material_by_id[finding.material_id]
+            location = (
+                "未定位"
+                if finding.bbox is None
+                else (
+                    f"({finding.bbox.x_min:.2f}, {finding.bbox.y_min:.2f})-"
+                    f"({finding.bbox.x_max:.2f}, {finding.bbox.y_max:.2f})"
+                )
+            )
+
+            lines.append(
+                f"| {_table_cell(material.file_name)} "
+                f"| {_table_cell(finding.label)} "
+                f"| {DETECTION_STATUS_LABELS[finding.detection_status]} "
+                f"| {RISK_SEVERITY_LABELS[finding.severity]} "
+                f"| {finding.confidence:.2f} "
+                f"| {location} "
+                f"| {_table_cell(finding.evidence_text)} |"
+            )
+    else:
+        lines.append("| 无 | 无 | 无 | 无 | 无 | 无 | 无 |")
+
+    lines.extend(["", "## 6. 自然灾害风险量化", ""])
+    if case.catastrophe_assessment is None:
+        lines.extend(["- 状态：未评估", "- 原因：没有生成组件与气象数据的联合评估", ""])
+    else:
+        assessment = case.catastrophe_assessment
+        ratio_thresholds = (
+            (
+                f"- 能力比分级门槛：严重不足 < {assessment.critical_shortfall_ratio:.2f}；"
+                f"能力不足 < 1.00；余量有限 < {assessment.adequate_margin_ratio:.2f}；"
+                "达到余量门槛后该灾种单项筛查通过"
+            )
+            if assessment.critical_shortfall_ratio is not None
+            and assessment.adequate_margin_ratio is not None
+            else "- 能力比分级门槛：历史记录未保存具体阈值"
+        )
+        lines.extend(
+            [
+                f"- 抗灾能力等级：{RESISTANCE_LABELS[assessment.resistance_level.value]}",
+                f"- 预期出险风险：{LOSS_RISK_LABELS[assessment.expected_loss_risk.value]}",
+                f"- 评估说明：{_table_cell(assessment.explanation)}",
+                "- 逐项因素：" + ("；".join(assessment.factors) or "无"),
+                ratio_thresholds,
+                "- 规则编号：" + ("、".join(assessment.triggered_rule_ids) or "无"),
+                "",
+            ]
+        )
+
+    if case.component_profile is not None:
+        component = case.component_profile
+        lines.extend(
+            [
+                "### 组件参数来源",
+                "",
+                (
+                    f"- 型号：{_table_cell(component.component_model)}；厂商：{_table_cell(component.manufacturer)}；"
+                    f"型号匹配置信度：{component.match_confidence:.2f}"
+                ),
+                (
+                    f"- 抗冰雹：{_display(component.hail_resistance_mm)} mm；"
+                    f"风荷载：{_display(component.wind_load_pa)} Pa；"
+                    f"雪荷载：{_display(component.snow_load_pa)} Pa"
+                ),
+                (
+                    f"- 来源：{_table_cell(component.source_name)}；"
+                    f"链接：{_table_cell(component.source_url)}；获取时间：{component.retrieved_at.isoformat()}"
+                ),
+                "",
+            ]
+        )
+
+    if case.weather_profile is not None:
+        weather = case.weather_profile
+        lines.extend(
+            [
+                "### 气象数据范围",
+                "",
+                f"- 查询坐标：{weather.longitude:.5f}, {weather.latitude:.5f}",
+                (
+                    f"- 观测期：{_display(weather.observation_start)} 至 {_display(weather.observation_end)}；"
+                    f"来源：{_table_cell(weather.source_name)}；链接：{_table_cell(weather.source_url)}"
+                ),
+                (
+                    f"- 历史最大阵风：{_display(weather.historical_max_wind_m_s)} m/s；"
+                    f"冰雹数据：{_display(weather.historical_max_hail_mm)} mm；"
+                    f"雪荷载数据：{_display(weather.historical_max_snow_load_pa)} Pa"
+                ),
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## 7. 处理留痕",
             "",
             "| 步骤 | 执行方 | 模型 | 状态 | 耗时（毫秒） |",
             "| --- | --- | --- | --- | --- |",
@@ -256,5 +641,33 @@ def generate_markdown_report(case: UnderwritingCase) -> str:
             )
     else:
         lines.append("| 无 | 无 | 无 | 无 | 无 |")
+
+    lines.extend(
+        [
+            "",
+            "## 8. 人工复核记录",
+            "",
+            "| 复核人 | 最终意见 | 复核时间（UTC） | 说明 |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    review_labels = {
+        "accept": "建议承保",
+        "recommend_reject": "建议拒保",
+        "surcharge": "建议加费",
+        "conditional_accept": "附条件承保",
+        "request_more": "补充材料",
+    }
+    if human_reviews:
+        for review in human_reviews:
+            lines.append(
+                "| "
+                f"{_table_cell(review.get('reviewer_name'))} | "
+                f"{review_labels.get(review.get('final_decision', ''), '未指定')} | "
+                f"{_table_cell(review.get('reviewed_at'))} | "
+                f"{_table_cell(review.get('comment'))} |"
+            )
+    else:
+        lines.append("| 尚无人复核 | — | — | — |")
 
     return "\n".join(lines).rstrip() + "\n"

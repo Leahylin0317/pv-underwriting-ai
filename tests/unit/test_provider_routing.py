@@ -131,7 +131,7 @@ class RecordingVisionProvider(VisionProvider):
         ),
         (
             MaterialCategory.PANORAMA,
-            False,
+            True,
         ),
         (
             MaterialCategory.ROOF_CONNECTION,
@@ -206,11 +206,11 @@ def test_ocr_category_routing(
         ),
         (
             MaterialCategory.COMPONENT_NAMEPLATE,
-            False,
+            True,
         ),
         (
             MaterialCategory.INVERTER_NAMEPLATE,
-            False,
+            True,
         ),
     ],
 )
@@ -240,17 +240,16 @@ def test_pdf_is_not_sent_to_vision() -> None:
     )
 
 
-def test_routed_ocr_provider_skips_panorama() -> None:
+def test_routed_ocr_provider_calls_panorama_for_watermark_ocr() -> None:
     delegate = RecordingOcrProvider()
     provider = RoutedOcrProvider(delegate)
-
-    provider.extract(
-        make_material_input(
-            MaterialCategory.PANORAMA
-        )
+    material_input = make_material_input(
+        MaterialCategory.PANORAMA
     )
 
-    assert delegate.received_inputs == []
+    provider.extract(material_input)
+
+    assert delegate.received_inputs == [material_input]
 
 
 def test_routed_ocr_provider_calls_delegate() -> None:

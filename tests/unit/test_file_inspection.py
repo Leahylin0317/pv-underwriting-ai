@@ -1,6 +1,7 @@
 from io import BytesIO
 
 import pymupdf
+from app.contracts import MaterialQualityStatus
 from app.intake import FileInspectionResult, inspect_file, safe_file_name
 from PIL import Image
 
@@ -31,6 +32,8 @@ def test_inspects_valid_jpeg() -> None:
     assert result.media_type == "image/jpeg"
     assert result.width == 32
     assert result.height == 24
+    assert result.quality_status is MaterialQualityStatus.POOR
+    assert "low_resolution" in result.quality_issues
     assert result.page_count is None
     assert result.sha256 is not None
     assert len(result.sha256) == 64

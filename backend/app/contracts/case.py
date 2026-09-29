@@ -4,9 +4,15 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from .common import ContractModel
+from .equipment import EquipmentInventoryItem
 from .findings import RiskFinding
 from .inputs import Material, OcrField, ProjectInfo
-from .outputs import MaterialReview, ProcessingTrace, UnderwritingDecision
+from .outputs import (
+    MaterialReview,
+    PackageAssessment,
+    ProcessingTrace,
+    UnderwritingDecision,
+)
 from .profiles import CatastropheAssessment, ComponentProfile, WeatherProfile
 
 
@@ -23,11 +29,13 @@ class UnderwritingCase(ContractModel):
     case_id: str = Field(min_length=1)
     project: ProjectInfo
     materials: list[Material]
+    equipment_inventory: list[EquipmentInventoryItem] = Field(default_factory=list)
     ocr_fields: list[OcrField]
     findings: list[RiskFinding]
     component_profile: ComponentProfile | None = None
     weather_profile: WeatherProfile | None = None
     catastrophe_assessment: CatastropheAssessment | None = None
+    package_assessment: PackageAssessment | None = None
     material_reviews: list[MaterialReview]
     decision: UnderwritingDecision | None = None
     processing_trace: list[ProcessingTrace]
@@ -52,6 +60,13 @@ class UnderwritingCase(ContractModel):
         material_id_set = set(material_ids)
         ocr_field_id_set = set(ocr_field_ids)
         finding_id_set = set(finding_ids)
+
+        for item in self.equipment_inventory:
+            if item.source_material_id not in material_id_set:
+                raise ValueError(
+                    "equipment inventory item references unknown material "
+                    f"{item.source_material_id}"
+                )
 
         for field in self.ocr_fields:
             if field.material_id not in material_id_set:

@@ -64,7 +64,7 @@ class VlmSettings:
     base_url: str
     api_key: str = field(repr=False)
     model: str
-    timeout_seconds: float = 60.0
+    timeout_seconds: float = 120.0
 
     @classmethod
     def from_environment(
@@ -96,7 +96,7 @@ class VlmSettings:
             timeout_seconds=(
                 _positive_float_environment_value(
                     "PV_VLM_TIMEOUT_SECONDS",
-                    "60",
+                    "120",
                 )
             ),
         )

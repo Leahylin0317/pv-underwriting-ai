@@ -4,6 +4,17 @@ from fastapi.testclient import TestClient
 client = TestClient(app)
 
 
+def test_readiness_reports_configured_components_without_secrets() -> None:
+    response = client.get("/ready")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["status"] in {"ready", "degraded"}
+    assert result["weather_connectivity_checked"] is False
+    assert "checks" in result
+    assert "api_key" not in response.text.casefold()
+
+
 def analyze_payload() -> dict:
     return {
         "case_id": "case-api-001",
@@ -67,7 +78,7 @@ def test_mock_analyze_returns_complete_case() -> None:
     assert len(result["findings"]) == 1
     assert len(result["material_reviews"]) == 2
     assert len(result["processing_trace"]) == 4
-    assert result["decision"]["decision"] == "manual_review"
+    assert result["decision"]["decision"] == "recommend_reject"
 
 
 def test_mock_analyze_rejects_empty_materials() -> None:
@@ -96,6 +107,6 @@ def test_mock_report_returns_downloadable_markdown() -> None:
     assert response.text.startswith(
         "# 分布式光伏财产险 AI 核保报告"
     )
-    assert "建议结论：**转人工复核**" in response.text
+    assert "建议结论：**建议拒保**" in response.text
     assert "site-panorama.jpg" in response.text
     assert "临近水体" in response.text

@@ -21,7 +21,11 @@ from app.contracts import (
 )
 from app.settings import VlmSettings
 
-from ..common import MaterialInput, ProviderError
+from ..common import (
+    MaterialInput,
+    ProviderError,
+    post_with_connect_retry,
+)
 from .base import OcrProvider
 
 SUPPORTED_IMAGE_TYPES = {
@@ -39,9 +43,14 @@ BBOX_COORDINATE_FIELDS = (
 )
 
 CATEGORY_FIELD_GUIDANCE = {
+    MaterialCategory.PANORAMA: (
+        "如有现场水印，检查并提取 watermark_present（true/false）、"
+        "watermark_date（YYYY-MM-DD）、watermark_longitude、watermark_latitude。"
+        "没有水印时明确返回 watermark_present=false；坐标或日期看不清时不要猜。"
+    ),
     MaterialCategory.FILING_CERTIFICATE: (
-        "重点提取 project_name、project_entity、site_address、"
-        "province、city、district 等项目备案信息。"
+        "重点提取 project_name、project_entity、insured_name、site_address、insured_address、"
+        "province、city、district 等项目备案信息；若备案证列出组件型号，也提取 component_model。"
     ),
     MaterialCategory.GRID_CONNECTION_DOCUMENT: (
         "重点提取 project_name、insured_name、project_entity、"
@@ -58,6 +67,10 @@ CATEGORY_FIELD_GUIDANCE = {
     MaterialCategory.ELECTRICAL_GROUNDING: (
         "重点提取 grounding_resistance_ohm、inspection_date、"
         "inspection_result 等接地检测信息。"
+    ),
+    MaterialCategory.MONITORING_OPTIONAL: (
+        "如材料直接证明监控系统存在或运行状态，提取 monitoring_present、"
+        "monitoring_model、online_status、coverage_period；不能从宣传文案推断实际在线。"
     ),
     MaterialCategory.COMBINER_BOX: (
         "重点提取 combiner_box_model、manufacturer、rated_voltage_v、"
@@ -81,6 +94,8 @@ bbox、evidence_text。
 
 字段要求：
 - field_name 使用简短的英文 snake_case。
+- 全景照必须明确返回 watermark_present=true 或 false；有水印时尽量提取
+  watermark_date、watermark_longitude、watermark_latitude。无法确认时返回 uncertain。
 - 每个语义字段最多返回一次。
 - raw_value 保存图片中直接读取到的原文。
 - normalized_value 保存标准化后的值；无法可靠标准化时与 raw_value 相同。
@@ -131,6 +146,31 @@ class OcrFieldPayload(BaseModel):
     )
     bbox: Bbox | None = None
     evidence_text: str | None = None
+
+    @field_validator(
+        "raw_value",
+        "normalized_value",
+        "evidence_text",
+        mode="before",
+    )
+    @classmethod
+    def coerce_scalar_text_values(
+        cls,
+        value: Any,
+    ) -> Any:
+        if value is None or isinstance(value, str):
+            return value
+
+        if isinstance(value, bool):
+            return str(value).lower()
+
+        if (
+            isinstance(value, (int, float))
+            and math.isfinite(value)
+        ):
+            return str(value)
+
+        return value
 
     @field_validator(
         "bbox",
@@ -323,10 +363,17 @@ class CompatibleOcrProvider(OcrProvider):
 
         try:
             with httpx.Client(
-                timeout=self._settings.timeout_seconds,
+                timeout=httpx.Timeout(
+                    self._settings.timeout_seconds,
+                    connect=min(
+                        self._settings.timeout_seconds,
+                        15.0,
+                    ),
+                ),
                 transport=self._transport,
             ) as client:
-                response = client.post(
+                response = post_with_connect_retry(
+                    client,
                     (
                         f"{self._settings.base_url}"
                         "/chat/completions"
@@ -343,9 +390,24 @@ class CompatibleOcrProvider(OcrProvider):
 
                 response.raise_for_status()
 
+        except httpx.ConnectTimeout as exc:
+            raise ProviderError(
+                "OCR provider connection timed out"
+            ) from exc
+
+        except httpx.ReadTimeout as exc:
+            raise ProviderError(
+                "OCR provider response timed out"
+            ) from exc
+
         except httpx.TimeoutException as exc:
             raise ProviderError(
                 "OCR provider request timed out"
+            ) from exc
+
+        except httpx.ConnectError as exc:
+            raise ProviderError(
+                "OCR provider connection failed"
             ) from exc
 
         except httpx.HTTPStatusError as exc:

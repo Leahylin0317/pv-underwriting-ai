@@ -49,6 +49,7 @@
 | case\_id | string | 是 | 系统 | 单次核保案件唯一编号 |
 | project | ProjectInfo | 是 | 材料解析和用户输入 | 项目与被保险标的信息 |
 | materials | Material\[] | 是 | 材料接收模块 | 本次提交的全部材料 |
+| equipment\_inventory | EquipmentInventoryItem\[] | 否 | XLSX 设备清单解析器 | 设备清单行项目和来源位置；无清单时为空数组 |
 | ocr\_fields | OcrField\[] | 是 | OCR Provider | 结构化文字识别结果 |
 | findings | RiskFinding\[] | 是 | Vision Provider | 图片风险识别结果 |
 | component\_profile | ComponentProfile 或 null | 否 | 组件参数 Provider | 组件型号及抗灾参数 |
@@ -57,6 +58,15 @@
 | material\_reviews | MaterialReview\[] | 是 | 规则引擎 | 每份材料的审核结论 |
 | decision | UnderwritingDecision 或 null | 否 | 决策模块 | 整单综合核保意见 |
 | processing\_trace | ProcessingTrace\[] | 是 | 各处理模块 | 模型、耗时和异常留痕 |
+| package\_assessment | PackageAssessment 或 null | 否 | 材料门禁 | 照片数量、备案证和全景视角完整性 |
+
+`PackageAssessment` 会计算图片数量、全景照数量、是否含备案证、是否已标注正面平视和俯拍视角、缺失的必需材料类别，以及需要补充的项目。Demo 门槛包括至少 5 张图片、2 张全景照、1 份备案证，并要求提供屋顶连接处、女儿墙/排水、并网材料、电气接地、组件铭牌、逆变器铭牌和汇流箱材料；屋顶式项目还要求车间照片，监控照片为可选。门槛不满足时整案建议补充材料。
+
+图片数量只统计 JPEG/PNG；全景数量只统计图像格式的全景材料。每张全景图都须具备可核验的日期、经纬度水印，且拍摄日期须处于拟起保日前 15 日内。PDF 备案材料不计入图片数量。
+
+设备清单可作为 `equipment_inventory` 类别上传 XLSX。系统读取工作表行并保留原文件、工作表和行号来源；明确且唯一的光伏组件型号可用于补充案件型号。清单价格只作为原始资料展示，不用于推算保额或保费；清单不能替代铭牌照片和组件抗灾规格来源。
+
+赛题原始高火险行业清单与加费规则尚未提供。若提交车间材料，工作台要求填写企业所属行业；系统明确转人工核验，不会因缺少行业清单而自动视为低风险。
 
 ## 5 ProjectInfo 项目信息
 
@@ -64,7 +74,9 @@
 | --- | --- | --- | --- |
 | project\_name | string 或 null | 是 | 项目名称，无法识别时为 null |
 | insured\_name | string 或 null | 是 | 被保险人名称 |
+| insured\_address | string 或 null | 否 | 被保险人地址，用于与备案材料交叉核验 |
 | project\_entity | string 或 null | 否 | 备案证项目单位 |
+| industry\_name | string 或 null | 否 | 企业所属行业；正式高火险清单未配置时转人工核验 |
 | project\_type | enum | 是 | rooftop、carport、unsupported、unknown |
 | installation\_type | enum | 是 | color\_steel\_roof、flat\_roof、tile\_roof、carport\_roof、unknown |
 | site\_address | string 或 null | 是 | 被保险项目地址 |
@@ -83,10 +95,12 @@
 | --- | --- | --- | --- |
 | material\_id | string | 是 | 材料唯一编号 |
 | category | enum | 是 | 材料类别 |
+| capture\_view | enum | 否 | 全景照视角：front\_level、overhead、other、unknown |
 | file\_name | string | 是 | 原始文件名 |
 | media\_type | string | 是 | image/jpeg、image/png、application/pdf 等 |
 | sha256 | string 或 null | 否 | 文件摘要，用于证据追溯 |
 | captured\_at | datetime 或 null | 否 | 水印或元数据中的拍摄时间 |
+| watermark\_status | enum | 否 | present、absent、uncertain、not\_checked |
 | longitude | number 或 null | 否 | 图片水印中的经度 |
 | latitude | number 或 null | 否 | 图片水印中的纬度 |
 | quality\_status | enum | 是 | usable、poor、unusable、unknown |
@@ -125,6 +139,8 @@
 | model | string | 是 | 使用的模型或版本 |
 | evidence\_text | string 或 null | 否 | 支撑结果的原始文字片段 |
 
+首期会从备案/并网材料提取项目名称、项目单位和地址；从组件、逆变器及汇流箱铭牌提取型号和额定参数；从接地检测记录提取接地电阻、检测日期和结论。可选监控材料仅用于提示核保员检查优惠资格，不据此自动计算折扣。
+
 ## 8 RiskFinding 图片风险识别结果
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -144,6 +160,8 @@
 
 阶段一风险类别 `category`：
 
+每张送入视觉识别的图片还必须包含 `image_quality` 检查：清晰可用时为 `not_detected`，质量不足时为 `detected`，无法判断时为 `uncertain`。
+
 \- `agriculture\_environment`
 \- `forest\_environment`
 \- `livestock\_environment`
@@ -159,6 +177,10 @@
 \- `drainage\_abnormal`
 \- `flammable\_material`
 \- `hazardous\_material`
+
+风险类别还包括 `image_quality`、`roof_connection_abnormal`、`module_damage`、`inverter_abnormal`、`electrical_grounding_abnormal`、`combiner_box_seal_abnormal`、`combiner_box_fuse_abnormal` 和 `surge_protector_abnormal`。设备外观类别只记录照片可直接观察的缺陷；不能依据普通照片推断电气性能、接地电阻或隐蔽结构合格。接地电阻与检验结论须来自可读的检测记录。
+
+模糊、过暗、关键区域缺失或视角不符时要求补拍，不能把未充分检查的风险判为未发现。
 
 ## 9 Bbox 风险位置
 
@@ -252,7 +274,7 @@
 5\. `conditional\_accept`
 6\. `accept`
 
-最终优先级须由金融成员确认。
+当前比赛 Demo 使用上述保守顺序。可选监控材料只触发优惠资格复核提示；未提供正式费率和资格规则时不计算折扣或保费。最终优先级和业务规则仍须由金融成员确认。
 
 ## 15 ProcessingTrace 处理留痕
 
@@ -282,3 +304,28 @@
 10\. 综合决策优先级是否认可？
 11\. 无水印照片是提示还是必须补材？
 12\. 哪些材料在首期属于强制材料？
+
+## 17 案件历史与人工复核记录
+
+异步分析接口 `POST /api/v1/underwriting/jobs` 返回 `job_id`。客户端通过 `GET /api/v1/underwriting/jobs/{job_id}` 轮询 `queued`、`running`、`completed` 或 `failed` 状态、阶段名称和进度百分比；完成时响应包含标准 `UnderwritingCase`。任务由当前服务进程执行，重启时未完成记录会标记为 `SERVER_RESTARTED`，不会自动恢复。
+
+真实整单分析成功后，结构化 `UnderwritingCase` 会保存到本地 SQLite。历史接口为：
+
+| 方法与路径 | 说明 |
+| --- | --- |
+| `GET /api/v1/cases` | 分页查询案件摘要，可按机器结论和人工复核状态筛选 |
+| `GET /api/v1/cases/{case_id}` | 读取案件结果和全部人工复核事件 |
+| `GET /api/v1/cases/{case_id}/report` | 下载包含机器意见及复核历史的 Markdown 报告 |
+| `POST /api/v1/cases/{case_id}/review` | 记录复核人填写的最终结论、说明和 UTC 时间 |
+
+人工复核事件追加保留；当前案件记录同时保存最新复核结论。相同案件编号不能重复创建分析记录。上传原文件只在本次请求处理期间保留在内存中，不写入数据库。数据库可能包含 OCR 提取的个人或企业信息。默认 `PV_AUTH_ENABLED=false`；启用后使用 SQLite 本地账号与 8 小时 Bearer 会话，支持 `viewer`、`underwriter`、`admin` 三种角色，首次启动通过 `PV_ADMIN_USERNAME`、`PV_ADMIN_PASSWORD` 引导创建管理员。该认证面向本地演示，不含 MFA、登录限速或生产级密钥管理；对外部署前仍需评估 HTTPS、网络访问控制、数据库加密和删除审计。`PV_CASE_RETENTION_DAYS` 可在数据责任方批准期限后配置自动清理，默认关闭。此清理不能代替正式的数据访问、加密和删除控制。
+
+## 18 离线评测标注格式
+
+每行一个匿名案件 JSON 对象，使用 `scripts/evaluate_cases.py` 与真实预测结果对齐。`suite` 可标记 A/B/C。可选的 `expected_ocr_fields` 用于逐字段 OCR 对照；只有在 `findings_complete: true` 且提供完整 `expected_findings` 时，评测器才会统计风险点误报率。最小示例：
+
+~~~json
+{"case_id":"case-a","suite":"B","expected_decision":"recommend_reject","required_high_risk_categories":[{"category":"water_adjacent_environment","material_id":"panorama-1"}],"required_rule_ids":["ENV-EXCLUDED-001"],"findings_complete":true,"expected_findings":[{"category":"water_adjacent_environment","material_id":"panorama-1"}],"expected_ocr_fields":[{"material_id":"filing-1","field_name":"project_name","expected_value":"示例项目"}],"required_findings":[{"category":"water_adjacent_environment","material_id":"panorama-1","bbox":{"x_min":0.1,"y_min":0.2,"x_max":0.4,"y_max":0.6}}]}
+~~~
+
+高风险召回只将 `detection_status=detected` 计为检出；`uncertain` 按漏检统计，符合赛题对高风险零漏检的验收底线。标注框使用 0 到 1 归一化坐标，定位命中默认要求 IoU ≥ 0.50。默认评测门槛为综合结论准确率 ≥ 0.90 且高风险场景召回率为 1.00；风险点精确率和 OCR 准确率可由命令行显式设置门槛，避免把尚未确认的指标阈值写成既定业务要求。

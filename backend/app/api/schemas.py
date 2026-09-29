@@ -1,10 +1,12 @@
 from collections import Counter
-from typing import Self
+from typing import Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.contracts import (
+    CaptureView,
     ContractModel,
+    DecisionType,
     Material,
     MaterialCategory,
     ProjectInfo,
@@ -28,6 +30,7 @@ class UploadedMaterialManifest(
 
     material_id: str = Field(min_length=1)
     category: MaterialCategory
+    capture_view: CaptureView = CaptureView.UNKNOWN
 
 
 class RealAnalyzeManifest(ContractModel):
@@ -60,3 +63,40 @@ class RealAnalyzeManifest(ContractModel):
             )
 
         return self
+
+
+class HumanReviewSubmission(ContractModel):
+    """A human underwriting decision recorded against a saved case."""
+
+    reviewer_name: str = Field(min_length=1, max_length=100)
+    final_decision: DecisionType
+    comment: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("reviewer_name", "comment")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("value must not be blank")
+        return normalized
+
+    @model_validator(mode="after")
+    def require_final_outcome(self) -> Self:
+        if self.final_decision is DecisionType.MANUAL_REVIEW:
+            raise ValueError("final_decision must be a completed underwriting outcome")
+        return self
+
+
+class LoginRequest(ContractModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class UserCreateRequest(ContractModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=12, max_length=256)
+    role: Literal["viewer", "underwriter", "admin"]
+
+
+class UserPasswordResetRequest(ContractModel):
+    password: str = Field(min_length=12, max_length=256)

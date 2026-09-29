@@ -103,6 +103,14 @@ def test_decision_engine_requests_coordinates() -> None:
     assert decision.decision is DecisionType.REQUEST_MORE
     assert "补充项目准确经纬度" in decision.missing_requirements
     assert "REQ-PROJECT-COORDINATES" in decision.decisive_rule_ids
+    explanation = next(
+        item
+        for item in decision.rule_explanations
+        if item.rule_id == "REQ-PROJECT-COORDINATES"
+    )
+    assert explanation.title == "项目坐标缺失"
+    assert "历史气象数据" in explanation.trigger
+    assert "补充准确经纬度" in explanation.effect
 
 
 def test_decision_engine_requests_component_model() -> None:

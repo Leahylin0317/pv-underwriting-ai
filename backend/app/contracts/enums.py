@@ -39,6 +39,25 @@ class RiskCategory(StrEnum):
     DRAINAGE_ABNORMAL = "drainage_abnormal"
     FLAMMABLE_MATERIAL = "flammable_material"
     HAZARDOUS_MATERIAL = "hazardous_material"
+    INSTALLATION_TYPE = "installation_type"
+    COMBINER_BOX_SEAL_ABNORMAL = "combiner_box_seal_abnormal"
+    COMBINER_BOX_FUSE_ABNORMAL = "combiner_box_fuse_abnormal"
+    SURGE_PROTECTOR_ABNORMAL = "surge_protector_abnormal"
+    ROOF_CONNECTION_ABNORMAL = "roof_connection_abnormal"
+    MODULE_DAMAGE = "module_damage"
+    INVERTER_ABNORMAL = "inverter_abnormal"
+    ELECTRICAL_GROUNDING_ABNORMAL = "electrical_grounding_abnormal"
+    IMAGE_QUALITY = "image_quality"
+    MONITORING_EFFECTIVE_COVERAGE = "monitoring_effective_coverage"
+    UNPROTECTED_CABLE = "unprotected_cable"
+    MODULE_BACKSHEET_BULGING = "module_backsheet_bulging"
+    MODULE_DISCOLORATION = "module_discoloration"
+    SUPPORT_CORROSION = "support_corrosion"
+    SUPPORT_DEFORMATION = "support_deformation"
+    WATERPROOF_LAYER_DAMAGE = "waterproof_layer_damage"
+    DANGEROUS_PROCESS = "dangerous_process"
+    CLEANROOM = "cleanroom"
+    FIRE_PROTECTION_ABSENT = "fire_protection_absent"
 
 
 class DecisionType(StrEnum):
@@ -81,10 +100,30 @@ class MaterialCategory(StrEnum):
     GRID_CONNECTION_DOCUMENT = "grid_connection_document"
     ELECTRICAL_GROUNDING = "electrical_grounding"
     COMPONENT_NAMEPLATE = "component_nameplate"
+    COMPONENT_SURFACE = "component_surface"
     INVERTER_NAMEPLATE = "inverter_nameplate"
     COMBINER_BOX = "combiner_box"
     MONITORING_OPTIONAL = "monitoring_optional"
+    EQUIPMENT_INVENTORY = "equipment_inventory"
     OTHER = "other"
+
+
+class CaptureView(StrEnum):
+    """全景照片拍摄视角，用于核实环境覆盖范围。"""
+
+    FRONT_LEVEL = "front_level"
+    OVERHEAD = "overhead"
+    OTHER = "other"
+    UNKNOWN = "unknown"
+
+
+class WatermarkStatus(StrEnum):
+    """照片水印检查状态。"""
+
+    PRESENT = "present"
+    ABSENT = "absent"
+    UNCERTAIN = "uncertain"
+    NOT_CHECKED = "not_checked"
 
 
 class MaterialQualityStatus(StrEnum):
@@ -147,6 +186,7 @@ class ProcessingStep(StrEnum):
 
     MATERIAL_PARSE = "material_parse"
     OCR = "ocr"
+    EQUIPMENT_INVENTORY = "equipment_inventory"
     VISION = "vision"
     COMPONENT_LOOKUP = "component_lookup"
     WEATHER_LOOKUP = "weather_lookup"

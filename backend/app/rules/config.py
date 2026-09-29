@@ -1,0 +1,57 @@
+"""Versioned business-rule configuration for the competition demo."""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_RULES_PATH = PROJECT_ROOT / "data" / "rules" / "challenge_open_ai_01.json"
+
+
+class BusinessRulesConfig(BaseModel):
+    """Configurable inputs extracted from the challenge brief.
+
+    The official underwriting workbook and fire-industry list were not present in
+    the provided materials, so those values intentionally remain empty until the
+    business owner supplies them. An empty list is treated as unknown, never as
+    evidence that an industry is safe.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    ruleset_id: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    source_note: str = Field(min_length=1)
+    high_fire_risk_industries: tuple[str, ...] = ()
+    advanced_checks_enabled: bool = True
+    catastrophe_adequate_margin_ratio: float = Field(default=1.25, gt=1.0)
+    catastrophe_critical_shortfall_ratio: float = Field(default=0.75, gt=0.0, lt=1.0)
+
+    @field_validator("high_fire_risk_industries")
+    @classmethod
+    def normalize_industries(cls, values: tuple[str, ...]) -> tuple[str, ...]:
+        normalized = tuple(dict.fromkeys(value.strip() for value in values if value.strip()))
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_catastrophe_thresholds(self) -> Self:
+        if self.catastrophe_critical_shortfall_ratio >= self.catastrophe_adequate_margin_ratio:
+            raise ValueError("catastrophe thresholds are inconsistent")
+        return self
+
+    @classmethod
+    def load(cls, path: str | Path | None = None) -> Self:
+        configured_path = path or os.getenv("PV_BUSINESS_RULES_PATH")
+        rules_path = Path(configured_path).expanduser() if configured_path else DEFAULT_RULES_PATH
+        if not rules_path.is_absolute():
+            rules_path = PROJECT_ROOT / rules_path
+        try:
+            payload = json.loads(rules_path.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("business rules configuration is unavailable or invalid") from exc
+        return cls.model_validate(payload)

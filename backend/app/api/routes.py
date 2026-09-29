@@ -1,3 +1,4 @@
+import sqlite3
 from typing import Annotated
 
 from fastapi import (
@@ -20,9 +21,11 @@ from app.contracts import (
     UnderwritingCase,
 )
 from app.intake import (
+    MAX_FILE_SIZE_BYTES,
     MAX_FILES_PER_REQUEST,
     FileInspectionResult,
     inspect_file,
+    read_upload_limited,
 )
 from app.pipeline import UnderwritingPipeline
 from app.providers import (
@@ -41,8 +44,11 @@ from app.settings import (
     ProviderConfigurationError,
     VlmSettings,
 )
+from app.storage import CaseRepository
 
+from .component_dependencies import PROJECT_ROOT, get_component_provider
 from .schemas import MockAnalyzeRequest
+from .weather_dependencies import build_weather_provider
 
 router = APIRouter()
 
@@ -111,6 +117,50 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/ready", tags=["system"])
+def readiness_check() -> dict[str, object]:
+    """Report local configuration readiness without revealing credentials."""
+
+    checks = {
+        "ocr_model_configured": False,
+        "vision_model_configured": False,
+        "component_catalog_available": False,
+        "weather_provider_configured": False,
+        "case_database_available": False,
+    }
+
+    try:
+        VlmSettings.from_environment(env_file=PROJECT_ROOT / ".env")
+        checks["ocr_model_configured"] = True
+        checks["vision_model_configured"] = True
+    except ProviderConfigurationError:
+        pass
+
+    try:
+        get_component_provider()
+        checks["component_catalog_available"] = True
+    except HTTPException:
+        pass
+
+    try:
+        build_weather_provider()
+        checks["weather_provider_configured"] = True
+    except ValueError:
+        pass
+
+    try:
+        CaseRepository().list_cases(limit=1)
+        checks["case_database_available"] = True
+    except (OSError, sqlite3.Error):
+        pass
+
+    return {
+        "status": "ready" if all(checks.values()) else "degraded",
+        "checks": checks,
+        "weather_connectivity_checked": False,
+    }
+
+
 @router.post(
     "/api/v1/files/inspect",
     response_model=list[FileInspectionResult],
@@ -145,7 +195,7 @@ async def inspect_uploaded_files(
 
     for uploaded_file in files:
         try:
-            content = await uploaded_file.read()
+            content = await read_upload_limited(uploaded_file)
         finally:
             await uploaded_file.close()
 
@@ -198,7 +248,7 @@ async def analyze_uploaded_image(
     """检查上传图片并调用真实视觉模型识别风险。"""
 
     try:
-        content = await file.read()
+        content = await read_upload_limited(file)
     finally:
         await file.close()
 
@@ -209,6 +259,11 @@ async def analyze_uploaded_image(
     )
 
     if inspection.status != "accepted":
+        if "file_too_large" in inspection.issues:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail=f"Maximum file size is {MAX_FILE_SIZE_BYTES} bytes",
+            )
         raise HTTPException(
             status_code=(
                 status.HTTP_422_UNPROCESSABLE_CONTENT

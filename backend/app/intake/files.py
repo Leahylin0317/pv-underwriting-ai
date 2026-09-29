@@ -2,15 +2,25 @@ from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 from typing import Literal
+from xml.etree import ElementTree
+from zipfile import BadZipFile, ZipFile
 
 import pymupdf
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageFilter, ImageStat, UnidentifiedImageError
 from pydantic import Field
 
-from app.contracts import ContractModel
+from app.contracts import ContractModel, MaterialQualityStatus
 
 MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
 MAX_FILES_PER_REQUEST = 20
+MAX_TOTAL_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024
+MAX_XLSX_EXPANDED_SIZE_BYTES = 64 * 1024 * 1024
+MAX_XLSX_ENTRIES = 4096
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+QUALITY_METRIC_MAX_SIDE = 512
+MIN_PHOTO_SHORT_SIDE = 600
+MIN_MEAN_LUMINANCE = 24.0
+MIN_LAPLACIAN_VARIANCE = 35.0
 
 
 class FileInspectionResult(ContractModel):
@@ -25,6 +35,10 @@ class FileInspectionResult(ContractModel):
     page_count: int | None = Field(default=None, ge=1)
     width: int | None = Field(default=None, ge=1)
     height: int | None = Field(default=None, ge=1)
+    quality_status: MaterialQualityStatus | None = None
+    quality_issues: list[str] = Field(default_factory=list)
+    mean_luminance: float | None = Field(default=None, ge=0.0, le=255.0)
+    sharpness_score: float | None = Field(default=None, ge=0.0)
 
 
 def safe_file_name(file_name: str | None) -> str:
@@ -86,6 +100,15 @@ def inspect_file(
     if declared_media_type and declared_media_type != media_type:
         accepted_issues.append("declared_media_type_mismatch")
 
+    quality_status = None
+    quality_issues: list[str] = []
+    mean_luminance = None
+    sharpness_score = None
+    if media_type in {"image/jpeg", "image/png"}:
+        quality_status, quality_issues, mean_luminance, sharpness_score = (
+            assess_image_quality(content)
+        )
+
     if seen_sha256 is not None and digest in seen_sha256:
         return FileInspectionResult(
             file_name=normalized_name,
@@ -97,6 +120,10 @@ def inspect_file(
             page_count=page_count,
             width=width,
             height=height,
+            quality_status=quality_status,
+            quality_issues=quality_issues,
+            mean_luminance=mean_luminance,
+            sharpness_score=sharpness_score,
         )
 
     if seen_sha256 is not None:
@@ -112,6 +139,62 @@ def inspect_file(
         page_count=page_count,
         width=width,
         height=height,
+        quality_status=quality_status,
+        quality_issues=quality_issues,
+        mean_luminance=mean_luminance,
+        sharpness_score=sharpness_score,
+    )
+
+
+def assess_image_quality(
+    content: bytes,
+) -> tuple[MaterialQualityStatus, list[str], float | None, float | None]:
+    """Run conservative preflight checks; visual review remains authoritative.
+
+    Sharpness and brightness are deterministic heuristics, not calibrated
+    probabilities. Any flag therefore requests better material rather than
+    claiming a numeric confidence score.
+    """
+
+    try:
+        with Image.open(BytesIO(content)) as source:
+            width, height = source.size
+            grayscale = source.convert("L")
+            grayscale.thumbnail(
+                (QUALITY_METRIC_MAX_SIDE, QUALITY_METRIC_MAX_SIDE),
+                Image.Resampling.LANCZOS,
+            )
+            mean_luminance = ImageStat.Stat(grayscale).mean[0]
+            if grayscale.width < 3 or grayscale.height < 3:
+                # A 3x3 Laplacian kernel cannot be applied to tiny valid images.
+                # Such an image is already below the minimum usable resolution.
+                sharpness_score = 0.0
+            else:
+                laplacian = grayscale.filter(
+                    ImageFilter.Kernel(
+                        (3, 3),
+                        [-1, -1, -1, -1, 8, -1, -1, -1, -1],
+                        scale=1,
+                        offset=0,
+                    )
+                )
+                sharpness_score = ImageStat.Stat(laplacian).var[0]
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError, ValueError):
+        return MaterialQualityStatus.UNKNOWN, ["quality_metrics_unavailable"], None, None
+
+    issues: list[str] = []
+    if min(width, height) < MIN_PHOTO_SHORT_SIDE:
+        issues.append("low_resolution")
+    if mean_luminance < MIN_MEAN_LUMINANCE:
+        issues.append("underexposed")
+    if sharpness_score < MIN_LAPLACIAN_VARIANCE:
+        issues.append("suspected_blur_or_insufficient_detail")
+
+    return (
+        MaterialQualityStatus.POOR if issues else MaterialQualityStatus.USABLE,
+        issues,
+        round(mean_luminance, 2),
+        round(sharpness_score, 2),
     )
 
 
@@ -122,7 +205,48 @@ def inspect_content(
 
     if content.startswith(b"%PDF-"):
         return inspect_pdf(content)
+    if content.startswith(b"PK\x03\x04"):
+        return inspect_xlsx(content)
     return inspect_image(content)
+
+
+def inspect_xlsx(
+    content: bytes,
+) -> tuple[str, None, None, None, list[str]]:
+    """Validate a macro-free OOXML workbook container without expanding arbitrary archives."""
+
+    try:
+        with ZipFile(BytesIO(content)) as archive:
+            entries = archive.infolist()
+            if len(entries) > MAX_XLSX_ENTRIES:
+                return XLSX_MEDIA_TYPE, None, None, None, ["xlsx_too_many_entries"]
+            if any(entry.flag_bits & 0x1 for entry in entries):
+                return XLSX_MEDIA_TYPE, None, None, None, ["encrypted_xlsx"]
+            if any(
+                name.startswith(("/", "\\")) or ".." in name.replace("\\", "/").split("/")
+                for name in archive.namelist()
+            ):
+                return XLSX_MEDIA_TYPE, None, None, None, ["invalid_xlsx_archive_path"]
+            if sum(entry.file_size for entry in entries) > MAX_XLSX_EXPANDED_SIZE_BYTES:
+                return XLSX_MEDIA_TYPE, None, None, None, ["xlsx_expanded_size_too_large"]
+
+            names = set(archive.namelist())
+            required = {"[Content_Types].xml", "xl/workbook.xml", "xl/_rels/workbook.xml.rels"}
+            if not required.issubset(names) or any(
+                name.lower().endswith("vbaproject.bin") for name in names
+            ):
+                return XLSX_MEDIA_TYPE, None, None, None, ["invalid_or_macro_enabled_xlsx"]
+
+            content_types = ElementTree.fromstring(archive.read("[Content_Types].xml"))
+            workbook = ElementTree.fromstring(archive.read("xl/workbook.xml"))
+            if not list(workbook.iter("{http://schemas.openxmlformats.org/spreadsheetml/2006/main}sheet")):
+                return XLSX_MEDIA_TYPE, None, None, None, ["xlsx_has_no_sheets"]
+            if not list(content_types):
+                return XLSX_MEDIA_TYPE, None, None, None, ["invalid_xlsx_content_types"]
+    except (BadZipFile, KeyError, OSError, ValueError, ElementTree.ParseError):
+        return XLSX_MEDIA_TYPE, None, None, None, ["corrupt_xlsx"]
+
+    return XLSX_MEDIA_TYPE, None, None, None, []
 
 
 def inspect_pdf(

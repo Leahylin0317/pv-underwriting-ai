@@ -5,6 +5,7 @@ from app.contracts import (
     ResistanceLevel,
     WeatherProfile,
 )
+from app.rules.config import BusinessRulesConfig
 
 WIND_PRESSURE_COEFFICIENT = 0.613
 ADEQUATE_MARGIN_RATIO = 1.25
@@ -13,6 +14,11 @@ CRITICAL_SHORTFALL_RATIO = 0.75
 
 class CatastropheAssessmentEngine:
     """比较组件额定能力与项目所在地历史灾害指标。"""
+
+    def __init__(self, config: BusinessRulesConfig | None = None) -> None:
+        rules = config or BusinessRulesConfig.load()
+        self.adequate_margin_ratio = rules.catastrophe_adequate_margin_ratio
+        self.critical_shortfall_ratio = rules.catastrophe_critical_shortfall_ratio
 
     def assess(
         self,
@@ -34,6 +40,12 @@ class CatastropheAssessmentEngine:
             rule_ids.append("CAT-WEATHER-PROFILE-MISSING")
 
         if component is not None and weather is not None:
+            if weather.historical_max_daily_snowfall_cm is not None:
+                factors.append(
+                    "气候背景：历史最大单日降雪量约 "
+                    f"{weather.historical_max_daily_snowfall_cm:.1f} cm；"
+                    "降雪量未换算为结构雪荷载，不直接用于承载结论"
+                )
             self._assess_wind(component, weather, factors, rule_ids, missing, outcomes)
             self._assess_hail(component, weather, factors, rule_ids, missing, outcomes)
             self._assess_snow(component, weather, factors, rule_ids, missing, outcomes)
@@ -62,6 +74,8 @@ class CatastropheAssessmentEngine:
             explanation=explanation,
             triggered_rule_ids=list(dict.fromkeys(rule_ids)),
             requires_manual_review=requires_manual_review,
+            critical_shortfall_ratio=self.critical_shortfall_ratio,
+            adequate_margin_ratio=self.adequate_margin_ratio,
         )
 
     def _assess_wind(
@@ -131,20 +145,20 @@ class CatastropheAssessmentEngine:
         )
         self._record_ratio("SNOW", ratio, rule_ids, outcomes)
 
-    @staticmethod
     def _record_ratio(
+        self,
         hazard: str,
         ratio: float,
         rule_ids: list[str],
         outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
     ) -> None:
-        if ratio < CRITICAL_SHORTFALL_RATIO:
+        if ratio < self.critical_shortfall_ratio:
             rule_ids.append(f"CAT-{hazard}-CRITICAL")
             outcomes.append((ResistanceLevel.LOW, ExpectedLossRisk.CRITICAL))
         elif ratio < 1.0:
             rule_ids.append(f"CAT-{hazard}-CAPACITY-SHORTFALL")
             outcomes.append((ResistanceLevel.LOW, ExpectedLossRisk.HIGH))
-        elif ratio < ADEQUATE_MARGIN_RATIO:
+        elif ratio < self.adequate_margin_ratio:
             rule_ids.append(f"CAT-{hazard}-LIMITED-MARGIN")
             outcomes.append((ResistanceLevel.MEDIUM, ExpectedLossRisk.MEDIUM))
         else:

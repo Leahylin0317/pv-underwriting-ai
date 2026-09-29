@@ -149,7 +149,7 @@ def test_calls_compatible_api_and_converts_findings() -> None:
         make_material_input()
     )
 
-    assert len(findings) == 2
+    assert len(findings) == 3
 
     assert findings[0].finding_id == (
         "material-panorama-001:"
@@ -175,6 +175,7 @@ def test_calls_compatible_api_and_converts_findings() -> None:
         findings[1].requires_manual_review
         is True
     )
+    assert findings[2].detection_status is DetectionStatus.NOT_DETECTED
 
 
 def test_defaults_bbox_coordinate_space() -> None:

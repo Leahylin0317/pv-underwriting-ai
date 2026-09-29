@@ -4,7 +4,7 @@ from math import isfinite
 from typing import Self
 
 import httpx
-from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.contracts import WeatherProfile
 
@@ -19,11 +19,14 @@ class _DailyWeather(BaseModel):
 
     time: list[date]
     wind_gusts_10m_max: list[float | None]
+    snowfall_sum: list[float | None] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_series_lengths(self) -> Self:
         if len(self.time) != len(self.wind_gusts_10m_max):
             raise ValueError("daily weather series lengths do not match")
+        if self.snowfall_sum and len(self.time) != len(self.snowfall_sum):
+            raise ValueError("daily snowfall series length does not match")
         return self
 
 
@@ -87,7 +90,7 @@ class OpenMeteoWeatherProvider(WeatherProvider):
                         "longitude": longitude,
                         "start_date": self.observation_start.isoformat(),
                         "end_date": self.observation_end.isoformat(),
-                        "daily": "wind_gusts_10m_max",
+                        "daily": "wind_gusts_10m_max,snowfall_sum",
                         "timezone": "UTC",
                         "wind_speed_unit": "ms",
                     },
@@ -106,6 +109,11 @@ class OpenMeteoWeatherProvider(WeatherProvider):
             for value in payload.daily.wind_gusts_10m_max
             if value is not None and isfinite(value) and value >= 0.0
         ]
+        snowfall_values = [
+            value
+            for value in payload.daily.snowfall_sum
+            if value is not None and isfinite(value) and value >= 0.0
+        ]
 
         return WeatherProfile(
             longitude=longitude,
@@ -113,6 +121,7 @@ class OpenMeteoWeatherProvider(WeatherProvider):
             historical_max_wind_m_s=max(wind_values, default=None),
             historical_max_hail_mm=None,
             historical_max_snow_load_pa=None,
+            historical_max_daily_snowfall_cm=max(snowfall_values, default=None),
             observation_start=self.observation_start,
             observation_end=self.observation_end,
             source_name="Open-Meteo Historical Weather API",

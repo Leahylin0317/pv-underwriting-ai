@@ -30,6 +30,7 @@ class WeatherProfile(ContractModel):
     historical_max_wind_m_s: float | None = Field(default=None, ge=0.0)
     historical_max_hail_mm: float | None = Field(default=None, ge=0.0)
     historical_max_snow_load_pa: float | None = Field(default=None, ge=0.0)
+    historical_max_daily_snowfall_cm: float | None = Field(default=None, ge=0.0)
     observation_start: date | None = None
     observation_end: date | None = None
     source_name: str = Field(min_length=1)
@@ -56,3 +57,5 @@ class CatastropheAssessment(ContractModel):
     explanation: str = Field(min_length=1)
     triggered_rule_ids: list[str]
     requires_manual_review: bool
+    critical_shortfall_ratio: float | None = Field(default=None, gt=0.0, lt=1.0)
+    adequate_margin_ratio: float | None = Field(default=None, gt=1.0)

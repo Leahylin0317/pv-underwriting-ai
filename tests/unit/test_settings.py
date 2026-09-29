@@ -60,6 +60,23 @@ def test_reads_settings_from_process_environment(
     assert "secret-test-key" not in repr(settings)
 
 
+def test_default_vlm_timeout_allows_slow_multimodal_responses(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "PV_VLM_BASE_URL",
+        "https://api.example.com/v1",
+    )
+    monkeypatch.setenv("PV_VLM_API_KEY", "secret")
+    monkeypatch.setenv("PV_VLM_MODEL", "example-model")
+
+    settings = VlmSettings.from_environment(
+        env_file="missing.env"
+    )
+
+    assert settings.timeout_seconds == 120.0
+
+
 def test_reads_settings_from_dotenv_file(
     tmp_path,
 ) -> None:

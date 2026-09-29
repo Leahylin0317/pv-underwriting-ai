@@ -25,6 +25,7 @@ VISION_MEDIA_TYPES = frozenset(
 
 OCR_MATERIAL_CATEGORIES = frozenset(
     {
+        MaterialCategory.PANORAMA,
         MaterialCategory.FILING_CERTIFICATE,
         MaterialCategory.GRID_CONNECTION_DOCUMENT,
         MaterialCategory.ELECTRICAL_GROUNDING,
@@ -40,9 +41,12 @@ VISION_MATERIAL_CATEGORIES = frozenset(
     {
         MaterialCategory.PANORAMA,
         MaterialCategory.ROOF_CONNECTION,
+        MaterialCategory.COMPONENT_SURFACE,
         MaterialCategory.PARAPET,
         MaterialCategory.WORKSHOP,
         MaterialCategory.ELECTRICAL_GROUNDING,
+        MaterialCategory.COMPONENT_NAMEPLATE,
+        MaterialCategory.INVERTER_NAMEPLATE,
         MaterialCategory.COMBINER_BOX,
         MaterialCategory.MONITORING_OPTIONAL,
         MaterialCategory.OTHER,

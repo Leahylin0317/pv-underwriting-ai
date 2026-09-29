@@ -1,6 +1,7 @@
 import pytest
 from app.contracts import (
     Material,
+    MaterialCategory,
     MaterialParseStatus,
     MaterialQualityStatus,
     MaterialReviewAction,
@@ -13,9 +14,9 @@ def material_with_quality(
 ) -> Material:
     return Material(
         material_id=f"material-{quality_status.value}",
-        category="panorama",
+        category=MaterialCategory.OTHER,
         file_name="example.jpg",
-        media_type="image/jpeg",
+        media_type="application/pdf",
         quality_status=quality_status,
         quality_confidence=None,
         quality_issues=[],

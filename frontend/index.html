@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102c28">
+  <title>光伏财产险智能核保</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182825;
+      --muted: #64746f;
+      --line: #dce5df;
+      --paper: #f5f7f4;
+      --green: #175e4c;
+      --green-dark: #102c28;
+      --lime: #c8e36a;
+      --red: #a94336;
+      --amber: #875b16;
+      --shadow: 0 16px 42px rgba(24, 48, 40, .08);
+      font-family: "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 5vw; color: #eff8ee; background: var(--green-dark); }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+    .brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; background: var(--lime); color: var(--green-dark); font-size: 16px; }
+    .top-meta { color: #a8c0b6; font-size: 12px; }
+    main { width: min(1440px, 92vw); margin: 34px auto 64px; }
+    .hero { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 23px; }
+    .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(26px, 3vw, 36px); letter-spacing: -.04em; }
+    .hero-copy { max-width: 520px; margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #78a895; }
+    .status-pill.degraded .status-dot { background: #d49b3e; }
+    .topbar .secondary { min-height: 30px; padding: 0 9px; border-color: #547066; background: transparent; color: #eff8ee; }
+    .login-overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(9, 28, 24, .68); }
+    .login-overlay[hidden] { display: none; }
+    .login-card { width: min(390px, 100%); padding: 24px; border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
+    .login-card h2 { margin: 0 0 8px; font-size: 19px; }
+    .login-card p { margin: 0 0 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .login-card .field { margin-bottom: 12px; }
+    .login-error { min-height: 20px; color: var(--red); font-size: 11px; }
+    .dialog-overlay { position: fixed; inset: 0; z-index: 15; display: grid; place-items: center; padding: 20px; background: rgba(9, 28, 24, .58); }
+    .dialog-overlay[hidden] { display: none; }
+    .dialog-card { width: min(640px, 100%); max-height: min(760px, 90vh); overflow: auto; padding: 22px; border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
+    .dialog-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .dialog-head h2 { margin: 0; font-size: 18px; }
+    .user-create-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #f8faf8; }
+    .user-create-form .primary { min-height: 39px; padding: 0 12px; }
+    .user-list { display: grid; gap: 8px; margin-top: 14px; }
+    .user-entry { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px; border: 1px solid #e8ede9; border-radius: 9px; }
+    .user-entry p { margin: 0; }
+    .user-actions { display: flex; gap: 7px; }
+    .user-actions button { min-height: 32px; padding: 0 9px; }
+    .dialog-message { min-height: 20px; margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr); gap: 20px; align-items: start; }
+    .panel { border: 1px solid var(--line); border-radius: 17px; background: #fff; box-shadow: var(--shadow); }
+    .panel-head { display: flex; align-items: start; justify-content: space-between; gap: 14px; padding: 22px 24px 17px; border-bottom: 1px solid #edf1ed; }
+    .panel-head h2 { margin: 0; font-size: 17px; }
+    .panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .step-no { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 9px; background: #e9f1e9; color: var(--green); font-size: 12px; font-weight: 800; }
+    .panel-body { padding: 22px 24px 24px; }
+    .section-label { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; color: #45645a; font-size: 12px; font-weight: 800; }
+    .section-label::after { height: 1px; flex: 1; background: #e8eeea; content: ""; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 13px; }
+    .field { min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+    label { display: block; margin: 0 0 6px; color: #43534e; font-size: 11px; font-weight: 700; }
+    label .optional { color: #89958f; font-weight: 400; }
+    input, select { width: 100%; height: 39px; border: 1px solid #d9e2dc; border-radius: 8px; outline: none; background: #fff; color: var(--ink); padding: 0 11px; font-size: 12px; transition: border-color .15s, box-shadow .15s; }
+    input:focus, select:focus { border-color: #4a8c73; box-shadow: 0 0 0 3px rgba(74, 140, 115, .12); }
+    input::placeholder { color: #a1aaa5; }
+    .materials-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 12px; }
+    .materials-head .section-label { flex: 1; margin: 0; }
+    .text-button { padding: 5px 0; border: 0; background: transparent; color: var(--green); font-size: 12px; font-weight: 800; }
+    .file-list { display: grid; gap: 9px; }
+    .file-row { display: grid; grid-template-columns: minmax(120px, 1.2fr) minmax(120px, .9fr) minmax(112px, .8fr) 28px; gap: 8px; align-items: end; padding: 11px; border: 1px solid #e2e9e4; border-radius: 11px; background: #fbfcfb; }
+    .file-row .field label { font-size: 10px; }
+    .file-row input, .file-row select { height: 35px; padding-left: 8px; font-size: 11px; }
+    input[type=file] { padding: 7px 6px; }
+    .remove-row { width: 28px; height: 35px; border: 0; border-radius: 7px; background: transparent; color: #86928b; font-size: 17px; }
+    .remove-row:hover { background: #f6e9e6; color: var(--red); }
+    .hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .hint strong { color: #38594d; }
+    .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+    .primary { min-height: 43px; padding: 0 20px; border: 0; border-radius: 9px; background: var(--green); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 8px 18px rgba(23, 94, 76, .17); }
+    .primary:hover { background: #104d3e; }
+    .primary:disabled { cursor: wait; opacity: .65; }
+    .secondary { min-height: 39px; padding: 0 13px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #34564a; font-size: 12px; font-weight: 700; }
+    .secondary:hover { background: #f4f8f4; }
+    .result-empty { display: grid; min-height: 380px; place-items: center; padding: 32px; text-align: center; }
+    .empty-icon { display: grid; width: 54px; height: 54px; place-items: center; margin: 0 auto 16px; border: 1px solid #dfe9e1; border-radius: 17px; background: #f1f6f0; color: var(--green); font-size: 23px; }
+    .result-empty h3 { margin: 0 0 7px; font-size: 15px; }
+    .result-empty p { max-width: 250px; margin: 0 auto; color: var(--muted); font-size: 12px; line-height: 1.8; }
+    .result-content { padding: 20px 21px 23px; }
+    .decision-card { padding: 17px; border: 1px solid #e5e9e4; border-radius: 12px; background: #f8faf7; }
+    .decision-card.reject { border-color: #f0d8d2; background: #fff7f5; }
+    .decision-card.review { border-color: #eadfca; background: #fffaf0; }
+    .decision-card.accept { border-color: #cce5d7; background: #f2faf5; }
+    .decision-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .decision-title { margin: 0; font-size: 19px; font-weight: 850; }
+    .decision-tag { padding: 5px 9px; border-radius: 999px; background: #e8eee9; color: #486057; font-size: 10px; font-weight: 800; }
+    .reject .decision-tag { background: #f7e2dc; color: #9e4033; }
+    .review .decision-tag { background: #f3ead5; color: #805b18; }
+    .accept .decision-tag { background: #dceddf; color: #276346; }
+    .decision-reason { margin: 9px 0 0; color: #54635d; font-size: 12px; line-height: 1.8; }
+    .result-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin: 12px 0 18px; }
+    textarea { width: 100%; min-height: 72px; resize: vertical; border: 1px solid #d9e2dc; border-radius: 8px; padding: 9px 11px; color: var(--ink); font: inherit; font-size: 12px; }
+    .review-form { display: grid; gap: 10px; margin-top: 18px; padding: 13px; border: 1px solid #e4ebe5; border-radius: 10px; background: #f8faf8; }
+    .review-form h3 { margin: 0; font-size: 12px; }
+    .review-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .review-note { padding: 10px; border-radius: 8px; background: #edf5ef; color: #355d49; font-size: 11px; line-height: 1.7; }
+    .history-entry { width: 100%; padding: 11px; border: 1px solid #e8ede9; border-radius: 9px; background: #fff; color: var(--ink); text-align: left; }
+    .history-entry:hover { border-color: #85ad97; background: #f7fbf7; }
+    .no-print { }
+    @media print {
+      @page { margin: 16mm; }
+      body { background: #fff; }
+      .topbar, .hero, .layout > section:first-child, .no-print, footer { display: none !important; }
+      main { width: 100%; margin: 0; }
+      .layout { display: block; }
+      .panel { border: 0; box-shadow: none; }
+      .panel-head { padding: 0 0 12px; }
+      #result { padding: 8px 0; }
+      .result-item, .decision-card { break-inside: avoid; }
+    }
+    .result-section { margin-top: 19px; }
+    .result-section h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 12px; }
+    .count { display: inline-grid; min-width: 19px; height: 19px; place-items: center; border-radius: 6px; background: #eef3ee; color: #446656; font-size: 10px; }
+    .result-list { display: grid; gap: 7px; }
+    .result-item { padding: 10px 11px; border: 1px solid #e8ede9; border-radius: 9px; background: #fff; }
+    .item-top { display: flex; justify-content: space-between; gap: 10px; }
+    .item-title { margin: 0; font-size: 11px; font-weight: 800; }
+    .item-meta { color: #738078; font-size: 10px; white-space: nowrap; }
+    .item-copy { margin: 5px 0 0; color: #68766f; font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+    .badge { display: inline-flex; margin: 6px 5px 0 0; padding: 3px 6px; border-radius: 5px; background: #f2f4f2; color: #617068; font-size: 9px; }
+    .badge.alert { background: #fae9e4; color: #9f4337; }
+    .badge.uncertain { background: #fff2d8; color: #795919; }
+    .error { margin: 12px 0; padding: 10px 12px; border: 1px solid #f0d2cd; border-radius: 9px; background: #fff5f3; color: #97473b; font-size: 12px; line-height: 1.65; }
+    footer { margin-top: 18px; color: #849089; font-size: 10px; line-height: 1.7; }
+    .explainability-panel { margin-top: 16px; padding: 15px; border: 1px solid #dce8df; border-radius: 12px; background: #f8fbf8; }
+    .explainability-panel h3 { margin: 0; font-size: 13px; }
+    .explainability-note { margin: 7px 0 12px; color: #5f7067; font-size: 11px; line-height: 1.75; }
+    .flow-list { display: grid; gap: 8px; }
+    .flow-step { display: grid; grid-template-columns: 25px 1fr; gap: 9px; padding: 10px; border: 1px solid #e5ece6; border-radius: 9px; background: #fff; }
+    .flow-step-no { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 7px; background: #e9f2ea; color: #2d674c; font-size: 10px; font-weight: 800; }
+    .flow-step h4 { margin: 1px 0 4px; font-size: 11px; }
+    .flow-step p { margin: 0; color: #68766f; font-size: 10px; line-height: 1.7; overflow-wrap: anywhere; }
+    .evidence-details { margin-top: 8px; border-top: 1px solid #edf1ed; padding-top: 7px; }
+    .evidence-details summary { color: #315d49; cursor: pointer; font-size: 10px; font-weight: 800; }
+    .explanation-list { display: grid; gap: 6px; margin-top: 7px; }
+    .explanation-entry { padding: 7px 8px; border-radius: 7px; background: #f5f8f5; }
+    .explanation-entry strong { display: block; color: #304d40; font-size: 10px; }
+    .explanation-entry p { margin: 4px 0 0; color: #68766f; font-size: 10px; line-height: 1.65; }
+    @media (max-width: 940px) { main { width: min(740px, 92vw); } .layout { grid-template-columns: 1fr; } .result-empty { min-height: 220px; } }
+    @media (max-width: 580px) { .user-create-form { grid-template-columns: 1fr 1fr; } .user-create-form button { grid-column: 1 / -1; } .user-entry { align-items: start; flex-direction: column; } }
+    @media (max-width: 580px) { .topbar { padding: 0 4vw; } .topbar .brand { gap: 7px; font-size: 12px; } .top-meta { display: flex; max-width: 55vw; flex-wrap: wrap; justify-content: flex-end; gap: 6px !important; } .top-meta > span:first-child { display: none; } .topbar .secondary { min-height: 28px; padding: 0 7px; font-size: 10px; } main { margin-top: 24px; } .hero { display: block; } .status-pill { margin-top: 15px; } .panel-head, .panel-body { padding-left: 17px; padding-right: 17px; } .form-grid { grid-template-columns: 1fr; } .field.wide { grid-column: auto; } .file-row { grid-template-columns: 1fr 1fr 28px; } .file-row .file-field { grid-column: 1 / -1; } .file-row .view-field { grid-column: 2; } .file-row .remove-row { grid-column: 3; grid-row: 2; } }
+  </style>
+</head>
+<body>
+  <div class="login-overlay" id="loginOverlay" hidden>
+    <form class="login-card" id="loginForm">
+      <h2>登录核保工作台</h2>
+      <p>请使用管理员创建的个人账号。会话令牌只保存在当前浏览器标签页。</p>
+      <div class="field"><label for="loginUsername">用户名</label><input id="loginUsername" autocomplete="username" required></div>
+      <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+      <button class="primary" type="submit">登录</button>
+      <div class="login-error" id="loginError" aria-live="polite"></div>
+    </form>
+  </div>
+  <div class="dialog-overlay" id="userAdminOverlay" hidden>
+    <section class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="userAdminTitle">
+      <div class="dialog-head"><div><h2 id="userAdminTitle">账号管理</h2><p class="hint">账号变更会立即生效；停用或重置密码将撤销该账号的现有会话。</p></div><button class="secondary" id="closeUserAdmin" type="button">关闭</button></div>
+      <form class="user-create-form" id="userCreateForm">
+        <div class="field"><label for="newUsername">用户名</label><input id="newUsername" minlength="3" maxlength="64" pattern="[A-Za-z0-9_.-]+" required></div>
+        <div class="field"><label for="newUserPassword">初始密码（至少 12 位）</label><input id="newUserPassword" type="password" minlength="12" maxlength="256" required></div>
+        <div class="field"><label for="newUserRole">角色</label><select id="newUserRole"><option value="viewer">查看者</option><option value="underwriter">核保员</option><option value="admin">管理员</option></select></div>
+        <button class="primary" type="submit">创建账号</button>
+      </form>
+      <p class="dialog-message" id="userAdminMessage" aria-live="polite"></p>
+      <div class="user-list" id="userList"></div>
+    </section>
+  </div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">☼</span><span>分布式光伏财产险 · 智能核保</span></div>
+    <div class="top-meta" style="display:flex;align-items:center;gap:14px"><span>材料解析　/　规则核验　/　核保建议</span><span id="signedInUser"></span><button id="userAdminButton" class="secondary" type="button" hidden>账号管理</button><button id="logoutButton" class="secondary" type="button" hidden>退出登录</button></div>
+  </header>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">PV UNDERWRITING DESK</p>
+        <h1>新建核保案件</h1>
+        <p class="hero-copy">上传电站照片与备案材料，系统将逐项检查证据、匹配规则并生成核保建议。识别范围不足时会列出补充材料要求。</p>
+      </div>
+      <div class="status-pill degraded" id="systemStatus"><span class="status-dot"></span><span id="systemStatusText">正在检查服务配置…</span></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-head"><div><h2>案件与标的信息</h2><p>带 * 的字段用于本次核保和灾害数据查询。</p></div><span class="step-no">01</span></div>
+        <div class="panel-body">
+          <div class="section-label">投保信息</div>
+          <div class="form-grid">
+            <div class="field"><label for="caseId">案件编号 *</label><input id="caseId" value="" placeholder="自动生成"></div>
+            <div class="field"><label for="projectName">项目名称</label><input id="projectName" placeholder="与备案证保持一致"></div>
+            <div class="field"><label for="insuredName">被保险人</label><input id="insuredName" placeholder="企业或个人名称"></div>
+            <div class="field"><label for="projectEntity">项目单位 <span class="optional">可选</span></label><input id="projectEntity" placeholder="备案证载明单位"></div>
+            <div class="field"><label for="industryName">企业所属行业 <span class="optional">车间照片审核用</span></label><input id="industryName" placeholder="如：电子制造、化工"></div>
+            <div class="field"><label for="fireSurchargeConfirmed">高火险行业加费情况 <span class="optional">待业务核验</span></label><select id="fireSurchargeConfirmed"><option value="">未确认</option><option value="true">已按规则加费</option><option value="false">尚未加费</option></select></div>
+            <div class="field"><label for="projectType">项目类型 *</label><select id="projectType"><option value="rooftop">工商业屋顶式</option><option value="carport">车棚顶式</option><option value="unsupported">其他/暂不支持</option><option value="unknown">未知</option></select></div>
+            <div class="field"><label for="installationType">安装类型 *</label><select id="installationType"><option value="unknown">待图片识别</option><option value="color_steel_roof">彩钢瓦屋顶</option><option value="flat_roof">平屋顶</option><option value="tile_roof">瓦片屋顶</option><option value="carport_roof">车棚顶</option></select></div>
+            <div class="field wide"><label for="siteAddress">项目地址</label><input id="siteAddress" placeholder="省、市、区县及详细地址"></div>
+            <div class="field"><label for="longitude">经度 *</label><input id="longitude" type="number" step="any" placeholder="例如 113.2644"></div>
+            <div class="field"><label for="latitude">纬度 *</label><input id="latitude" type="number" step="any" placeholder="例如 23.1291"></div>
+            <div class="field"><label for="startDate">拟起保日期</label><input id="startDate" type="date"></div>
+            <div class="field"><label for="componentModel">组件完整型号</label><input id="componentModel" placeholder="可由铭牌 OCR 补齐"></div>
+            <div class="field wide"><label for="insuredAddress">被保险地址 <span class="optional">可选</span></label><input id="insuredAddress" placeholder="用于与备案材料核对"></div>
+          </div>
+
+          <div class="materials-head"><div class="section-label">投保材料</div><button class="text-button" id="addFile" type="button">＋ 添加材料</button></div>
+          <div class="file-list" id="fileList"></div>
+          <p class="hint"><strong>最低材料门槛：</strong>5 张图片、2 张全景照（正面平视 + 俯拍）、1 份备案证。无法识别的灾种会进入补材或人工复核。</p>
+          <div class="form-actions"><button class="primary" id="analyzeButton" type="button">开始智能核保</button><span class="hint" id="progressText" aria-live="polite"></span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><div><h2>核保评估结果</h2><p>逐项结论保留证据来源，明确拒保事实优先显示。</p></div><div><button class="secondary no-print" id="historyButton" type="button">历史案件</button> <span class="step-no">02</span></div></div>
+        <div id="result" class="result-empty"><div><div class="empty-icon">⌕</div><h3>等待提交案件材料</h3><p>完成左侧信息和文件选择后开始分析。报告会显示风险点、材料覆盖和灾害数据缺口。</p></div></div>
+      </section>
+    </div>
+    <footer>系统输出为辅助核保建议，最终承保决定需由授权核保人员确认。缺失的风、雹、雪参数会标记为未评估，不以演示数据补值。</footer>
+  </main>
+
+  <template id="fileRowTemplate">
+    <div class="file-row">
+      <div class="field file-field"><label>选择文件</label><input class="upload-file" type="file" accept=".jpg,.jpeg,.png,.pdf,.xlsx,image/jpeg,image/png,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div>
+      <div class="field"><label>材料类别</label><select class="category">
+        <option value="panorama">电站全景照</option><option value="roof_connection">屋顶连接处</option><option value="parapet">女儿墙/排水</option><option value="workshop">厂房/车间</option><option value="filing_certificate">备案证</option><option value="grid_connection_document">并网材料</option><option value="electrical_grounding">电气接地</option><option value="component_nameplate">组件铭牌</option><option value="component_surface">组件表面瑕疵（阶段二）</option><option value="inverter_nameplate">逆变器铭牌</option><option value="combiner_box">汇流箱</option><option value="monitoring_optional">监控（可选）</option><option value="equipment_inventory">设备清单（Excel）</option><option value="other">其他</option>
+      </select></div>
+      <div class="field view-field"><label>全景视角</label><select class="capture-view"><option value="unknown">未标注</option><option value="front_level">正面平视</option><option value="overhead">俯拍</option><option value="other">其他视角</option></select></div>
+      <button class="remove-row" type="button" aria-label="移除此材料">×</button>
+    </div>
+  </template>
+
+  <script>
+    const fileList = document.getElementById("fileList");
+    const resultRoot = document.getElementById("result");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const progressText = document.getElementById("progressText");
+    const systemStatus = document.getElementById("systemStatus");
+    const systemStatusText = document.getElementById("systemStatusText");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const loginError = document.getElementById("loginError");
+    const userAdminOverlay = document.getElementById("userAdminOverlay");
+    const userAdminMessage = document.getElementById("userAdminMessage");
+    let authenticatedRole = "admin";
+    let authenticationEnabled = false;
+    let nextMaterialId = 1;
+
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = (input, init = {}) => {
+      const headers = new Headers(init.headers || {});
+      const token = sessionStorage.getItem("pv-auth-token");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      const requestUrl = new URL(input instanceof Request ? input.url : input, window.location.href);
+      return nativeFetch(input, { ...init, headers }).then(response => {
+        if (response.status === 401 && token && requestUrl.pathname !== "/api/v1/auth/login") {
+          sessionStorage.removeItem("pv-auth-token");
+          showLoginOverlay();
+        }
+        return response;
+      });
+    };
+
+    const labels = {
+      accept: "建议承保", recommend_reject: "建议拒保", surcharge: "建议加费",
+      conditional_accept: "附条件承保", request_more: "建议补充材料", manual_review: "转人工复核",
+      pass: "通过", warning: "风险提示", conditional: "建议附加条件", not_applicable: "不适用",
+      detected: "已识别", not_detected: "未发现", uncertain: "不确定",
+      low: "低", medium: "中", high: "高", critical: "严重", unknown: "未知",
+      panorama: "电站全景照", roof_connection: "屋顶连接处", parapet: "女儿墙/排水", workshop: "厂房/车间",
+      filing_certificate: "备案证", grid_connection_document: "并网材料", electrical_grounding: "电气接地",
+      component_nameplate: "组件铭牌", component_surface: "组件表面瑕疵", inverter_nameplate: "逆变器铭牌", combiner_box: "汇流箱",
+      monitoring_optional: "监控（可选）", other: "其他"
+    };
+    const ocrLabels = {
+      project_name: "项目名称", project_entity: "项目单位", insured_name: "被保险人",
+      insured_address: "被保险地址", site_address: "项目地址", component_model: "组件型号",
+      inverter_model: "逆变器型号", rated_power_w: "额定功率（W）", serial_number: "序列号",
+      grid_connection_date: "并网日期", grounding_resistance_ohm: "接地电阻（Ω）",
+      inspection_date: "检测日期", inspection_result: "检测结论", monitoring_present: "监控状态"
+    };
+    const ocrStatusLabels = { extracted: "已提取", missing: "缺失", uncertain: "不确定" };
+
+    async function checkReadiness() {
+      try {
+        const response = await fetch("/ready");
+        const readiness = await response.json();
+        const missing = Object.entries(readiness.checks || {}).filter(([, ready]) => !ready).map(([name]) => name);
+        const isReady = response.ok && readiness.status === "ready";
+        systemStatus.classList.toggle("degraded", !isReady);
+        systemStatusText.textContent = isReady ? "本地服务已就绪" : `服务待配置${missing.length ? ` · ${missing.length} 项` : ""}`;
+        systemStatus.title = missing.length ? `未就绪：${missing.join("、")}` : "服务配置检查通过；外部天气连通性会在案件分析时验证";
+      } catch {
+        systemStatusText.textContent = "无法连接核保服务";
+        systemStatus.title = "请确认后端服务正在运行";
+      }
+    }
+
+    function showLoginOverlay() {
+      loginError.textContent = "";
+      loginOverlay.hidden = false;
+      document.getElementById("loginUsername").focus();
+    }
+
+    async function initializeAuthentication() {
+      try {
+        const response = await fetch("/api/v1/auth/config");
+        const configuration = await response.json();
+        authenticationEnabled = configuration.enabled === true;
+        if (!authenticationEnabled) {
+          sessionStorage.removeItem("pv-auth-token");
+          authenticatedRole = "admin";
+          document.getElementById("signedInUser").textContent = "本地演示";
+          document.getElementById("userAdminButton").hidden = true;
+          await checkReadiness();
+          return;
+        }
+
+        const token = sessionStorage.getItem("pv-auth-token");
+        if (!token) {
+          document.getElementById("userAdminButton").hidden = true;
+          return showLoginOverlay();
+        }
+        const userResponse = await fetch("/api/v1/auth/me");
+        if (!userResponse.ok) {
+          sessionStorage.removeItem("pv-auth-token");
+          return showLoginOverlay();
+        }
+        const user = await userResponse.json();
+        authenticatedRole = user.role;
+        const roleLabels = { viewer: "查看者", underwriter: "核保员", admin: "管理员" };
+        document.getElementById("signedInUser").textContent = `${user.username} · ${roleLabels[user.role] || user.role}`;
+        document.getElementById("logoutButton").hidden = false;
+        document.getElementById("userAdminButton").hidden = user.role !== "admin";
+        analyzeButton.disabled = authenticatedRole === "viewer";
+        if (authenticatedRole === "viewer") analyzeButton.textContent = "查看者无提交权限";
+        loginOverlay.hidden = true;
+        await checkReadiness();
+      } catch {
+        systemStatusText.textContent = "无法连接核保服务";
+        systemStatus.title = "请确认后端服务正在运行";
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      loginError.textContent = "登录中…";
+      try {
+        const response = await fetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: document.getElementById("loginUsername").value,
+            password: document.getElementById("loginPassword").value,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || `登录失败 (${response.status})`);
+        sessionStorage.setItem("pv-auth-token", data.access_token);
+        await initializeAuthentication();
+      } catch (error) {
+        loginError.textContent = error.message || "登录失败";
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", async () => {
+      try { await fetch("/api/v1/auth/logout", { method: "POST" }); } catch { /* clear local session below */ }
+      sessionStorage.removeItem("pv-auth-token");
+      document.getElementById("logoutButton").hidden = true;
+      document.getElementById("userAdminButton").hidden = true;
+      document.getElementById("signedInUser").textContent = "";
+      userAdminOverlay.hidden = true;
+      authenticatedRole = "viewer";
+      showLoginOverlay();
+    });
+
+    async function refreshUsers() {
+      userAdminMessage.textContent = "正在读取账号…";
+      try {
+        const response = await fetch("/api/v1/auth/users");
+        const users = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(users.detail || `账号读取失败 (${response.status})`);
+        const roleLabels = { viewer: "查看者", underwriter: "核保员", admin: "管理员" };
+        const list = document.getElementById("userList");
+        list.replaceChildren();
+        users.forEach(user => {
+          const entry = makeNode("div", "user-entry");
+          const info = makeNode("div");
+          info.appendChild(makeNode("p", "item-title", `${user.username} · ${roleLabels[user.role] || user.role}`));
+          info.appendChild(makeNode("p", "item-copy", `${user.active ? "启用" : "已停用"} · 创建于 ${user.created_at}`));
+          entry.appendChild(info);
+          if (user.active) {
+            const actions = makeNode("div", "user-actions");
+            const resetButton = makeNode("button", "secondary", "重置密码");
+            resetButton.type = "button";
+            resetButton.addEventListener("click", async () => {
+              const password = window.prompt(`为 ${user.username} 设置新密码（至少 12 位）`);
+              if (password === null) return;
+              try {
+                const resetResponse = await fetch(`/api/v1/auth/users/${encodeURIComponent(user.username)}/password`, {
+                  method: "PUT", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password })
+                });
+                const result = await resetResponse.json().catch(() => ({}));
+                if (!resetResponse.ok) throw new Error(result.detail || `密码重置失败 (${resetResponse.status})`);
+                userAdminMessage.textContent = `${user.username} 的密码已重置，其会话已撤销。`;
+                if (user.username === document.getElementById("signedInUser").textContent.split(" · ")[0]) {
+                  sessionStorage.removeItem("pv-auth-token");
+                  await initializeAuthentication();
+                }
+              } catch (error) {
+                userAdminMessage.textContent = error.message || "密码重置失败";
+              }
+            });
+            actions.appendChild(resetButton);
+            if (user.username !== document.getElementById("signedInUser").textContent.split(" · ")[0]) {
+              const deactivateButton = makeNode("button", "secondary", "停用");
+              deactivateButton.type = "button";
+              deactivateButton.addEventListener("click", async () => {
+                if (!window.confirm(`确定停用账号 ${user.username} 吗？`)) return;
+                try {
+                  const deactivateResponse = await fetch(`/api/v1/auth/users/${encodeURIComponent(user.username)}/deactivate`, { method: "POST" });
+                  const result = await deactivateResponse.json().catch(() => ({}));
+                  if (!deactivateResponse.ok) throw new Error(result.detail || `账号停用失败 (${deactivateResponse.status})`);
+                  userAdminMessage.textContent = `${user.username} 已停用。`;
+                  await refreshUsers();
+                } catch (error) {
+                  userAdminMessage.textContent = error.message || "账号停用失败";
+                }
+              });
+              actions.appendChild(deactivateButton);
+            }
+            entry.appendChild(actions);
+          }
+          list.appendChild(entry);
+        });
+        if (!users.length) list.appendChild(makeNode("p", "hint", "尚无账号"));
+        userAdminMessage.textContent = `${users.length} 个账号`;
+      } catch (error) {
+        userAdminMessage.textContent = error.message || "账号读取失败";
+      }
+    }
+
+    document.getElementById("userAdminButton").addEventListener("click", async () => {
+      userAdminOverlay.hidden = false;
+      await refreshUsers();
+      document.getElementById("newUsername").focus();
+    });
+    document.getElementById("closeUserAdmin").addEventListener("click", () => {
+      userAdminOverlay.hidden = true;
+      document.getElementById("userAdminButton").focus();
+    });
+    userAdminOverlay.addEventListener("click", event => {
+      if (event.target === userAdminOverlay) userAdminOverlay.hidden = true;
+    });
+    document.getElementById("userCreateForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const submitButton = event.currentTarget.querySelector("button[type=submit]");
+      submitButton.disabled = true;
+      userAdminMessage.textContent = "正在创建账号…";
+      try {
+        const response = await fetch("/api/v1/auth/users", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: document.getElementById("newUsername").value,
+            password: document.getElementById("newUserPassword").value,
+            role: document.getElementById("newUserRole").value,
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.detail || `账号创建失败 (${response.status})`);
+        event.currentTarget.reset();
+        userAdminMessage.textContent = `已创建账号 ${result.username}。`;
+        await refreshUsers();
+      } catch (error) {
+        userAdminMessage.textContent = error.message || "账号创建失败";
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !userAdminOverlay.hidden) userAdminOverlay.hidden = true;
+    });
+
+    function addFileRow() {
+      const fragment = document.getElementById("fileRowTemplate").content.cloneNode(true);
+      const row = fragment.querySelector(".file-row");
+      row.dataset.materialId = `material-${String(nextMaterialId++).padStart(3, "0")}`;
+      const category = row.querySelector(".category");
+      const view = row.querySelector(".capture-view");
+      const viewField = row.querySelector(".view-field");
+      const syncView = () => { viewField.style.visibility = category.value === "panorama" ? "visible" : "hidden"; };
+      category.addEventListener("change", syncView);
+      syncView();
+      row.querySelector(".remove-row").addEventListener("click", () => {
+        if (fileList.children.length > 1) row.remove();
+      });
+      fileList.appendChild(fragment);
+    }
+
+    function readProject() {
+      const numberOrNull = (id) => {
+        const value = document.getElementById(id).value.trim();
+        return value === "" ? null : Number(value);
+      };
+      const textOrNull = (id) => document.getElementById(id).value.trim() || null;
+      return {
+        project_name: textOrNull("projectName"),
+        insured_name: textOrNull("insuredName"),
+        insured_address: textOrNull("insuredAddress"),
+        project_entity: textOrNull("projectEntity"),
+        industry_name: textOrNull("industryName"),
+        fire_surcharge_confirmed: document.getElementById("fireSurchargeConfirmed").value === ""
+          ? null
+          : document.getElementById("fireSurchargeConfirmed").value === "true",
+        project_type: document.getElementById("projectType").value,
+        installation_type: document.getElementById("installationType").value,
+        site_address: textOrNull("siteAddress"),
+        longitude: numberOrNull("longitude"),
+        latitude: numberOrNull("latitude"),
+        proposed_start_date: textOrNull("startDate"),
+        component_model: textOrNull("componentModel")
+      };
+    }
+
+    function makeNode(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined && text !== null) element.textContent = String(text);
+      return element;
+    }
+
+    function renderListSection(parent, title, rows, renderItem, emptyText = "无") {
+      const section = makeNode("section", "result-section");
+      const heading = makeNode("h3", "", title);
+      heading.appendChild(makeNode("span", "count", rows.length));
+      section.appendChild(heading);
+      const list = makeNode("div", "result-list");
+      if (!rows.length) list.appendChild(makeNode("div", "item-copy", emptyText));
+      rows.forEach(row => list.appendChild(renderItem(row)));
+      section.appendChild(list);
+      parent.appendChild(section);
+    }
+
+    function appendRuleExplanations(parent, ruleIds, decision) {
+      const explanations = new Map((decision?.rule_explanations || []).map(item => [item.rule_id, item]));
+      const list = makeNode("div", "explanation-list");
+      if (!ruleIds.length) {
+        list.appendChild(makeNode("p", "item-copy", "没有登记命中规则。"));
+      }
+      ruleIds.forEach(ruleId => {
+        const explanation = explanations.get(ruleId);
+        const entry = makeNode("div", "explanation-entry");
+        entry.appendChild(makeNode("strong", "", `${ruleId} · ${explanation?.title || "规则说明未登记"}`));
+        entry.appendChild(makeNode("p", "", `触发条件：${explanation?.trigger || "请核对规则编号和原始案件记录。"}`));
+        entry.appendChild(makeNode("p", "", `处理作用：${explanation?.effect || "编号已保留；需补齐该规则的中文说明。"}`));
+        list.appendChild(entry);
+      });
+      parent.appendChild(list);
+    }
+
+    function renderEvidenceDetails(parent, review, data) {
+      const details = document.createElement("details");
+      details.className = "evidence-details";
+      const findingIds = review.finding_ids || [];
+      const ocrFieldIds = review.ocr_field_ids || [];
+      const ruleIds = review.triggered_rule_ids || [];
+      const summary = makeNode("summary", "", `查看规则说明和关联证据（规则 ${ruleIds.length} · 图片 ${findingIds.length} · OCR ${ocrFieldIds.length}）`);
+      details.appendChild(summary);
+      appendRuleExplanations(details, ruleIds, data.decision);
+
+      const findingList = makeNode("div", "explanation-list");
+      if (!findingIds.length) findingList.appendChild(makeNode("p", "item-copy", "该材料没有关联视觉发现。"));
+      findingIds.forEach(findingId => {
+        const finding = (data.findings || []).find(candidate => candidate.finding_id === findingId);
+        const entry = makeNode("div", "explanation-entry");
+        if (!finding) {
+          entry.appendChild(makeNode("strong", "", `${findingId} · 引用记录未找到`));
+        } else {
+          const status = labels[finding.detection_status] || finding.detection_status;
+          entry.appendChild(makeNode("strong", "", `${findingId} · ${finding.label} · ${status}`));
+          entry.appendChild(makeNode("p", "", `证据描述：${finding.evidence_text || "未提供"}`));
+          entry.appendChild(makeNode("p", "", `模型参考置信度：${Math.round((finding.confidence || 0) * 100)}%（未校准） · ${finding.provider} / ${finding.model}`));
+          if (finding.bbox) entry.appendChild(makeNode("p", "", `图片区域：${(finding.bbox.x_min * 100).toFixed(0)}%, ${(finding.bbox.y_min * 100).toFixed(0)}% - ${(finding.bbox.x_max * 100).toFixed(0)}%, ${(finding.bbox.y_max * 100).toFixed(0)}%`));
+        }
+        findingList.appendChild(entry);
+      });
+      details.appendChild(makeNode("p", "item-copy", "关联视觉证据"));
+      details.appendChild(findingList);
+
+      const ocrList = makeNode("div", "explanation-list");
+      if (!ocrFieldIds.length) ocrList.appendChild(makeNode("p", "item-copy", "该材料没有关联 OCR 字段。"));
+      ocrFieldIds.forEach(fieldId => {
+        const field = (data.ocr_fields || []).find(candidate => candidate.field_id === fieldId);
+        const entry = makeNode("div", "explanation-entry");
+        if (!field) {
+          entry.appendChild(makeNode("strong", "", `${fieldId} · 引用记录未找到`));
+        } else {
+          const fieldName = ocrLabels[field.field_name] || field.field_name;
+          const status = ocrStatusLabels[field.value_status] || field.value_status;
+          entry.appendChild(makeNode("strong", "", `${fieldId} · ${fieldName} · ${status}`));
+          entry.appendChild(makeNode("p", "", `原文：${field.raw_value || "未识别"} · 规范值：${field.normalized_value || "未标准化"}`));
+          entry.appendChild(makeNode("p", "", `识别参考置信度：${Math.round((field.confidence || 0) * 100)}%（未校准） · ${field.provider} / ${field.model}`));
+        }
+        ocrList.appendChild(entry);
+      });
+      details.appendChild(makeNode("p", "item-copy", "关联 OCR 字段"));
+      details.appendChild(ocrList);
+      parent.appendChild(details);
+    }
+
+    function renderDecisionPath(parent, data, savedRecord) {
+      const decision = data.decision || {};
+      const packageInfo = data.package_assessment;
+      const materials = data.materials || [];
+      const reviews = data.material_reviews || [];
+      const findings = data.findings || [];
+      const fields = data.ocr_fields || [];
+      const traces = data.processing_trace || [];
+      const uncertainFindings = findings.filter(item => item.detection_status === "uncertain").length;
+      const incompleteTraces = traces.filter(item => ["partial", "failed"].includes(item.status)).length;
+      const actionCounts = reviews.reduce((counts, item) => {
+        const label = labels[item.action] || item.action;
+        counts[label] = (counts[label] || 0) + 1;
+        return counts;
+      }, {});
+      const actionSummary = Object.entries(actionCounts).map(([label, count]) => `${label} ${count} 份`).join("、") || "暂无逐项材料审核结果";
+      const section = makeNode("section", "explainability-panel");
+      section.appendChild(makeNode("h3", "", "判断过程与依据"));
+      section.appendChild(makeNode("p", "explainability-note", "这里展示从材料、识别证据、规则到建议结论的路径。识别模型提供 OCR/视觉观察；确定性规则引擎汇总材料动作和整单建议。显示的置信度是识别参考分数，未经过概率校准。"));
+      const flow = makeNode("div", "flow-list");
+      const addStep = (title, description, detailsRenderer = null) => {
+        const step = makeNode("div", "flow-step");
+        step.appendChild(makeNode("span", "flow-step-no", flow.children.length + 1));
+        const content = document.createElement("div");
+        content.appendChild(makeNode("h4", "", title));
+        content.appendChild(makeNode("p", "", description));
+        if (detailsRenderer) detailsRenderer(content);
+        step.appendChild(content);
+        flow.appendChild(step);
+      };
+
+      if (packageInfo) {
+        const missing = (packageInfo.missing_requirements || []).join("；") || "无";
+        addStep("材料接收与完整性检查", `收到 ${materials.length} 份材料；图片 ${packageInfo.image_count} 张、全景 ${packageInfo.panorama_count} 张；备案证${packageInfo.has_filing_certificate ? "已提供" : "缺失"}。待补充：${missing}`);
+      } else {
+        addStep("材料接收与完整性检查", `收到 ${materials.length} 份材料；当前结果未包含材料包门槛评估。`);
+      }
+      addStep("文字与图像信息提取", `OCR 字段 ${fields.length} 项；视觉检查 ${findings.length} 项，其中不确定 ${uncertainFindings} 项。模型只提供观察和证据描述；不确定结果会交给规则转补材料或人工复核。`);
+      addStep("单份材料规则审核", `${reviews.length} 份材料已生成审核动作：${actionSummary}。每份材料卡片可展开查看具体规则、OCR 字段和图片证据之间的关联。`);
+      const catastrophe = data.catastrophe_assessment;
+      if (catastrophe) {
+        const thresholds = Number.isFinite(catastrophe.critical_shortfall_ratio) && Number.isFinite(catastrophe.adequate_margin_ratio)
+          ? `能力比分级门槛：严重不足 < ${catastrophe.critical_shortfall_ratio.toFixed(2)}；能力不足 < 1.00；余量有限 < ${catastrophe.adequate_margin_ratio.toFixed(2)}；达到余量门槛后该灾种单项通过。`
+          : "该历史记录未保存具体能力比分级门槛。";
+        addStep("自然灾害量化评估", `${catastrophe.explanation || "已完成组件能力与气象指标比较。"} ${[...(catastrophe.factors || [])].join("；")} ${thresholds}`);
+      } else {
+        addStep("自然灾害量化评估", "未生成完整的组件与历史气象联合评估；缺失原因可在规则和处理记录中查看。未评估不等于风险已通过。 ");
+      }
+      const priorityText = "整单按固定顺序汇总：建议拒保 → 补充材料 → 转人工复核 → 建议加费 → 附条件承保 → 建议承保。";
+      const decisionLabel = labels[decision.decision] || decision.decision || "尚未生成";
+      const decisionReason = {
+        recommend_reject: "存在建议拒保动作，优先于其他结论。",
+        request_more: "没有更高优先级的建议拒保，但存在必需材料或信息缺口。",
+        manual_review: "没有更高优先级的拒保或补材料结论，但存在需人工确认的事项。",
+        surcharge: "前序条件未触发，规则汇总为建议加费。",
+        conditional_accept: "前序条件未触发，规则汇总为附条件承保。",
+        accept: "前序风险、资料缺口和人工复核条件均未触发。"
+      }[decision.decision] || "系统尚未生成整单结论。";
+      addStep("整单结论汇总", `系统建议：${decisionLabel}。${decisionReason} ${priorityText}`, content => {
+        const rules = decision.decisive_rule_ids || [];
+        const details = document.createElement("details");
+        details.className = "evidence-details";
+        details.appendChild(makeNode("summary", "", `查看整单命中规则解释（${rules.length} 项）`));
+        appendRuleExplanations(details, rules, decision);
+        content.appendChild(details);
+        if ((decision.reasons || []).length) content.appendChild(makeNode("p", "item-copy", `理由：${decision.reasons.join("；")}`));
+        if (incompleteTraces) content.appendChild(makeNode("p", "item-copy", `${incompleteTraces} 个自动处理步骤未完整执行，已纳入人工复核判断。`));
+        if (savedRecord?.final_decision) content.appendChild(makeNode("p", "item-copy", `人工核保结论：${labels[savedRecord.final_decision] || savedRecord.final_decision} · ${savedRecord.reviewer_name || "未记录复核人"}${savedRecord.review_comment ? `；依据：${savedRecord.review_comment}` : ""}`));
+      });
+      section.appendChild(flow);
+      parent.appendChild(section);
+    }
+
+    function renderCase(data, savedRecord = null) {
+      resultRoot.className = "result-content";
+      resultRoot.replaceChildren();
+      const decision = data.decision || {};
+      const cardClass = decision.decision === "recommend_reject" ? "reject" :
+        decision.decision === "accept" ? "accept" : "review";
+      const card = makeNode("div", `decision-card ${cardClass}`);
+      const top = makeNode("div", "decision-top");
+      top.appendChild(makeNode("h3", "decision-title", labels[decision.decision] || decision.decision || "未生成结论"));
+      top.appendChild(makeNode("span", "decision-tag", `案件 ${data.case_id || ""}`));
+      card.appendChild(top);
+      card.appendChild(makeNode("p", "decision-reason", (decision.reasons || []).join("；") || "没有额外判断说明。"));
+      if (savedRecord?.final_decision) {
+        const finalLabel = labels[savedRecord.final_decision] || savedRecord.final_decision;
+        card.appendChild(makeNode("p", "decision-reason", `人工复核结论：${finalLabel} · ${savedRecord.reviewer_name || ""}`));
+        if (savedRecord.review_comment) card.appendChild(makeNode("p", "decision-reason", `复核意见：${savedRecord.review_comment}`));
+      }
+      if ((decision.missing_requirements || []).length) {
+        card.appendChild(makeNode("p", "decision-reason", `待补充：${decision.missing_requirements.join("；")}`));
+      }
+      resultRoot.appendChild(card);
+
+      const actions = makeNode("div", "result-actions");
+      const reportButton = makeNode("button", "secondary", "下载核保报告");
+      reportButton.type = "button";
+      reportButton.addEventListener("click", () => downloadReport(data));
+      actions.appendChild(reportButton);
+      const printButton = makeNode("button", "secondary no-print", "打印 / 保存为 PDF");
+      printButton.type = "button";
+      printButton.addEventListener("click", () => window.print());
+      actions.appendChild(printButton);
+      const historyButton = makeNode("button", "secondary no-print", "历史案件");
+      historyButton.type = "button";
+      historyButton.addEventListener("click", loadHistory);
+      actions.appendChild(historyButton);
+      resultRoot.appendChild(actions);
+      renderDecisionPath(resultRoot, data, savedRecord);
+
+      const reviewForm = makeNode("form", "review-form no-print");
+      reviewForm.appendChild(makeNode("h3", "", "人工核保意见"));
+      const reviewStatus = savedRecord?.review_status === "completed" ? "已完成复核" : "待复核";
+      reviewForm.appendChild(makeNode("p", "item-copy", `状态：${reviewStatus}。提交意见会保留复核人、结论和时间。`));
+      const reviewFields = makeNode("div", "review-fields");
+      const reviewer = document.createElement("input");
+      reviewer.type = "text";
+      reviewer.maxLength = 100;
+      reviewer.required = true;
+      reviewer.placeholder = "核保人姓名";
+      reviewer.setAttribute("aria-label", "核保人姓名");
+      const finalDecision = document.createElement("select");
+      finalDecision.setAttribute("aria-label", "人工核保结论");
+      ["accept", "recommend_reject", "surcharge", "conditional_accept", "request_more"].forEach(value => {
+        const option = makeNode("option", "", labels[value]);
+        option.value = value;
+        finalDecision.appendChild(option);
+      });
+      reviewFields.append(reviewer, finalDecision);
+      reviewForm.appendChild(reviewFields);
+      const reviewComment = document.createElement("textarea");
+      reviewComment.required = true;
+      reviewComment.maxLength = 4000;
+      reviewComment.placeholder = "记录人工判断依据、条件或补充要求";
+      reviewComment.setAttribute("aria-label", "人工复核意见");
+      reviewForm.appendChild(reviewComment);
+      const submitReview = makeNode("button", "secondary", "保存人工复核");
+      submitReview.type = "submit";
+      reviewForm.appendChild(submitReview);
+      const reviewMessage = makeNode("p", "item-copy", "");
+      reviewMessage.setAttribute("aria-live", "polite");
+      reviewForm.appendChild(reviewMessage);
+      reviewForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        submitReview.disabled = true;
+        reviewMessage.textContent = "正在保存…";
+        try {
+          const response = await fetch(`/api/v1/cases/${encodeURIComponent(data.case_id)}/review`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reviewer_name: reviewer.value, final_decision: finalDecision.value, comment: reviewComment.value })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.detail || `保存失败 (${response.status})`);
+          renderCase(data, result);
+        } catch (error) {
+          reviewMessage.textContent = error.message || "复核意见保存失败";
+        } finally {
+          submitReview.disabled = false;
+        }
+      });
+      if (authenticatedRole !== "viewer") resultRoot.appendChild(reviewForm);
+
+      if (savedRecord?.review_history?.length) {
+        renderListSection(resultRoot, "人工复核记录", savedRecord.review_history, review => {
+          const item = makeNode("div", "result-item");
+          item.appendChild(makeNode("p", "item-title", `${review.reviewer_name} · ${labels[review.final_decision] || review.final_decision}`));
+          item.appendChild(makeNode("p", "item-copy", `${review.reviewed_at} · ${review.comment}`));
+          return item;
+        });
+      }
+
+      const packageInfo = data.package_assessment;
+      if (packageInfo) {
+        const packageRows = [
+          `图片 ${packageInfo.image_count} 张 · 全景 ${packageInfo.panorama_count} 张 · 备案证 ${packageInfo.has_filing_certificate ? "已提供" : "缺失"}`,
+          ...(packageInfo.missing_material_categories || []).map(value => `缺少材料类别：${labels[value] || value}`),
+          ...(packageInfo.missing_requirements || []).map(value => `待补充：${value}`)
+        ];
+        renderListSection(resultRoot, "材料包门槛", packageRows, value => makeNode("div", "item-copy", value));
+      }
+
+      renderListSection(resultRoot, "设备清单结构化结果", data.equipment_inventory || [], item => {
+        const title = [item.item_category, item.item_name, item.normalized_component_model].filter(Boolean).join(" · ") || "设备清单行";
+        const detail = [item.manufacturer, item.specification, item.quantity ? `数量 ${item.quantity} ${item.unit || ""}` : "", item.total_price ? `合计 ${item.total_price}` : "", `${item.worksheet_name} 第 ${item.row_number} 行`].filter(Boolean).join(" · ");
+        const row = makeNode("div", "result-item");
+        row.appendChild(makeNode("p", "item-title", title));
+        row.appendChild(makeNode("p", "item-copy", detail));
+        return row;
+      });
+
+      renderListSection(resultRoot, "逐项材料审核", data.material_reviews || [], review => {
+        const item = makeNode("div", "result-item");
+        const material = (data.materials || []).find(candidate => candidate.material_id === review.material_id);
+        item.appendChild(makeNode("p", "item-title", `${material ? material.file_name : review.material_id} · ${labels[review.action] || review.action}`));
+        item.appendChild(makeNode("p", "item-copy", (review.reasons || []).join("；") || "无补充说明"));
+        renderEvidenceDetails(item, review, data);
+        return item;
+      });
+
+      renderListSection(resultRoot, "OCR 字段提取", data.ocr_fields || [], field => {
+        const item = makeNode("div", "result-item");
+        const material = (data.materials || []).find(candidate => candidate.material_id === field.material_id);
+        const fieldName = ocrLabels[field.field_name] || field.field_name;
+        item.appendChild(makeNode("p", "item-title", `${fieldName} · ${ocrStatusLabels[field.value_status] || field.value_status} · 参考分数 ${Math.round((field.confidence || 0) * 100)}%（未校准）`));
+        item.appendChild(makeNode("p", "item-copy", `${material ? material.file_name : field.material_id} · 原文：${field.raw_value || "未识别"} · 规范值：${field.normalized_value || "未标准化"}`));
+        if (field.bbox) item.appendChild(makeNode("p", "item-copy", `图片位置 ${(field.bbox.x_min * 100).toFixed(0)}%, ${(field.bbox.y_min * 100).toFixed(0)}% - ${(field.bbox.x_max * 100).toFixed(0)}%, ${(field.bbox.y_max * 100).toFixed(0)}%`));
+        return item;
+      }, "没有提取到可显示的 OCR 字段");
+
+      renderListSection(resultRoot, "图片风险与检查", data.findings || [], finding => {
+        const item = makeNode("div", "result-item");
+        const material = (data.materials || []).find(candidate => candidate.material_id === finding.material_id);
+        const titleRow = makeNode("div", "item-top");
+        titleRow.appendChild(makeNode("p", "item-title", finding.label));
+        titleRow.appendChild(makeNode("span", "item-meta", `${labels[finding.detection_status] || finding.detection_status} · 参考分数 ${Math.round((finding.confidence || 0) * 100)}%（未校准）`));
+        item.appendChild(titleRow);
+        item.appendChild(makeNode("p", "item-copy", `${material ? material.file_name : finding.material_id} · ${finding.evidence_text || "无证据说明"}`));
+        if (finding.bbox) item.appendChild(makeNode("p", "item-copy", `图片位置 ${(finding.bbox.x_min * 100).toFixed(0)}%, ${(finding.bbox.y_min * 100).toFixed(0)}% - ${(finding.bbox.x_max * 100).toFixed(0)}%, ${(finding.bbox.y_max * 100).toFixed(0)}%`));
+        return item;
+      }, "没有返回可核验的图片检查结果");
+
+      const catastrophe = data.catastrophe_assessment;
+      if (catastrophe) {
+        const summary = [catastrophe.explanation, ...(catastrophe.factors || [])].join("；");
+        renderListSection(resultRoot, "自然灾害风险量化", [summary], value => makeNode("div", "item-copy", value));
+      }
+      renderListSection(resultRoot, "处理记录", data.processing_trace || [], trace => {
+        const item = makeNode("div", "result-item");
+        const stepLabels = { material_parse: "材料解析", ocr: "文字识别", equipment_inventory: "设备清单解析", vision: "图片风险识别", component_lookup: "组件参数查询", weather_lookup: "气象数据查询", catastrophe_assessment: "灾害风险评估", rule_engine: "规则判断", decision: "综合决策" };
+        const statusLabels = { success: "成功", partial: "部分成功", failed: "失败" };
+        const stepPurposes = { material_parse: "检查文件可读性并提取基础信息", ocr: "提取可核对的文字字段", equipment_inventory: "解析设备型号和数量", vision: "识别图像风险观察，不直接决定整单结论", component_lookup: "查询组件抗灾参数来源", weather_lookup: "查询项目坐标对应的历史气象指标", catastrophe_assessment: "比较组件额定能力与历史灾害指标", rule_engine: "将材料事实与程序规则逐项比对", decision: "按固定优先顺序汇总材料动作和评估结果" };
+        item.appendChild(makeNode("p", "item-title", `${stepLabels[trace.step] || trace.step} · ${statusLabels[trace.status] || trace.status}`));
+        item.appendChild(makeNode("p", "item-copy", `${stepPurposes[trace.step] || "处理步骤"}。${trace.provider}${trace.model ? ` / ${trace.model}` : ""} · ${trace.latency_ms} ms${trace.error_code ? ` · ${trace.error_code}` : ""}${trace.error_message ? ` · ${trace.error_message}` : ""}${["partial", "failed"].includes(trace.status) ? " · 未完整执行会触发人工复核" : ""}`));
+        return item;
+      });
+    }
+
+    async function downloadReport(data) {
+      try {
+        const response = await fetch(`/api/v1/cases/${encodeURIComponent(data.case_id)}/report`);
+        if (!response.ok) throw new Error(`报告生成失败 (${response.status})`);
+        const blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "underwriting-report.md";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      } catch (error) {
+        showError(error.message || "报告下载失败");
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch("/api/v1/cases?limit=50");
+        const records = await response.json().catch(() => []);
+        if (!response.ok) throw new Error(records.detail || `历史记录读取失败 (${response.status})`);
+        resultRoot.className = "result-content";
+        resultRoot.replaceChildren();
+        renderListSection(resultRoot, "历史案件（最近 50 条）", records, record => {
+          const button = makeNode("button", "history-entry");
+          button.type = "button";
+          button.appendChild(makeNode("p", "item-title", `${record.case_id} · ${labels[record.decision] || record.decision || "未生成结论"}`));
+          button.appendChild(makeNode("p", "item-copy", `${record.stored_at} · 人工复核：${record.review_status === "completed" ? "已完成" : "待复核"}`));
+          button.addEventListener("click", async () => {
+            try {
+              const detailResponse = await fetch(`/api/v1/cases/${encodeURIComponent(record.case_id)}`);
+              const detail = await detailResponse.json().catch(() => ({}));
+              if (!detailResponse.ok) throw new Error(detail.detail || `案件读取失败 (${detailResponse.status})`);
+              renderCase(detail.case, detail);
+            } catch (error) {
+              showError(error.message || "案件读取失败");
+            }
+          });
+          return button;
+        }, "暂无历史案件");
+      } catch (error) {
+        showError(error.message || "历史记录读取失败");
+      }
+    }
+
+    function showError(message) {
+      resultRoot.className = "result-content";
+      resultRoot.replaceChildren(makeNode("div", "error", message));
+    }
+
+    async function analyze() {
+      const rows = [...fileList.querySelectorAll(".file-row")];
+      const selected = rows.map(row => ({ row, file: row.querySelector(".upload-file").files[0] })).filter(item => item.file);
+      if (!selected.length) return showError("请至少选择一份投保材料。");
+      const project = readProject();
+      if (!project.project_type || project.longitude === null || project.latitude === null) {
+        return showError("请填写项目类型、经度和纬度，系统需要这些信息查询项目所在地灾害数据。");
+      }
+      const caseId = document.getElementById("caseId").value.trim() || `PV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      document.getElementById("caseId").value = caseId;
+      const manifestMaterials = selected.map(({ row }) => ({
+        material_id: row.dataset.materialId,
+        category: row.querySelector(".category").value,
+        capture_view: row.querySelector(".capture-view").value
+      }));
+      const form = new FormData();
+      form.append("manifest", JSON.stringify({ case_id: caseId, project, materials: manifestMaterials }));
+      selected.forEach(({ file }) => form.append("files", file, file.name));
+      analyzeButton.disabled = true;
+      progressText.textContent = "正在检查材料并运行模型，请稍候…";
+      resultRoot.className = "result-empty";
+      resultRoot.replaceChildren(makeNode("div", "item-copy", "正在执行 OCR、图片风险识别、灾害查询和规则判断…"));
+      try {
+        const response = await fetch("/api/v1/underwriting/jobs", { method: "POST", body: form });
+        const started = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const detail = started.detail;
+          throw new Error(typeof detail === "string" ? detail : detail?.message || `核保请求失败 (${response.status})`);
+        }
+        let completedJob = null;
+        for (let attempt = 0; attempt < 900; attempt += 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const jobResponse = await fetch(`/api/v1/underwriting/jobs/${encodeURIComponent(started.job_id)}`);
+          const job = await jobResponse.json().catch(() => ({}));
+          if (!jobResponse.ok) throw new Error(job.detail || `任务状态读取失败 (${jobResponse.status})`);
+          progressText.textContent = `${job.current_step || "正在处理"} · ${job.progress_percent || 0}%`;
+          if (job.status === "completed") {
+            completedJob = job;
+            break;
+          }
+          if (job.status === "failed") {
+            throw new Error(`核保任务失败（${job.error_code || "未知错误"}）。请查看服务日志并重试。`);
+          }
+        }
+        if (!completedJob) throw new Error(`核保任务等待时间过长。可用任务编号 ${started.job_id} 查询状态。`);
+        const data = completedJob.result;
+        renderCase(data);
+        document.getElementById("caseId").value = "";
+        progressText.textContent = "分析完成";
+      } catch (error) {
+        showError(error.message || "核保失败，请检查服务配置后重试。");
+        progressText.textContent = "请求未完成";
+      } finally {
+        analyzeButton.disabled = false;
+      }
+    }
+
+    document.getElementById("addFile").addEventListener("click", addFileRow);
+    document.getElementById("historyButton").addEventListener("click", loadHistory);
+    analyzeButton.addEventListener("click", analyze);
+    addFileRow();
+    initializeAuthentication();
+  </script>
+</body>
+</html>

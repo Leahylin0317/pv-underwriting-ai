@@ -24,7 +24,7 @@ def test_returns_maximum_historical_wind_and_request_parameters() -> None:
         assert request.url.params["longitude"] == "113.25"
         assert request.url.params["start_date"] == "2021-01-01"
         assert request.url.params["end_date"] == "2025-12-31"
-        assert request.url.params["daily"] == "wind_gusts_10m_max"
+        assert request.url.params["daily"] == "wind_gusts_10m_max,snowfall_sum"
         assert request.url.params["timezone"] == "UTC"
         assert request.url.params["wind_speed_unit"] == "ms"
         return httpx.Response(
@@ -33,6 +33,7 @@ def test_returns_maximum_historical_wind_and_request_parameters() -> None:
                 "daily": {
                     "time": ["2025-01-01", "2025-01-02", "2025-01-03"],
                     "wind_gusts_10m_max": [18.5, None, 31.2],
+                    "snowfall_sum": [2.0, 12.5, 0.0],
                 }
             },
         )
@@ -42,6 +43,7 @@ def test_returns_maximum_historical_wind_and_request_parameters() -> None:
     assert result.historical_max_wind_m_s == 31.2
     assert result.historical_max_hail_mm is None
     assert result.historical_max_snow_load_pa is None
+    assert result.historical_max_daily_snowfall_cm == 12.5
     assert result.observation_start == date(2021, 1, 1)
     assert result.observation_end == date(2025, 12, 31)
     assert result.source_name == "Open-Meteo Historical Weather API"
@@ -90,6 +92,24 @@ def test_invalid_series_is_rejected() -> None:
                 "daily": {
                     "time": ["2025-01-01"],
                     "wind_gusts_10m_max": [20.0, 30.0],
+                }
+            },
+        )
+
+    with pytest.raises(ProviderError, match="invalid response"):
+        provider(handler).lookup(longitude=113.25, latitude=23.12)
+
+
+def test_invalid_snowfall_series_is_rejected() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        del request
+        return httpx.Response(
+            200,
+            json={
+                "daily": {
+                    "time": ["2025-01-01", "2025-01-02"],
+                    "wind_gusts_10m_max": [20.0, 30.0],
+                    "snowfall_sum": [1.0],
                 }
             },
         )

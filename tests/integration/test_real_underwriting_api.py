@@ -86,7 +86,7 @@ def project_payload() -> dict:
         "longitude": 113.25,
         "latitude": 23.12,
         "proposed_start_date": "2026-10-01",
-        "component_model": "PV-MODULE-580W",
+        "component_model": "JAM66D42-580/MB",
     }
 
 
@@ -152,8 +152,8 @@ class RecordingOcrProvider(OcrProvider):
                     material_input.material.material_id
                 ),
                 field_name="component_model",
-                raw_value="PV-MODULE-580W",
-                normalized_value="PV-MODULE-580W",
+                raw_value="JAM66D42-580/MB",
+                normalized_value="JAM66D42-580/MB",
                 value_status=(
                     OcrValueStatus.EXTRACTED
                 ),
@@ -162,7 +162,7 @@ class RecordingOcrProvider(OcrProvider):
                 provider=self.name,
                 model=self.model_name,
                 evidence_text=(
-                    "Model: PV-MODULE-580W"
+                    "Model: JAM66D42-580/MB"
                 ),
             )
         ]
@@ -341,7 +341,13 @@ def override_real_providers() -> Iterator[
 
 def test_runs_complete_real_underwriting_pipeline(
     override_real_providers: ProviderOverride,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setenv(
+        "PV_CASE_DB_PATH",
+        str(tmp_path / "cases.sqlite3"),
+    )
     ocr_provider = RecordingOcrProvider()
     vision_provider = RecordingVisionProvider()
 
@@ -402,8 +408,43 @@ def test_runs_complete_real_underwriting_pipeline(
     )
     assert (
         result["decision"]["decision"]
-        == "manual_review"
+        == "request_more"
     )
+
+    saved_case = client.get(
+        "/api/v1/cases/case-real-api-001"
+    )
+    assert saved_case.status_code == 200
+    assert saved_case.json()["case"]["case_id"] == "case-real-api-001"
+    assert saved_case.json()["review_status"] == "pending"
+
+    review_response = client.post(
+        "/api/v1/cases/case-real-api-001/review",
+        json={
+            "reviewer_name": "测试核保员",
+            "final_decision": "conditional_accept",
+            "comment": "测试人工复核意见",
+        },
+    )
+    assert review_response.status_code == 200
+    assert review_response.json()["review_status"] == "completed"
+    assert review_response.json()["review_history"][0]["final_decision"] == "conditional_accept"
+
+    saved_report = client.get(
+        "/api/v1/cases/case-real-api-001/report"
+    )
+    assert saved_report.status_code == 200
+    assert "人工复核记录" in saved_report.text
+    assert "测试核保员" in saved_report.text
+    assert "测试人工复核意见" in saved_report.text
+
+    completed_cases = client.get(
+        "/api/v1/cases?review_status=completed&decision=request_more"
+    )
+    assert completed_cases.status_code == 200
+    assert [item["case_id"] for item in completed_cases.json()] == [
+        "case-real-api-001"
+    ]
 
     assert (
         result["component_profile"]
@@ -413,7 +454,7 @@ def test_runs_complete_real_underwriting_pipeline(
         result["component_profile"][
             "component_model"
         ]
-        == "PV-MODULE-580W"
+        == "JAM66D42-580/MB"
     )
     assert (
         result["component_profile"][
@@ -424,7 +465,7 @@ def test_runs_complete_real_underwriting_pipeline(
         result["component_profile"][
             "match_confidence"
         ]
-        == 1.0
+        == 0.98
     )
 
     component_trace = next(
@@ -446,8 +487,8 @@ def test_runs_complete_real_underwriting_pipeline(
     assert result["weather_profile"] is not None
     assert result["weather_profile"]["historical_max_wind_m_s"] == 30.0
     assert result["catastrophe_assessment"] is not None
-    assert result["catastrophe_assessment"]["expected_loss_risk"] == "low"
-    assert result["catastrophe_assessment"]["requires_manual_review"] is False
+    assert result["catastrophe_assessment"]["expected_loss_risk"] == "unknown"
+    assert result["catastrophe_assessment"]["requires_manual_review"] is True
 
     weather_trace = next(
         trace
@@ -478,6 +519,37 @@ def test_runs_complete_real_underwriting_pipeline(
         .file_name
         == "site-panorama.png"
     )
+
+
+def test_background_job_reports_progress_and_saves_result(
+    override_real_providers: ProviderOverride,
+) -> None:
+    override_real_providers(
+        RecordingOcrProvider(),
+        RecordingVisionProvider(),
+    )
+    payload = manifest_payload()
+    payload["case_id"] = "case-job-api-001"
+
+    response = client.post(
+        "/api/v1/underwriting/jobs",
+        data={"manifest": json.dumps(payload, ensure_ascii=False)},
+        files=[
+            ("files", ("component-nameplate.png", png_bytes(), "image/png")),
+            ("files", ("site-panorama.png", png_bytes("gray"), "image/png")),
+        ],
+    )
+
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    job_response = client.get(f"/api/v1/underwriting/jobs/{job_id}")
+
+    assert job_response.status_code == 200
+    job = job_response.json()
+    assert job["status"] == "completed"
+    assert job["progress_percent"] == 100
+    assert job["result"]["case_id"] == "case-job-api-001"
+    assert client.get("/api/v1/cases/case-job-api-001").status_code == 200
 
 
 def test_rejects_file_count_mismatch(

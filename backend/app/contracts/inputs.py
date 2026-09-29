@@ -4,12 +4,14 @@ from pydantic import Field, IPvAnyAddress
 
 from .common import Bbox, ContractModel
 from .enums import (
+    CaptureView,
     InstallationType,
     MaterialCategory,
     MaterialParseStatus,
     MaterialQualityStatus,
     OcrValueStatus,
     ProjectType,
+    WatermarkStatus,
 )
 
 
@@ -18,7 +20,10 @@ class ProjectInfo(ContractModel):
 
     project_name: str | None
     insured_name: str | None
+    insured_address: str | None = None
     project_entity: str | None = None
+    industry_name: str | None = None
+    fire_surcharge_confirmed: bool | None = None
     project_type: ProjectType
     installation_type: InstallationType
     site_address: str | None
@@ -37,10 +42,12 @@ class Material(ContractModel):
 
     material_id: str = Field(min_length=1)
     category: MaterialCategory
+    capture_view: CaptureView = CaptureView.UNKNOWN
     file_name: str = Field(min_length=1)
     media_type: str = Field(min_length=1)
     sha256: str | None = Field(default=None, pattern=r"^[0-9a-fA-F]{64}$")
     captured_at: datetime | None = None
+    watermark_status: WatermarkStatus = WatermarkStatus.NOT_CHECKED
     longitude: float | None = Field(default=None, ge=-180.0, le=180.0)
     latitude: float | None = Field(default=None, ge=-90.0, le=90.0)
     quality_status: MaterialQualityStatus

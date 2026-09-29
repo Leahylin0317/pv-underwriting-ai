@@ -26,13 +26,13 @@ class MockOcrProvider(OcrProvider):
                 field_id=f"{material.material_id}:component-model",
                 material_id=material.material_id,
                 field_name="component_model",
-                raw_value="PV-MODULE-580W",
-                normalized_value="PV-MODULE-580W",
+                raw_value="JAM66D42-580/MB",
+                normalized_value="JAM66D42-580/MB",
                 value_status=OcrValueStatus.EXTRACTED,
                 confidence=0.98,
                 bbox=None,
                 provider=self.name,
                 model=self.model_name,
-                evidence_text="组件型号：PV-MODULE-580W",
+                evidence_text="组件型号：JAM66D42-580/MB",
             )
         ]

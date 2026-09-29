@@ -1,4 +1,11 @@
-from app.contracts import UnderwritingCase
+from app.contracts import (
+    DetectionStatus,
+    EquipmentInventoryItem,
+    OcrField,
+    OcrValueStatus,
+    RiskCategory,
+    UnderwritingCase,
+)
 from app.reports import generate_markdown_report
 
 
@@ -114,6 +121,67 @@ def test_generates_readable_markdown_report() -> None:
     assert "图片风险识别" in report
 
 
+def test_report_explains_the_end_to_end_decision_path_and_linked_evidence() -> None:
+    report = generate_markdown_report(make_case())
+
+    assert "判断过程与追溯" in report
+    assert "整单汇总顺序" in report
+    assert "模型不直接生成整单结论" in report
+    assert "finding-001" in report
+    assert "关联视觉证据" in report
+    assert "规则说明待补充" in report
+
+
+def test_report_includes_extracted_ocr_fields() -> None:
+    case = make_case()
+    field = OcrField(
+        field_id="material-panorama-001:project_name",
+        material_id="material-panorama-001",
+        field_name="project_name",
+        raw_value="示例光伏项目",
+        normalized_value="示例光伏项目",
+        value_status=OcrValueStatus.EXTRACTED,
+        confidence=0.98,
+        provider="mock-ocr",
+        model="mock-v1",
+    )
+    report = generate_markdown_report(
+        case.model_copy(update={"ocr_fields": [field]})
+    )
+
+    assert "OCR 字段提取结果" in report
+    assert "示例光伏项目" in report
+    assert "0.98" in report
+
+
+def test_report_includes_structured_equipment_inventory() -> None:
+    case = make_case().model_copy(
+        update={
+            "equipment_inventory": [
+                EquipmentInventoryItem(
+                    source_material_id="material-panorama-001",
+                    worksheet_name="设备清单",
+                    row_number=2,
+                    item_category="组件",
+                    item_name="光伏板",
+                    manufacturer="晶澳",
+                    specification="JAM72D42-630W",
+                    quantity="8525",
+                    normalized_component_model="JAM72D42-630W",
+                    rated_power_w=630,
+                )
+            ]
+        }
+    )
+
+    report = generate_markdown_report(case)
+
+    assert "设备清单结构化结果" in report
+    assert "JAM72D42-630W" in report
+    assert "630 W" in report
+    assert "8525" in report
+
+
 
 def test_renders_catastrophe_assessment_trace_label() -> None:
     case = make_case()
@@ -125,6 +193,26 @@ def test_renders_catastrophe_assessment_trace_label() -> None:
     )
 
     assert "灾害风险评估" in report
+
+
+def test_report_hides_findings_outside_the_reviewed_material_scope() -> None:
+    case = make_case()
+    irrelevant = case.findings[0].model_copy(
+        update={
+            "finding_id": "finding-out-of-scope",
+            "category": RiskCategory.FLAMMABLE_MATERIAL,
+            "label": "out-of-scope combustible material",
+            "detection_status": DetectionStatus.DETECTED,
+            "evidence_text": "This finding is outside the material review scope.",
+        }
+    )
+
+    report = generate_markdown_report(
+        case.model_copy(update={"findings": [*case.findings, irrelevant]})
+    )
+
+    assert "outside the material review scope" not in report
+    assert "0.72" in report
 
 
 def test_handles_case_without_decision_or_results() -> None:

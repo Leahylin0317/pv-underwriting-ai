@@ -34,6 +34,7 @@ def weather(
     wind_m_s: float | None = 30,
     hail_mm: float | None = 20,
     snow_load_pa: float | None = 3000,
+    snowfall_cm: float | None = None,
 ) -> WeatherProfile:
     return WeatherProfile(
         longitude=113.25,
@@ -41,6 +42,7 @@ def weather(
         historical_max_wind_m_s=wind_m_s,
         historical_max_hail_mm=hail_mm,
         historical_max_snow_load_pa=snow_load_pa,
+        historical_max_daily_snowfall_cm=snowfall_cm,
         observation_start=date(2021, 1, 1),
         observation_end=date(2025, 12, 31),
         source_name="测试气象源",
@@ -58,6 +60,8 @@ def test_marks_complete_adequate_capacity_as_low_risk() -> None:
     assert result.resistance_level is ResistanceLevel.HIGH
     assert result.expected_loss_risk is ExpectedLossRisk.LOW
     assert result.requires_manual_review is False
+    assert result.critical_shortfall_ratio == 0.75
+    assert result.adequate_margin_ratio == 1.25
     assert "CAT-WIND-CAPACITY-ADEQUATE" in result.triggered_rule_ids
     assert "CAT-HAIL-CAPACITY-ADEQUATE" in result.triggered_rule_ids
     assert "CAT-SNOW-CAPACITY-ADEQUATE" in result.triggered_rule_ids
@@ -99,6 +103,17 @@ def test_missing_hail_and_snow_data_remains_unknown() -> None:
     assert "CAT-HAIL-DATA-MISSING" in result.triggered_rule_ids
     assert "CAT-SNOW-DATA-MISSING" in result.triggered_rule_ids
     assert any("缺少" in factor for factor in result.factors)
+
+
+def test_snowfall_indicator_is_reported_without_being_misrepresented_as_load() -> None:
+    result = CatastropheAssessmentEngine().assess(
+        component=component(),
+        weather=weather(hail_mm=None, snow_load_pa=None, snowfall_cm=18.0),
+    )
+
+    assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
+    assert any("18.0 cm" in factor and "未换算为结构雪荷载" in factor for factor in result.factors)
+    assert "CAT-SNOW-DATA-MISSING" in result.triggered_rule_ids
 
 
 def test_missing_profiles_are_explicit() -> None:

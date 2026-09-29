@@ -1,14 +1,14 @@
 [
   {
-    "component_model": "PV-MODULE-580W",
-    "manufacturer": "示例组件厂商（演示数据）",
+    "component_model": "JAM66D42-580/MB",
+    "manufacturer": "JA Solar",
     "rated_power_w": 580,
-    "hail_resistance_mm": 25,
-    "wind_load_pa": 2400,
-    "snow_load_pa": 5400,
-    "source_url": null,
-    "source_name": "演示组件目录（非生产数据）",
-    "retrieved_at": "2026-09-26T00:00:00+08:00",
-    "match_confidence": 1.0
+    "hail_resistance_mm": null,
+    "wind_load_pa": null,
+    "snow_load_pa": null,
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/3032618e4342717.pdf",
+    "source_name": "JA Solar JAM66D42 MB official datasheet, version Global-EN-20240326A; wind, hail and snow values not normalized",
+    "retrieved_at": "2026-09-28T00:00:00+08:00",
+    "match_confidence": 0.98
   }
 ]
