@@ -64,7 +64,7 @@ EXPECTED_CHECKS_BY_MATERIAL = {
         | SUPPLEMENT_REQUIRED_CHECKS
     ),
     MaterialCategory.PARAPET: frozenset(
-        {RiskCategory.MISSING_PARAPET_OR_GUARDRAIL, RiskCategory.DRAINAGE_ABNORMAL}
+        {RiskCategory.MISSING_PARAPET_OR_GUARDRAIL}
     ) | SUPPLEMENT_REQUIRED_CHECKS,
     MaterialCategory.WORKSHOP: frozenset(
         {RiskCategory.FLAMMABLE_MATERIAL, RiskCategory.HAZARDOUS_MATERIAL}
@@ -79,7 +79,6 @@ EXPECTED_CHECKS_BY_MATERIAL = {
     MaterialCategory.ELECTRICAL_GROUNDING: frozenset(
         {
             RiskCategory.ELECTRICAL_GROUNDING_ABNORMAL,
-            RiskCategory.UNPROTECTED_CABLE,
         }
     ) | SUPPLEMENT_REQUIRED_CHECKS,
     MaterialCategory.COMPONENT_NAMEPLATE: frozenset(
@@ -91,8 +90,6 @@ EXPECTED_CHECKS_BY_MATERIAL = {
     MaterialCategory.COMPONENT_SURFACE: frozenset(
         {
             RiskCategory.MODULE_DAMAGE,
-            RiskCategory.MODULE_BACKSHEET_BULGING,
-            RiskCategory.MODULE_DISCOLORATION,
         }
     ) | SUPPLEMENT_REQUIRED_CHECKS,
     MaterialCategory.MONITORING_OPTIONAL: frozenset(
@@ -101,6 +98,7 @@ EXPECTED_CHECKS_BY_MATERIAL = {
     MaterialCategory.OTHER: SUPPLEMENT_REQUIRED_CHECKS,
 }
 ADVANCED_CHECKS_BY_MATERIAL = {
+    MaterialCategory.PARAPET: frozenset({RiskCategory.DRAINAGE_ABNORMAL}),
     MaterialCategory.ROOF_CONNECTION: frozenset(
         {
             RiskCategory.SUPPORT_CORROSION,
@@ -117,6 +115,9 @@ ADVANCED_CHECKS_BY_MATERIAL = {
     ),
     MaterialCategory.ELECTRICAL_GROUNDING: frozenset(
         {RiskCategory.UNPROTECTED_CABLE}
+    ),
+    MaterialCategory.COMPONENT_SURFACE: frozenset(
+        {RiskCategory.MODULE_BACKSHEET_BULGING, RiskCategory.MODULE_DISCOLORATION}
     ),
 }
 PROHIBITED_PROJECT_TERMS = ("集中式", "林光", "渔光", "滩涂")

@@ -8,6 +8,8 @@ from app.providers import ProviderError
 from app.providers.component import (
     CatalogComponentProvider,
     ComponentProvider,
+    LocalFirstComponentProvider,
+    RemoteCatalogComponentProvider,
 )
 
 PROJECT_ROOT = (
@@ -17,8 +19,8 @@ PROJECT_ROOT = (
 DEFAULT_COMPONENT_CATALOG_PATH = (
     PROJECT_ROOT
     / "data"
-    / "examples"
-    / "component_catalog.sample.json"
+    / "catalogs"
+    / "component_catalog_2026-10-01.json"
 )
 
 
@@ -51,17 +53,14 @@ def get_component_catalog_path() -> Path:
 
 
 def get_component_provider() -> ComponentProvider:
-    """创建组件目录 Provider。"""
+    """Create local-first lookup with optional verified online fallback."""
 
     catalog_path = (
         get_component_catalog_path()
     )
 
     try:
-        return (
-            CatalogComponentProvider
-            .from_json_file(catalog_path)
-        )
+        local = CatalogComponentProvider.from_json_file(catalog_path)
     except ProviderError as exc:
         raise HTTPException(
             status_code=(
@@ -71,3 +70,26 @@ def get_component_provider() -> ComponentProvider:
                 "Component catalog is unavailable"
             ),
         ) from exc
+
+    online_url = os.getenv("PV_COMPONENT_ONLINE_CATALOG_URL", "").strip()
+    if not online_url:
+        return local
+    domains = tuple(
+        part.strip()
+        for part in os.getenv(
+            "PV_COMPONENT_APPROVED_SOURCE_DOMAINS", "jasolar.com"
+        ).split(",")
+        if part.strip()
+    )
+    try:
+        online = RemoteCatalogComponentProvider(
+            online_url,
+            approved_source_domains=domains,
+            api_key=os.getenv("PV_COMPONENT_ONLINE_CATALOG_API_KEY", "").strip(),
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Online component catalog configuration is invalid",
+        ) from exc
+    return LocalFirstComponentProvider(local, online)

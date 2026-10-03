@@ -2,6 +2,7 @@
 
 [赛题要求覆盖矩阵](docs/赛题要求覆盖矩阵.md)
 [判断透明化与证据追溯](docs/判断透明化与证据追溯.md)
+[官方材料规则对照](docs/官方材料规则对照.md)
 
 
 本项目提供一个可运行的分布式光伏财产险核保后端，用于检查投保材料、提取结构化字段、识别图片风险、查询组件与历史气象数据、执行确定性规则，并生成核保结论和 Markdown 报告。
@@ -14,7 +15,8 @@
 - 读取 Excel 设备清单并结构化提取类别、型号、品牌、数量和价格；单一明确的组件型号可补充案件录入字段
 - 将多页 PDF 渲染为图片后逐页执行 OCR
 - 按材料类别把文件路由到适用的 OCR 或视觉 Provider
-- 从本地 JSON 组件目录查询风荷载、雪荷载和抗冰雹参数
+- OCR/设备清单提取型号后先查本地 JSON 目录；配置经审核的在线组件目录后，仅为缺失参数查询并补充完全一致型号的数据，保留逐项来源
+- 可通过独立的在线资料检索接口查找厂商规格书候选；候选链接需人工核对，不会直接生成抗灾参数
 - 通过 Open-Meteo 历史气象 API 查询项目坐标的历史最大阵风和最大单日降雪量
 - 比较组件能力和风、雹、雪灾害指标，缺少可靠数据时转人工复核
 - 执行材料规则、保守整单决策和完整处理留痕
@@ -33,8 +35,8 @@
 - 对监控材料提示核保人员复核优惠资格；没有正式费率配置时不自动计算折扣或保费
 - 对监控覆盖图识别优惠候选；覆盖有效性及优惠条件由核保人员按正式条款确认
 - 对车间材料要求登记企业所属行业；高火险行业列表和加费确认项可配置，官方名单缺失时显式转人工核验
-- 通过 `data/rules/challenge_open_ai_01.json` 维护赛题规则版本、阶段二检查开关、高火险行业关键词及灾害能力比阈值；正式规则值到位后替换配置
-- 支持阶段二演示检查：背板鼓包/变色、支架锈蚀/变形、防水层损坏、未保护裸露线缆、危险工艺、洁净车间和消防设施
+- 通过 `data/rules/challenge_open_ai_01.json` 维护赛题规则版本、阶段二检查开关、高火险行业关键词及灾害能力比阈值；阶段二默认关闭，须由业务确认后启用
+- 可选阶段二演示检查：背板鼓包/变色、支架锈蚀/变形、防水层损坏、未保护裸露线缆、危险工艺、洁净车间和消防设施
 - 将明确拒保事实设为整案优先动作，并在报告中保留证据、图片位置和规则编号
 
 ## 环境要求
@@ -80,6 +82,10 @@ python .\scripts\run_real_vision.py "C:\path\to\test-image.jpg" --category panor
 
 ~~~dotenv
 PV_COMPONENT_CATALOG_PATH=
+PV_COMPONENT_ONLINE_CATALOG_URL=
+PV_COMPONENT_ONLINE_CATALOG_API_KEY=
+PV_COMPONENT_APPROVED_SOURCE_DOMAINS=jasolar.com
+PV_COMPONENT_SEARCH_API_KEY=
 PV_WEATHER_BASE_URL=https://archive-api.open-meteo.com/v1/archive
 PV_WEATHER_LOOKBACK_DAYS=3650
 PV_WEATHER_DATA_LAG_DAYS=7
@@ -87,7 +93,11 @@ PV_WEATHER_TIMEOUT_SECONDS=30
 PV_CASE_DB_PATH=outputs/pv-underwriting.sqlite3
 ~~~
 
-**PV_COMPONENT_CATALOG_PATH** 留空时会使用 **data/examples/component_catalog.sample.json**。示例目录含 JA Solar JAM66D42-580/MB 厂商规格书中核实的 580 W 额定功率；风、雹、雪参数暂留空，系统会将对应灾种标记为未评估并转人工复核。该单条样本仍是演示目录，不能作为完整或生产核保依据。
+**PV_COMPONENT_CATALOG_PATH** 留空时会使用 **data/catalogs/component_catalog_2026-10-01.json**。该目录保留原有的两个示例条目，并从《光伏组件抗灾参数目录_2026-10-01.xlsx》导入 69 条中国市场且官网逐项列示的型号；全部 364 条原始记录保存在 **data/reference/component_parameters_2026-10-01.json** 供复核，其他市场版本、简写及范围展开型号不参与自动匹配。导入脚本为 **scripts/import_component_workbook.py**，更新源表后可重新生成两份 JSON。正反面最大静态载荷作为独立参考字段保存，不会换算成抗风或雪载；空缺的灾害参数仍会触发人工复核。导入数据尚需逐条核对官网版本和安装条件，不能直接作为生产核保依据。
+
+示例目录还收录了设备清单写法 `JAM72D42-630W` 的演示条目。型号别名仅在目录中显式登记后才会匹配；`630W` 与厂商 `/LB` 后缀的对应关系仍须核对铭牌。不同版本的厂商规格书静载参数不同，因此该条目的风、雪能力暂留空，不能据此给出抗灾结论。填写 `PV_COMPONENT_SEARCH_API_KEY` 后，可用 `GET /api/v1/components/sources?model=...` 搜索晶澳官网资料候选。该接口使用 [Brave Search API](https://api-dashboard.search.brave.com/api-reference/web/search/get)，只返回 `jasolar.com` 的 HTTPS 链接，不自动把搜索摘要当成核保参数。
+
+若已有**经过审核的在线组件目录服务**，将其 HTTPS 地址填入 `PV_COMPONENT_ONLINE_CATALOG_URL`。核保流程会在本地型号缺失或本地风、雹、雪等字段为空时，向该服务发送 `GET ?model=<完整型号>`。服务以 404 表示无记录，或返回 `{"verified":true,"profile":{...ComponentProfile 字段...}}`。`profile.parameter_sources` 必须为每个非空数值字段提供厂商 HTTPS 来源链接。系统只接受完全一致的型号及 `PV_COMPONENT_APPROVED_SOURCE_DOMAINS` 列表中的厂商来源；本地已有值不被覆盖。需要认证时可设置 `PV_COMPONENT_ONLINE_CATALOG_API_KEY`（Bearer），不要将密钥提交到仓库。**仓库目前没有通用、可靠的厂商参数 API 地址，留空时仅使用本地目录**；资料搜索接口只能给出候选链接，不会凭搜索摘要填数。气象部分已有 Open-Meteo 在线历史阵风查询；冰雹直径和结构雪荷载仍需经核验的数据源。
 
 **.env** 已被 Git 忽略，不要把真实 API Key 写入 **.env.example** 或其他受版本控制的文件。
 
@@ -110,6 +120,7 @@ python -m uvicorn app.main:app --reload
 | --- | --- | --- |
 | GET | /health | 服务健康检查 |
 | GET | /ready | 检查模型、组件目录、天气配置和案件数据库就绪状态，不返回密钥 |
+| GET | /api/v1/components/sources?model=... | 查询厂商资料候选，供人工核对和入库 |
 | GET | / | 本地核保工作台 |
 | POST | /api/v1/files/inspect | 检查上传文件 |
 | POST | /api/v1/ocr/extract | 对单个图片或 PDF 执行真实 OCR |
@@ -187,9 +198,9 @@ python .\scripts\evaluate_cases.py --truth .\data\private\ground-truth.jsonl --p
 
 可选附加门槛：`--minimum-finding-precision 0.90`、`--minimum-ocr-accuracy 0.95`。耗时统计是处理留痕中各步骤 `latency_ms` 的合计，用于比较同一环境下的回归结果，不视为端到端网络耗时。
 
-默认通过门槛为结论准确率 ≥ 90%、高风险拒保场景召回率 100%。评测材料和预测输出可能含敏感信息，保持在 Git 忽略的数据目录中，不要提交到仓库。当前官方规则工作簿、高火险行业清单和完整 A/B/C 标注真值包尚未接入，代码及单元测试不能证明上述业务验收指标已达标。
+默认通过门槛为结论准确率 ≥ 90%、高风险拒保场景召回率 100%。评测材料和预测输出可能含敏感信息，保持在 Git 忽略的数据目录中，不要提交到仓库。官方规则工作簿已取得并在[规则对照表](docs/官方材料规则对照.md)登记；高火险行业清单和完整 A/B/C 标注真值包仍未接入，代码及单元测试不能证明上述业务验收指标已达标。
 
-原 v0.1 基线为 206 项测试通过。本轮规则补齐后，在当前开发环境完整运行 **260 项测试，全部通过**（含 1 项 FastAPI 测试客户端弃用警告）；这只验证软件逻辑，不代表 A/B/C 准确率或业务验收门槛已达标。取得完整盲测包和标注真值后仍需开展专项回归。
+使用 `pytest -q --basetemp=.\outputs\pytest-all-temp` 运行本地完整回归。通过软件测试只验证代码逻辑，不代表 A/B/C 准确率或业务验收门槛已达标。取得完整盲测包和标注真值后仍需开展专项回归。
 
 ## 数据来源与判断边界
 
@@ -201,7 +212,7 @@ python .\scripts\evaluate_cases.py --truth .\data\private\ground-truth.jsonl --p
 - 冰雹、雪荷载或组件参数缺失时，系统明确标记数据缺口并要求人工复核。
 - 最终承保、拒保、加费和附加条件仍需由授权核保人员确认。
 - 材料门槛、检查项和裁决顺序用于比赛 Demo 首期验收；投入真实业务前需由核保业务负责人确认。
-- 本机当前没有赛题提到的《光伏自核材料及规则.xlsx》、高火险行业清单和 C 包；规则配置中的行业列表因此留空，留空会触发人工复核，不会推定行业安全。
+- 本机已取得《光伏自核材料及规则-v2.xlsx》；高火险行业清单和 C 包仍缺失。规则配置中的行业列表因此留空，留空会触发人工复核，不会推定行业安全。
 - 灾害能力比的默认 0.75/1.25 仅为可配置的演示阈值，尚未由业务方确认；组件参数缺失、冰雹数据缺失或没有雪荷载数据时，报告必须保留未知状态并人工复核。
 - 照片质量启发式阈值尚未通过完整比赛样本校准；它用于发现明显低分辨率、过暗或细节不足的照片，最终检查仍须结合视觉模型和人工复核。
 - 高风险环境目标为召回率 ≥ 90% 且拒保场景零漏检；在完整 A/B/C 真值包回归前，不能宣称已通过该指标。

@@ -214,8 +214,9 @@
             <div class="field"><label for="projectType">项目类型 *</label><select id="projectType"><option value="rooftop">工商业屋顶式</option><option value="carport">车棚顶式</option><option value="unsupported">其他/暂不支持</option><option value="unknown">未知</option></select></div>
             <div class="field"><label for="installationType">安装类型 *</label><select id="installationType"><option value="unknown">待图片识别</option><option value="color_steel_roof">彩钢瓦屋顶</option><option value="flat_roof">平屋顶</option><option value="tile_roof">瓦片屋顶</option><option value="carport_roof">车棚顶</option></select></div>
             <div class="field wide"><label for="siteAddress">项目地址</label><input id="siteAddress" placeholder="省、市、区县及详细地址"></div>
-            <div class="field"><label for="longitude">经度 *</label><input id="longitude" type="number" step="any" placeholder="例如 113.2644"></div>
-            <div class="field"><label for="latitude">纬度 *</label><input id="latitude" type="number" step="any" placeholder="例如 23.1291"></div>
+            <div class="field"><label for="longitude">经度 <span class="optional">未知可留空</span></label><input id="longitude" type="number" step="any" min="-180" max="180" placeholder="例如 113.2644"></div>
+            <div class="field"><label for="latitude">纬度 <span class="optional">未知可留空</span></label><input id="latitude" type="number" step="any" min="-90" max="90" placeholder="例如 23.1291"></div>
+            <p class="hint wide">经纬度须对应项目实际位置。暂时不知道可以都留空；系统会跳过所在地天气查询，并提示补充坐标后人工复核。不要用示例数字代替真实位置。</p>
             <div class="field"><label for="startDate">拟起保日期</label><input id="startDate" type="date"></div>
             <div class="field"><label for="componentModel">组件完整型号</label><input id="componentModel" placeholder="可由铭牌 OCR 补齐"></div>
             <div class="field wide"><label for="insuredAddress">被保险地址 <span class="optional">可选</span></label><input id="insuredAddress" placeholder="用于与备案材料核对"></div>
@@ -917,8 +918,15 @@
       const selected = rows.map(row => ({ row, file: row.querySelector(".upload-file").files[0] })).filter(item => item.file);
       if (!selected.length) return showError("请至少选择一份投保材料。");
       const project = readProject();
-      if (!project.project_type || project.longitude === null || project.latitude === null) {
-        return showError("请填写项目类型、经度和纬度，系统需要这些信息查询项目所在地灾害数据。");
+      if (!project.project_type) return showError("请选择项目类型。");
+      if ((project.longitude === null) !== (project.latitude === null)) {
+        return showError("经度和纬度请同时填写；暂时不知道时两个都留空。");
+      }
+      if (project.longitude !== null && (project.longitude < -180 || project.longitude > 180)) {
+        return showError("经度须在 -180 到 180 之间，请填写项目实际位置。");
+      }
+      if (project.latitude !== null && (project.latitude < -90 || project.latitude > 90)) {
+        return showError("纬度须在 -90 到 90 之间，请填写项目实际位置。");
       }
       const caseId = document.getElementById("caseId").value.trim() || `PV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
       document.getElementById("caseId").value = caseId;

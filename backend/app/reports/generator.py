@@ -599,6 +599,20 @@ def generate_markdown_report(
                 "",
             ]
         )
+        if component.parameter_sources:
+            labels = {
+                "rated_power_w": "额定功率",
+                "hail_resistance_mm": "抗冰雹",
+                "wind_load_pa": "风荷载",
+                "snow_load_pa": "雪荷载",
+            }
+            lines.append("- 参数逐项来源：")
+            lines.extend(
+                f"  - {labels.get(field, field)}：{_table_cell(source)}"
+                for field, source in component.parameter_sources.items()
+            )
+            lines.append("")
+        lines.extend(f"- 查询说明：{_table_cell(note)}" for note in component.lookup_notes)
 
     if case.weather_profile is not None:
         weather = case.weather_profile

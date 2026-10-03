@@ -36,6 +36,7 @@ from app.providers import (
     ProviderError,
     VisionProvider,
 )
+from app.providers.component import LocalFirstComponentProvider
 from app.providers.routing import (
     RoutedVisionProvider,
 )
@@ -128,6 +129,7 @@ def readiness_check() -> dict[str, object]:
         "weather_provider_configured": False,
         "case_database_available": False,
     }
+    online_catalog_configured = False
 
     try:
         VlmSettings.from_environment(env_file=PROJECT_ROOT / ".env")
@@ -137,8 +139,11 @@ def readiness_check() -> dict[str, object]:
         pass
 
     try:
-        get_component_provider()
+        component_provider = get_component_provider()
         checks["component_catalog_available"] = True
+        online_catalog_configured = isinstance(
+            component_provider, LocalFirstComponentProvider
+        )
     except HTTPException:
         pass
 
@@ -157,6 +162,8 @@ def readiness_check() -> dict[str, object]:
     return {
         "status": "ready" if all(checks.values()) else "degraded",
         "checks": checks,
+        "component_online_catalog_configured": online_catalog_configured,
+        "component_online_connectivity_checked": False,
         "weather_connectivity_checked": False,
     }
 

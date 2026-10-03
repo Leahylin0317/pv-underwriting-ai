@@ -16,11 +16,11 @@
     "manufacturer": "JA Solar",
     "rated_power_w": 630,
     "hail_resistance_mm": null,
-    "wind_load_pa": 2400,
-    "snow_load_pa": 5400,
+    "wind_load_pa": null,
+    "snow_load_pa": null,
     "source_url": "https://www.jasolar.com/uploadfile/2023/0628/20230628040509768.pdf",
-    "source_name": "JA Solar JAM72D42-630/LB official datasheet; equipment-list model JAM72D42-630W mapped to the official /LB designation; back static load 2400 Pa used for wind screening and front static load 5400 Pa used for snow screening",
+    "source_name": "Equipment list uses JAM72D42-630W; JA Solar /LB datasheets are candidate references only. Exact variant and mechanical loads require nameplate verification.",
     "retrieved_at": "2026-09-30T00:00:00+08:00",
-    "match_confidence": 0.95
+    "match_confidence": 0.5
   }
 ]

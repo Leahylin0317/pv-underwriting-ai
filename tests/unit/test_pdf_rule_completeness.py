@@ -167,7 +167,14 @@ def test_ocr_directly_compares_project_entity_and_insured_fields() -> None:
 
 
 def test_unprotected_cable_is_rejected_under_the_midterm_rule() -> None:
-    engine = RuleEngine()
+    engine = RuleEngine(
+        config=BusinessRulesConfig(
+            ruleset_id="stage-two-test",
+            version="1",
+            source_note="stage-two rule fixture",
+            advanced_checks_enabled=True,
+        )
+    )
     item = material(MaterialCategory.ELECTRICAL_GROUNDING)
     findings = negative_findings(engine, item)
     findings.append(finding(item.material_id, RiskCategory.UNPROTECTED_CABLE, DetectionStatus.DETECTED))
@@ -176,6 +183,20 @@ def test_unprotected_cable_is_rejected_under_the_midterm_rule() -> None:
 
     assert review.action is MaterialReviewAction.RECOMMEND_REJECT
     assert "ELEC-UNPROTECTED-CABLE-REJECT-001" in review.triggered_rule_ids
+
+
+def test_stage_two_checks_do_not_trigger_in_initial_phase() -> None:
+    engine = RuleEngine()
+    item = material(MaterialCategory.ELECTRICAL_GROUNDING)
+    findings = negative_findings(engine, item)
+    findings.append(
+        finding(item.material_id, RiskCategory.UNPROTECTED_CABLE, DetectionStatus.DETECTED)
+    )
+
+    review = engine.evaluate_material(item, findings=findings)
+
+    assert review.action is MaterialReviewAction.REQUEST_MORE
+    assert "ELEC-UNPROTECTED-CABLE-REJECT-001" not in review.triggered_rule_ids
 
 
 def test_irrelevant_detection_does_not_affect_material_decision() -> None:

@@ -1,0 +1,2045 @@
+[
+  {
+    "component_model": "JAM66D42-580/MB",
+    "manufacturer": "JA Solar",
+    "rated_power_w": 580,
+    "hail_resistance_mm": null,
+    "wind_load_pa": null,
+    "snow_load_pa": null,
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/3032618e4342717.pdf",
+    "source_name": "JA Solar JAM66D42 MB official datasheet, version Global-EN-20240326A; wind, hail and snow values not normalized",
+    "retrieved_at": "2026-09-28T00:00:00+08:00",
+    "match_confidence": 0.98
+  },
+  {
+    "component_model": "JAM72D42-630W",
+    "manufacturer": "JA Solar",
+    "rated_power_w": 630,
+    "hail_resistance_mm": null,
+    "wind_load_pa": null,
+    "snow_load_pa": null,
+    "source_url": "https://www.jasolar.com/uploadfile/2023/0628/20230628040509768.pdf",
+    "source_name": "Equipment list uses JAM72D42-630W; JA Solar /LB datasheets are candidate references only. Exact variant and mechanical loads require nameplate verification.",
+    "retrieved_at": "2026-09-30T00:00:00+08:00",
+    "match_confidence": 0.5
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR5-54HTB-440M",
+    "rated_power_w": 440.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 208; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR5-54HTB-445M",
+    "rated_power_w": 445.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 209; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR5-54HTB-450M",
+    "rated_power_w": 450.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 210; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-artist-full-black/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-605M",
+    "rated_power_w": 605.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 233; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-610M",
+    "rated_power_w": 610.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 234; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-615M",
+    "rated_power_w": 615.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 235; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-620M",
+    "rated_power_w": 620.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 236; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-625M",
+    "rated_power_w": 625.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 237; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "隆基 LONGi",
+    "component_model": "LR7-72HTHF-630M",
+    "rated_power_w": 630.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": 25.0,
+    "hail_impact_velocity_m_s": 23.0,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "cn",
+    "source_document_type": "官网产品页",
+    "source_url": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+    "source_note": "页面标称最大静态载荷；安装条件需另核",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 238; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "front_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "back_static_load_pa": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_resistance_mm": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/",
+      "hail_impact_velocity_m_s": "https://www.longi.com/cn/products/modules/hi-mo-x6-max-guardian-anti-dust/"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "页面标称最大静态载荷；安装条件需另核"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-435/LB",
+    "rated_power_w": 435.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 268; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-440/LB",
+    "rated_power_w": 440.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 269; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-445/LB",
+    "rated_power_w": 445.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 270; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-450/LB",
+    "rated_power_w": 450.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 271; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-455/LB",
+    "rated_power_w": 455.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 272; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D40-460/LB",
+    "rated_power_w": 460.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 273; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/66c564aad0b27d6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-605/LB",
+    "rated_power_w": 605.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 274; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-610/LB",
+    "rated_power_w": 610.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 275; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-615/LB",
+    "rated_power_w": 615.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 276; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-620/LB",
+    "rated_power_w": 620.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 277; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-625/LB",
+    "rated_power_w": 625.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 278; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D45-630/LB",
+    "rated_power_w": 630.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 279; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/3d553726b4dc.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-580/LB",
+    "rated_power_w": 580.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 280; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-585/LB",
+    "rated_power_w": 585.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 281; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-590/LB",
+    "rated_power_w": 590.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 282; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-595/LB",
+    "rated_power_w": 595.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 283; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-600/LB",
+    "rated_power_w": 600.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 284; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D40-605/LB",
+    "rated_power_w": 605.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 285; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/8281d66ede9c307.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-615/LB",
+    "rated_power_w": 615.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 286; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-620/LB",
+    "rated_power_w": 620.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 287; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-625/LB",
+    "rated_power_w": 625.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 288; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-630/LB",
+    "rated_power_w": 630.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 289; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-635/LB",
+    "rated_power_w": 635.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 290; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D42-640/LB",
+    "rated_power_w": 640.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 291; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-535/MB",
+    "rated_power_w": 535.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 292; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-540/MB",
+    "rated_power_w": 540.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 293; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-545/MB",
+    "rated_power_w": 545.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 294; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-550/MB",
+    "rated_power_w": 550.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 295; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-555/MB",
+    "rated_power_w": 555.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 296; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-560/MB",
+    "rated_power_w": 560.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 297; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/1120/a60aca200ffafe6.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-555/LB",
+    "rated_power_w": 555.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 298; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-560/LB",
+    "rated_power_w": 560.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 299; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-565/LB",
+    "rated_power_w": 565.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 300; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-570/LB",
+    "rated_power_w": 570.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 301; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-575/LB",
+    "rated_power_w": 575.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 302; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72D30-580/LB",
+    "rated_power_w": 580.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 303; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/2cc3a550b93786b.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-560/LR",
+    "rated_power_w": 560.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 304; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-565/LR",
+    "rated_power_w": 565.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 305; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-570/LR",
+    "rated_power_w": 570.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 306; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-575/LR",
+    "rated_power_w": 575.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 307; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-580/LR",
+    "rated_power_w": 580.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 308; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM72S30-585/LR",
+    "rated_power_w": 585.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 309; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0801/db09bea6cc21db3.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-615/GB",
+    "rated_power_w": 615.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 310; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-620/GB",
+    "rated_power_w": 620.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 311; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-625/GB",
+    "rated_power_w": 625.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 312; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-630/GB",
+    "rated_power_w": 630.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 313; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-635/GB",
+    "rated_power_w": 635.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 314; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM78D40-640/GB",
+    "rated_power_w": 640.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 315; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0506/f52e15bd4143bef.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-645/GB",
+    "rated_power_w": 645.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 316; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-650/GB",
+    "rated_power_w": 650.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 317; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-655/GB",
+    "rated_power_w": 655.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 318; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-660/GB",
+    "rated_power_w": 660.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 319; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-665/GB",
+    "rated_power_w": 665.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 320; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM66D50-670/GB",
+    "rated_power_w": 670.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 321; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/6dd299f69206f67.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-525/GR",
+    "rated_power_w": 525.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 322; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-530/GR",
+    "rated_power_w": 530.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 323; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-535/GR",
+    "rated_power_w": 535.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 324; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-540/GR",
+    "rated_power_w": 540.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 325; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-545/GR",
+    "rated_power_w": 545.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 326; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  {
+    "manufacturer": "晶澳 JA Solar",
+    "component_model": "JAM54D50-550/GR",
+    "rated_power_w": 550.0,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "snow_load_pa": null,
+    "wind_load_pa": null,
+    "hail_resistance_mm": null,
+    "hail_impact_velocity_m_s": null,
+    "model_derivation_method": "官网逐项列示",
+    "market_version": "中国",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 327; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2026/0429/a1df215c4596f62.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  }
+]

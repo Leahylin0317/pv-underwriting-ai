@@ -45,25 +45,15 @@ class CatalogComponentProvider(
         ] = {}
 
         for profile in profiles:
-            normalized_model = (
-                normalize_component_model(
-                    profile.component_model
-                )
-            )
-
-            if not normalized_model:
-                raise ValueError(
-                    "component model must contain "
-                    "letters or numbers"
-                )
-
-            if normalized_model in catalog:
-                raise ValueError(
-                    "duplicate normalized component "
-                    f"model: {normalized_model}"
-                )
-
-            catalog[normalized_model] = profile
+            for model in (profile.component_model, *profile.model_aliases):
+                normalized_model = normalize_component_model(model)
+                if not normalized_model:
+                    raise ValueError("component model must contain letters or numbers")
+                if normalized_model in catalog:
+                    raise ValueError(
+                        f"duplicate normalized component model: {normalized_model}"
+                    )
+                catalog[normalized_model] = profile
 
         self._catalog = catalog
 

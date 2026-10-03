@@ -11,15 +11,25 @@ class ComponentProfile(ContractModel):
     """光伏组件型号及抗灾参数。"""
 
     component_model: str = Field(min_length=1)
+    model_aliases: list[str] = Field(default_factory=list)
     manufacturer: str | None = None
     rated_power_w: float | None = Field(default=None, gt=0.0)
     hail_resistance_mm: float | None = Field(default=None, gt=0.0)
     wind_load_pa: float | None = Field(default=None, gt=0.0)
     snow_load_pa: float | None = Field(default=None, gt=0.0)
+    front_static_load_pa: float | None = Field(default=None, gt=0.0)
+    back_static_load_pa: float | None = Field(default=None, gt=0.0)
+    hail_impact_velocity_m_s: float | None = Field(default=None, gt=0.0)
+    market_version: str | None = None
+    model_derivation_method: str | None = None
+    source_document_type: str | None = None
+    source_note: str | None = None
     source_url: str | None
     source_name: str = Field(min_length=1)
     retrieved_at: datetime
     match_confidence: float = Field(ge=0.0, le=1.0)
+    parameter_sources: dict[str, str] = Field(default_factory=dict)
+    lookup_notes: list[str] = Field(default_factory=list)
 
 
 class WeatherProfile(ContractModel):

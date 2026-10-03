@@ -1,9 +1,9 @@
 {
   "ruleset_id": "OPEN-AI-01",
   "version": "2026-09-29.1",
-  "source_note": "Extracted from the challenge PDF. Official underwriting workbook, fire-industry list, catastrophe parameters and premium rules were not supplied; do not treat those as configured.",
+  "source_note": "Challenge PDF and 光伏自核材料及规则-v2.xlsx Sheet1 were supplied. This configuration still requires business approval; fire-industry list, catastrophe thresholds and premium rates were not supplied.",
   "high_fire_risk_industries": [],
-  "advanced_checks_enabled": true,
+  "advanced_checks_enabled": false,
   "catastrophe_adequate_margin_ratio": 1.25,
   "catastrophe_critical_shortfall_ratio": 0.75
 }

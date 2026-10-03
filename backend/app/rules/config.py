@@ -16,10 +16,9 @@ DEFAULT_RULES_PATH = PROJECT_ROOT / "data" / "rules" / "challenge_open_ai_01.jso
 class BusinessRulesConfig(BaseModel):
     """Configurable inputs extracted from the challenge brief.
 
-    The official underwriting workbook and fire-industry list were not present in
-    the provided materials, so those values intentionally remain empty until the
-    business owner supplies them. An empty list is treated as unknown, never as
-    evidence that an industry is safe.
+    The official underwriting workbook was supplied. The fire-industry list and
+    stage-two approval were not; an empty list is unknown, never evidence that
+    an industry is safe.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -28,7 +27,7 @@ class BusinessRulesConfig(BaseModel):
     version: str = Field(min_length=1)
     source_note: str = Field(min_length=1)
     high_fire_risk_industries: tuple[str, ...] = ()
-    advanced_checks_enabled: bool = True
+    advanced_checks_enabled: bool = False
     catastrophe_adequate_margin_ratio: float = Field(default=1.25, gt=1.0)
     catastrophe_critical_shortfall_ratio: float = Field(default=0.75, gt=0.0, lt=1.0)
 

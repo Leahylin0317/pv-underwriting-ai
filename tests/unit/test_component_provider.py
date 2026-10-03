@@ -90,6 +90,28 @@ def test_returns_none_for_unknown_or_empty_model() -> None:
     assert provider.lookup("   ") is None
 
 
+def test_only_explicit_aliases_match_other_model_suffixes() -> None:
+    profile = component_profile("JAM72D42-630/LB")
+    provider = CatalogComponentProvider(profiles=[profile])
+    assert provider.lookup("JAM72D42-630W") is None
+
+    verified = profile.model_copy(
+        update={"model_aliases": ["JAM72D42-630W"]}
+    )
+    provider = CatalogComponentProvider(profiles=[verified])
+    assert provider.lookup("JAM72D42-630W") == verified
+
+
+def test_rejects_alias_collision_across_profiles() -> None:
+    first = component_profile("MODEL-ONE").model_copy(
+        update={"model_aliases": ["MODEL-TWO"]}
+    )
+    with pytest.raises(ValueError, match="duplicate normalized component model"):
+        CatalogComponentProvider(
+            profiles=[first, component_profile("MODEL-TWO")]
+        )
+
+
 def test_rejects_duplicate_normalized_models() -> None:
     with pytest.raises(
         ValueError,

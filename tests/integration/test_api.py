@@ -11,6 +11,8 @@ def test_readiness_reports_configured_components_without_secrets() -> None:
     result = response.json()
     assert result["status"] in {"ready", "degraded"}
     assert result["weather_connectivity_checked"] is False
+    assert isinstance(result["component_online_catalog_configured"], bool)
+    assert result["component_online_connectivity_checked"] is False
     assert "checks" in result
     assert "api_key" not in response.text.casefold()
 
