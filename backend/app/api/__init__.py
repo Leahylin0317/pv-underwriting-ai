@@ -1,6 +1,7 @@
 from .auth_routes import router as auth_router
 from .case_routes import router as case_router
 from .component_routes import router as component_router
+from .geocoding_routes import router as geocoding_router
 from .ocr_routes import router as ocr_router
 from .report_routes import router as report_router
 from .routes import router
@@ -22,6 +23,7 @@ __all__ = [
     "auth_router",
     "case_router",
     "component_router",
+    "geocoding_router",
     "ocr_router",
     "report_router",
     "router",
