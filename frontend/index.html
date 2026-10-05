@@ -85,6 +85,12 @@
     .remove-row { width: 28px; height: 35px; border: 0; border-radius: 7px; background: transparent; color: #86928b; font-size: 17px; }
     .remove-row:hover { background: #f6e9e6; color: var(--red); }
     .hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .address-lookup { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .address-lookup .hint { margin: 0; }
+    .address-results { display: grid; gap: 8px; }
+    .address-results[hidden] { display: none; }
+    .address-candidate { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #f8faf8; }
+    .address-candidate .item-copy { min-width: 0; }
     .hint strong { color: #38594d; }
     .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
     .primary { min-height: 43px; padding: 0 20px; border: 0; border-radius: 9px; background: var(--green); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 8px 18px rgba(23, 94, 76, .17); }
@@ -214,9 +220,11 @@
             <div class="field"><label for="projectType">项目类型 *</label><select id="projectType"><option value="rooftop">工商业屋顶式</option><option value="carport">车棚顶式</option><option value="unsupported">其他/暂不支持</option><option value="unknown">未知</option></select></div>
             <div class="field"><label for="installationType">安装类型 *</label><select id="installationType"><option value="unknown">待图片识别</option><option value="color_steel_roof">彩钢瓦屋顶</option><option value="flat_roof">平屋顶</option><option value="tile_roof">瓦片屋顶</option><option value="carport_roof">车棚顶</option></select></div>
             <div class="field wide"><label for="siteAddress">项目地址</label><input id="siteAddress" placeholder="省、市、区县及详细地址"></div>
+            <div class="address-lookup wide"><button class="secondary" id="lookupAddressButton" type="button">按地址查坐标</button><span class="hint" id="lookupAddressMessage" aria-live="polite">查询结果须核对后手动选用。</span></div>
+            <div class="address-results wide" id="lookupAddressResults" hidden></div>
             <div class="field"><label for="longitude">经度 <span class="optional">未知可留空</span></label><input id="longitude" type="number" step="any" min="-180" max="180" placeholder="例如 113.2644"></div>
             <div class="field"><label for="latitude">纬度 <span class="optional">未知可留空</span></label><input id="latitude" type="number" step="any" min="-90" max="90" placeholder="例如 23.1291"></div>
-            <p class="hint wide">经纬度须对应项目实际位置。暂时不知道可以都留空；系统会跳过所在地天气查询，并提示补充坐标后人工复核。不要用示例数字代替真实位置。</p>
+            <p class="hint wide">经纬度须对应项目实际位置。地址查询返回候选和近似坐标，选用前请核对具体地址；不确定时两个坐标都留空，系统会跳过天气查询并转人工复核。</p>
             <div class="field"><label for="startDate">拟起保日期</label><input id="startDate" type="date"></div>
             <div class="field"><label for="componentModel">组件完整型号</label><input id="componentModel" placeholder="可由铭牌 OCR 补齐"></div>
             <div class="field wide"><label for="insuredAddress">被保险地址 <span class="optional">可选</span></label><input id="insuredAddress" placeholder="用于与备案材料核对"></div>
@@ -253,6 +261,13 @@
     const resultRoot = document.getElementById("result");
     const analyzeButton = document.getElementById("analyzeButton");
     const progressText = document.getElementById("progressText");
+    const lookupAddressButton = document.getElementById("lookupAddressButton");
+    const lookupAddressMessage = document.getElementById("lookupAddressMessage");
+    const lookupAddressResults = document.getElementById("lookupAddressResults");
+    const siteAddressInput = document.getElementById("siteAddress");
+    const longitudeInput = document.getElementById("longitude");
+    const latitudeInput = document.getElementById("latitude");
+    let selectedGeocodedAddress = null;
     const systemStatus = document.getElementById("systemStatus");
     const systemStatusText = document.getElementById("systemStatusText");
     const loginOverlay = document.getElementById("loginOverlay");
@@ -538,6 +553,62 @@
         proposed_start_date: textOrNull("startDate"),
         component_model: textOrNull("componentModel")
       };
+    }
+
+    async function lookupAddress() {
+      const address = siteAddressInput.value.trim();
+      lookupAddressResults.hidden = true;
+      lookupAddressResults.replaceChildren();
+      if (address.length < 4) {
+        lookupAddressMessage.textContent = "请先填写至少 4 个字的详细项目地址。";
+        siteAddressInput.focus();
+        return;
+      }
+
+      lookupAddressButton.disabled = true;
+      lookupAddressMessage.textContent = "正在查询地址候选…";
+      try {
+        const response = await fetch(`/api/v1/locations/resolve?address=${encodeURIComponent(address)}`);
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const detail = typeof payload.detail === "string" ? payload.detail : null;
+          throw new Error(detail || `地址查询失败 (${response.status})`);
+        }
+        const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
+        if (!candidates.length) {
+          lookupAddressMessage.textContent = "没有找到地址候选，请补充省、市、区县和详细地址。";
+          return;
+        }
+
+        lookupAddressMessage.textContent = `找到 ${candidates.length} 个候选，请核对后选择。`;
+        candidates.forEach(candidate => {
+          const row = makeNode("div", "address-candidate");
+          const copy = makeNode("div", "item-copy");
+          copy.appendChild(makeNode("strong", "", candidate.formatted_address || "未命名地址"));
+          copy.appendChild(makeNode(
+            "div",
+            "",
+            `定位级别：${candidate.level || "未知"} · 经度 ${candidate.longitude} · 纬度 ${candidate.latitude}`
+          ));
+          const useButton = makeNode("button", "secondary", "使用此位置");
+          useButton.type = "button";
+          useButton.addEventListener("click", () => {
+            siteAddressInput.value = candidate.formatted_address || address;
+            longitudeInput.value = candidate.longitude;
+            latitudeInput.value = candidate.latitude;
+            selectedGeocodedAddress = siteAddressInput.value;
+            lookupAddressResults.hidden = true;
+            lookupAddressMessage.textContent = "已填入近似坐标；提交前请核对候选地址。";
+          });
+          row.append(copy, useButton);
+          lookupAddressResults.appendChild(row);
+        });
+        lookupAddressResults.hidden = false;
+      } catch (error) {
+        lookupAddressMessage.textContent = error.message || "地址查询失败，请稍后重试。";
+      } finally {
+        lookupAddressButton.disabled = false;
+      }
     }
 
     function makeNode(tag, className, text) {
@@ -979,6 +1050,18 @@
 
     document.getElementById("addFile").addEventListener("click", addFileRow);
     document.getElementById("historyButton").addEventListener("click", loadHistory);
+    lookupAddressButton.addEventListener("click", lookupAddress);
+    siteAddressInput.addEventListener("input", () => {
+      if (selectedGeocodedAddress !== null && siteAddressInput.value !== selectedGeocodedAddress) {
+        longitudeInput.value = "";
+        latitudeInput.value = "";
+        selectedGeocodedAddress = null;
+        lookupAddressMessage.textContent = "地址已修改，请重新查询并选择位置。";
+      }
+      lookupAddressResults.hidden = true;
+    });
+    longitudeInput.addEventListener("input", () => { selectedGeocodedAddress = null; });
+    latitudeInput.addEventListener("input", () => { selectedGeocodedAddress = null; });
     analyzeButton.addEventListener("click", analyze);
     addFileRow();
     initializeAuthentication();

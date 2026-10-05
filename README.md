@@ -86,12 +86,15 @@ PV_COMPONENT_ONLINE_CATALOG_URL=
 PV_COMPONENT_ONLINE_CATALOG_API_KEY=
 PV_COMPONENT_APPROVED_SOURCE_DOMAINS=jasolar.com
 PV_COMPONENT_SEARCH_API_KEY=
+PV_AMAP_WEB_SERVICE_KEY=
 PV_WEATHER_BASE_URL=https://archive-api.open-meteo.com/v1/archive
 PV_WEATHER_LOOKBACK_DAYS=3650
 PV_WEATHER_DATA_LAG_DAYS=7
 PV_WEATHER_TIMEOUT_SECONDS=30
 PV_CASE_DB_PATH=outputs/pv-underwriting.sqlite3
 ~~~
+
+填写 `PV_AMAP_WEB_SERVICE_KEY` 后，工作台可按项目地址查询高德地理编码候选。用户必须核对并点击候选项，系统才会把近似转换后的 WGS84 经纬度用于 Open-Meteo 历史天气查询；地址变更时已选坐标会自动清空。该坐标只用于风险筛查，不是测绘结果。
 
 **PV_COMPONENT_CATALOG_PATH** 留空时会使用 **data/catalogs/component_catalog_2026-10-01.json**。该目录保留原有的两个示例条目，并从《光伏组件抗灾参数目录_2026-10-01.xlsx》导入 69 条中国市场且官网逐项列示的型号；全部 364 条原始记录保存在 **data/reference/component_parameters_2026-10-01.json** 供复核，其他市场版本、简写及范围展开型号不参与自动匹配。导入脚本为 **scripts/import_component_workbook.py**，更新源表后可重新生成两份 JSON。正反面最大静态载荷作为独立参考字段保存，不会换算成抗风或雪载；空缺的灾害参数仍会触发人工复核。导入数据尚需逐条核对官网版本和安装条件，不能直接作为生产核保依据。
 
@@ -121,6 +124,7 @@ python -m uvicorn app.main:app --reload
 | GET | /health | 服务健康检查 |
 | GET | /ready | 检查模型、组件目录、天气配置和案件数据库就绪状态，不返回密钥 |
 | GET | /api/v1/components/sources?model=... | 查询厂商资料候选，供人工核对和入库 |
+| GET | /api/v1/locations/resolve?address=... | 查询项目地址候选和天气查询用近似坐标 |
 | GET | / | 本地核保工作台 |
 | POST | /api/v1/files/inspect | 检查上传文件 |
 | POST | /api/v1/ocr/extract | 对单个图片或 PDF 执行真实 OCR |
