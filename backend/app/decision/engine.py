@@ -25,6 +25,9 @@ class DecisionEngine:
     MISSING_COMPONENT_MODEL_RULE_ID = "REQ-COMPONENT-MODEL"
     PROVIDER_FAILURE_RULE_ID = "SYS-PROVIDER-FAILURE"
     INCOMPLETE_PACKAGE_RULE_ID = "PKG-MINIMUM-001"
+    LOCATION_CONFLICT_RULE_ID = "LOC-CONFLICT-001"
+    LOCATION_SINGLE_SOURCE_RULE_ID = "LOC-SINGLE-SOURCE-001"
+    LOCATION_UNCERTAIN_RULE_ID = "LOC-UNCERTAIN-001"
 
     def decide(self, case: UnderwritingCase) -> UnderwritingDecision:
         rule_ids: list[str] = []
@@ -37,6 +40,7 @@ class DecisionEngine:
         has_conditional = False
         has_manual_review = False
         has_request_more = False
+        has_location_conflict = False
 
         if case.project.project_type.value in {"unsupported", "unknown"}:
             has_manual_review = True
@@ -51,6 +55,23 @@ class DecisionEngine:
             rule_ids.append(self.MISSING_COORDINATES_RULE_ID)
             reasons.append("项目经纬度缺失，无法查询所在地气象风险")
             missing_requirements.append("补充项目准确经纬度")
+
+        location = case.location_assessment
+        if location is not None:
+            if location.status == "conflict":
+                has_manual_review = True
+                has_location_conflict = True
+                rule_ids.append(self.LOCATION_CONFLICT_RULE_ID)
+                reasons.append("材料位置明显冲突，已暂停自动通过；需核对原件，不能仅凭自动比对拒保")
+                warnings.extend(location.notes)
+            elif location.status in {"single_source", "missing", "uncertain"}:
+                has_request_more = True
+                rule_ids.append(
+                    self.LOCATION_SINGLE_SOURCE_RULE_ID
+                    if location.status == "single_source" else self.LOCATION_UNCERTAIN_RULE_ID
+                )
+                reasons.extend(location.notes)
+                missing_requirements.extend(location.missing_requirements)
 
         if not case.project.component_model:
             has_request_more = True
@@ -112,6 +133,8 @@ class DecisionEngine:
         # 明确的禁保事实必须保留在整案结论中，不能被其他材料缺失覆盖。
         if has_reject:
             decision = DecisionType.RECOMMEND_REJECT
+        elif has_location_conflict:
+            decision = DecisionType.MANUAL_REVIEW
         elif has_request_more:
             decision = DecisionType.REQUEST_MORE
         elif has_manual_review:

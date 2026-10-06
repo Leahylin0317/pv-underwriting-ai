@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -28,6 +28,7 @@ class BusinessRulesConfig(BaseModel):
     source_note: str = Field(min_length=1)
     high_fire_risk_industries: tuple[str, ...] = ()
     advanced_checks_enabled: bool = False
+    package_requirement_profile: Literal["demo_minimum", "full_intake"] = "demo_minimum"
     catastrophe_adequate_margin_ratio: float = Field(default=1.25, gt=1.0)
     catastrophe_critical_shortfall_ratio: float = Field(default=0.75, gt=0.0, lt=1.0)
 

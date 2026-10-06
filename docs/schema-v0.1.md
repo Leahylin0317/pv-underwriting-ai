@@ -55,12 +55,15 @@
 | component\_profile | ComponentProfile 或 null | 否 | 组件参数 Provider | 组件型号及抗灾参数 |
 | weather\_profile | WeatherProfile 或 null | 否 | 气象 Provider | 项目所在地气象风险 |
 | catastrophe\_assessment | CatastropheAssessment 或 null | 否 | 风险量化模块 | 设备能力与气象风险比较结果 |
+| location\_assessment | LocationAssessment 或 null | 否 | 位置核验模块 | 项目地址材料与现场水印位置的交叉核验结果、来源及天气查询位置的核实状态 |
 | material\_reviews | MaterialReview\[] | 是 | 规则引擎 | 每份材料的审核结论 |
 | decision | UnderwritingDecision 或 null | 否 | 决策模块 | 整单综合核保意见 |
 | processing\_trace | ProcessingTrace\[] | 是 | 各处理模块 | 模型、耗时和异常留痕 |
 | package\_assessment | PackageAssessment 或 null | 否 | 材料门禁 | 照片数量、备案证和全景视角完整性 |
 
 `PackageAssessment` 会计算图片数量、全景照数量、是否含备案证、是否已标注正面平视和俯拍视角、缺失的必需材料类别，以及需要补充的项目。Demo 门槛包括至少 5 张图片、2 张全景照、1 份备案证，并要求提供屋顶连接处、女儿墙/排水、并网材料、电气接地、组件铭牌、逆变器铭牌和汇流箱材料；屋顶式项目还要求车间照片，监控照片为可选。门槛不满足时整案建议补充材料。
+
+`LocationAssessment.status` 取 `verified`（项目地址与现场照片位置一致）、`single_source`（仅一份位置来源）、`uncertain`（无法可靠比较）、`conflict`（明显冲突）或 `missing`（没有位置证据）。`evidence` 保留材料编号、文件名、原始地址及坐标。`weather_coordinates_verified` 区分交叉核验后的位置与仅供参考的天气候选位置。位置冲突只预警并暂停自动通过；人工核验后可通过案件复核记录最终意见，系统不凭自动距离比较直接拒保。
 
 图片数量只统计 JPEG/PNG；全景数量只统计图像格式的全景材料。每张全景图都须具备可核验的日期、经纬度水印，且拍摄日期须处于拟起保日前 15 日内。PDF 备案材料不计入图片数量。
 

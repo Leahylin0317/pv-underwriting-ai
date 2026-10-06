@@ -18,6 +18,7 @@ from app.providers import (
     OcrProvider,
     ProviderError,
 )
+from app.providers.vision.base import VisionAnalysis
 
 
 def project_info() -> ProjectInfo:
@@ -74,6 +75,39 @@ class PartiallyFailingOcrProvider(MockOcrProvider):
         if material_input.material.category is MaterialCategory.PANORAMA:
             raise ProviderError("sensitive upstream error details")
         return super().extract(material_input)
+
+
+def test_panorama_vision_precedes_ocr_and_skips_it_without_watermark() -> None:
+    events: list[str] = []
+
+    class NoWatermarkVision(MockVisionProvider):
+        def analyze_with_watermark(self, item: MaterialInput) -> VisionAnalysis:
+            events.append("vision")
+            return VisionAnalysis(findings=self.analyze(item), watermark_present=False)
+
+    class RecordingOcr(MockOcrProvider):
+        def extract(self, item: MaterialInput) -> list[OcrField]:
+            events.append("ocr")
+            return super().extract(item)
+
+    case = UnderwritingPipeline(
+        ocr_provider=RecordingOcr(),
+        vision_provider=NoWatermarkVision(),
+        progress_callback=lambda step, percent: events.append(step),
+    ).run(
+        case_id="watermark-order",
+        project=project_info(),
+        materials=[material_input("material-panorama", MaterialCategory.PANORAMA)],
+    )
+
+    assert events.index("正在识别图片风险与水印") < events.index("正在分别提取拍摄水印与业务文字")
+    assert events.count("vision") == 1
+    assert "ocr" not in events
+    assert case.materials[0].watermark_status.value == "absent"
+    assert [trace.step for trace in case.processing_trace[:2]] == [
+        ProcessingStep.VISION,
+        ProcessingStep.OCR,
+    ]
 
 
 def test_pipeline_builds_case_with_mock_provider_results() -> None:
@@ -157,7 +191,7 @@ def test_pipeline_marks_partially_failed_provider() -> None:
 
     assert len(case.ocr_fields) == 1
     assert ocr_trace.status is ProcessingStatus.PARTIAL
-    assert ocr_trace.error_message == "1 of 2 material calls failed"
+    assert ocr_trace.error_message == "1 of 3 extraction tasks failed"
 
 def test_pipeline_adds_request_more_review_for_poor_material() -> None:
     pipeline = UnderwritingPipeline(

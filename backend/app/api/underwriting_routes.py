@@ -31,6 +31,7 @@ from app.intake import (
     inspect_file,
     read_upload_limited,
 )
+from app.location import AmapGeocoder
 from app.pipeline import UnderwritingPipeline
 from app.providers import (
     MaterialInput,
@@ -358,6 +359,7 @@ def _run_analysis_job(
             component_provider=component_provider,
             weather_provider=weather_provider,
             catastrophe_engine=CatastropheAssessmentEngine(),
+            location_geocoder=AmapGeocoder.from_environment(),
             progress_callback=report_progress,
         )
         case = pipeline.run(

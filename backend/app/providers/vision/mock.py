@@ -8,7 +8,7 @@ from app.contracts import (
 )
 
 from ..common import MaterialInput
-from .base import VisionProvider
+from .base import VisionAnalysis, VisionProvider
 
 
 class MockVisionProvider(VisionProvider):
@@ -21,6 +21,14 @@ class MockVisionProvider(VisionProvider):
     @property
     def model_name(self) -> str:
         return "mock-vision-v1"
+
+    def analyze_with_watermark(self, material_input: MaterialInput) -> VisionAnalysis:
+        return VisionAnalysis(
+            findings=self.analyze(material_input),
+            watermark_present=(
+                True if material_input.material.category is MaterialCategory.PANORAMA else None
+            ),
+        )
 
     def analyze(self, material_input: MaterialInput) -> list[RiskFinding]:
         material = material_input.material

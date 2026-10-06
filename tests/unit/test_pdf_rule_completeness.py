@@ -195,7 +195,7 @@ def test_stage_two_checks_do_not_trigger_in_initial_phase() -> None:
 
     review = engine.evaluate_material(item, findings=findings)
 
-    assert review.action is MaterialReviewAction.REQUEST_MORE
+    assert review.action is MaterialReviewAction.PASS
     assert "ELEC-UNPROTECTED-CABLE-REJECT-001" not in review.triggered_rule_ids
 
 

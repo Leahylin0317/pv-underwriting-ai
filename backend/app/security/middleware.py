@@ -75,6 +75,8 @@ class RoleAccessMiddleware(BaseHTTPMiddleware):
             return "admin"
         if method == "GET":
             return "viewer"
+        if method == "POST" and path == "/api/v1/weather/history":
+            return "viewer"
         if method == "POST" and path == "/api/v1/reports/render":
             return "viewer"
         if "/review" in path:
@@ -84,6 +86,7 @@ class RoleAccessMiddleware(BaseHTTPMiddleware):
                 "/api/v1/underwriting/",
                 "/api/v1/ocr/",
                 "/api/v1/vision/",
+                "/api/v1/risk/",
                 "/api/v1/files/",
                 "/api/v1/analyze/",
                 "/api/v1/reports/",

@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
 from app.api import (
@@ -19,6 +19,9 @@ from app.api import (
     router,
     underwriting_router,
 )
+from app.api.risk_lab import router as risk_lab_router
+from app.api.vision_lab import router as vision_lab_router
+from app.api.weather_history_routes import router as weather_history_router
 from app.security import AuthRepository, auth_enabled
 from app.security.middleware import RoleAccessMiddleware
 from app.storage import AnalysisJobRepository, CaseRepository
@@ -48,6 +51,9 @@ app = FastAPI(
 app.add_middleware(RoleAccessMiddleware)
 
 app.include_router(router)
+app.include_router(vision_lab_router)
+app.include_router(risk_lab_router)
+app.include_router(weather_history_router)
 app.include_router(auth_router)
 app.include_router(ocr_router)
 app.include_router(case_router)
@@ -58,10 +64,53 @@ app.include_router(report_router)
 
 
 @app.get("/", include_in_schema=False)
-def underwriting_workspace() -> FileResponse:
-    """提供本地核保工作台页面。"""
-    page = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
+def evaluation_home() -> FileResponse:
+    """在首页提供当前材料评测台。"""
+    page = Path(__file__).resolve().parents[2] / "frontend" / "evaluation.html"
     return FileResponse(page, media_type="text/html; charset=utf-8")
+
+
+@app.get("/evaluation", include_in_schema=False)
+def evaluation_workspace() -> FileResponse:
+    """提供不依赖投保字段的材料评测工作台。"""
+    page = Path(__file__).resolve().parents[2] / "frontend" / "evaluation.html"
+    return FileResponse(page, media_type="text/html; charset=utf-8")
+
+
+@app.get("/material-files.js", include_in_schema=False)
+def material_files_script() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "material-files.js", media_type="application/javascript")
+
+
+@app.get("/workbench.js", include_in_schema=False)
+def workbench_script() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "workbench.js", media_type="application/javascript")
+
+
+@app.get("/workbench.css", include_in_schema=False)
+def workbench_style() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "workbench.css", media_type="text/css")
+
+
+@app.get("/evaluation/report.js", include_in_schema=False)
+def evaluation_report_script() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "underwriting-report.js", media_type="application/javascript")
+
+
+@app.get("/evaluation/report.css", include_in_schema=False)
+def evaluation_report_style() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "underwriting-report.css", media_type="text/css")
+
+
+@app.get("/evaluation/report-preview", include_in_schema=False)
+def evaluation_report_preview() -> FileResponse:
+    return FileResponse(Path(__file__).resolve().parents[2] / "frontend" / "report-preview.html", media_type="text/html; charset=utf-8")
+
+
+@app.get("/evaluation/replay", include_in_schema=False)
+def evaluation_replay() -> RedirectResponse:
+    """兼容先前的案例复盘链接。"""
+    return RedirectResponse("/evaluation?view=replay", status_code=302)
 
 
 def _set_file_array_binary(

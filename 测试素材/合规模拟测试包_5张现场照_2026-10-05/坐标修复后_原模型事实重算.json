@@ -1,0 +1,1788 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "SIM-LIVE-FIVE-PHOTO-20261005",
+  "project": {
+    "project_name": "SIM-合规车棚测试项目",
+    "insured_name": "模拟测试企业",
+    "insured_address": "佛山演示工业园1号（虚构地址）",
+    "project_entity": "模拟测试企业",
+    "industry_name": null,
+    "fire_surcharge_confirmed": null,
+    "project_type": "carport",
+    "installation_type": "carport_roof",
+    "site_address": "佛山演示工业园1号（虚构地址）",
+    "province": null,
+    "city": null,
+    "district": null,
+    "longitude": 113.1189,
+    "latitude": 23.0345,
+    "proposed_start_date": "2026-10-06",
+    "component_model": "JAM72D42-630/LB",
+    "submission_ip": null
+  },
+  "materials": [
+    {
+      "material_id": "front",
+      "category": "panorama",
+      "capture_view": "front_level",
+      "file_name": "01_全景_正面平视_模拟.png",
+      "media_type": "image/png",
+      "sha256": "d7905380b43ea6f860bc131bc1c5aeeff702ae6d53f6a548f6623c94fd003954",
+      "captured_at": "2026-10-05T00:00:00",
+      "watermark_status": "present",
+      "longitude": 113.1189,
+      "latitude": 23.0345,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    },
+    {
+      "material_id": "top",
+      "category": "panorama",
+      "capture_view": "overhead",
+      "file_name": "02_全景_俯拍_模拟.png",
+      "media_type": "image/png",
+      "sha256": "41d9e0d90b141c95178dec565ed08ffa546c9c397758ea361a01d78d5d2656e7",
+      "captured_at": "2026-10-05T00:00:00",
+      "watermark_status": "present",
+      "longitude": 113.1189,
+      "latitude": 23.0345,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    },
+    {
+      "material_id": "roof",
+      "category": "roof_connection",
+      "capture_view": "unknown",
+      "file_name": "03_支架连接节点_模拟.png",
+      "media_type": "image/png",
+      "sha256": "3899892fde4bdb88a2a1e9884b86feb600fbbc83c7c7e401268b7fb8e553e415",
+      "captured_at": "2026-10-05T00:00:00",
+      "watermark_status": "present",
+      "longitude": 113.1189,
+      "latitude": 23.0345,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    },
+    {
+      "material_id": "ground",
+      "category": "electrical_grounding",
+      "capture_view": "unknown",
+      "file_name": "04_电气接地_模拟.png",
+      "media_type": "image/png",
+      "sha256": "5f192e74dfc84e6d3a4231fb31a1eee97c4e3a6ce0644c5f984ffc9e10c71272",
+      "captured_at": "2026-10-05T00:00:00",
+      "watermark_status": "present",
+      "longitude": 113.1189,
+      "latitude": 23.0345,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    },
+    {
+      "material_id": "module",
+      "category": "component_nameplate",
+      "capture_view": "unknown",
+      "file_name": "05_组件铭牌_模拟.png",
+      "media_type": "image/png",
+      "sha256": "822f3c798fce1afcf65b4c00ae34ff3d50f1c3418ab112faecb555b56ab67e28",
+      "captured_at": "2026-10-05T00:00:00",
+      "watermark_status": "present",
+      "longitude": 113.1189,
+      "latitude": 23.0345,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    },
+    {
+      "material_id": "filing",
+      "category": "filing_certificate",
+      "capture_view": "unknown",
+      "file_name": "06_模拟备案信息单.png",
+      "media_type": "image/png",
+      "sha256": "d9753b15453c947bcfbe8895430d6f98541624cf5f67fc2cbab901d9493edea2",
+      "captured_at": null,
+      "watermark_status": "not_checked",
+      "longitude": null,
+      "latitude": null,
+      "quality_status": "usable",
+      "quality_confidence": null,
+      "quality_issues": [],
+      "parse_status": "success"
+    }
+  ],
+  "equipment_inventory": [],
+  "ocr_fields": [
+    {
+      "field_id": "front:watermark_present:1",
+      "material_id": "front",
+      "extraction_task": "watermark",
+      "field_name": "watermark_present",
+      "raw_value": "2026-10-05 | 113.118900 E, 23.034500 N",
+      "normalized_value": "true",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.762,
+        "y_min": 0.962,
+        "x_max": 0.992,
+        "y_max": 0.988,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "右下角存在包含日期和经纬度的拍摄信息水印"
+    },
+    {
+      "field_id": "front:watermark_date:2",
+      "material_id": "front",
+      "extraction_task": "watermark",
+      "field_name": "watermark_date",
+      "raw_value": "2026-10-05",
+      "normalized_value": "2026-10-05",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.762,
+        "y_min": 0.962,
+        "x_max": 0.825,
+        "y_max": 0.988,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印左侧显示日期 2026-10-05"
+    },
+    {
+      "field_id": "front:watermark_longitude:3",
+      "material_id": "front",
+      "extraction_task": "watermark",
+      "field_name": "watermark_longitude",
+      "raw_value": "113.118900 E",
+      "normalized_value": "113.118900 E",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.842,
+        "y_min": 0.962,
+        "x_max": 0.915,
+        "y_max": 0.988,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印右侧显示经度 113.118900 E"
+    },
+    {
+      "field_id": "front:watermark_latitude:4",
+      "material_id": "front",
+      "extraction_task": "watermark",
+      "field_name": "watermark_latitude",
+      "raw_value": "23.034500 N",
+      "normalized_value": "23.034500 N",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.925,
+        "y_min": 0.962,
+        "x_max": 0.992,
+        "y_max": 0.988,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印右侧显示纬度 23.034500 N"
+    },
+    {
+      "field_id": "top:watermark_present:1",
+      "material_id": "top",
+      "extraction_task": "watermark",
+      "field_name": "watermark_present",
+      "raw_value": "2026-10-05 | 113.118900 E, 23.034500 N",
+      "normalized_value": "true",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.77,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "右下角存在包含日期和经纬度的拍摄信息水印"
+    },
+    {
+      "field_id": "top:watermark_date:2",
+      "material_id": "top",
+      "extraction_task": "watermark",
+      "field_name": "watermark_date",
+      "raw_value": "2026-10-05",
+      "normalized_value": "2026-10-05",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.77,
+        "y_min": 0.96,
+        "x_max": 0.83,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印显示日期为 2026-10-05"
+    },
+    {
+      "field_id": "top:watermark_longitude:3",
+      "material_id": "top",
+      "extraction_task": "watermark",
+      "field_name": "watermark_longitude",
+      "raw_value": "113.118900 E",
+      "normalized_value": "113.118900 E",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.85,
+        "y_min": 0.96,
+        "x_max": 0.92,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印显示经度为 113.118900 E"
+    },
+    {
+      "field_id": "top:watermark_latitude:4",
+      "material_id": "top",
+      "extraction_task": "watermark",
+      "field_name": "watermark_latitude",
+      "raw_value": "23.034500 N",
+      "normalized_value": "23.034500 N",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.93,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印显示纬度为 23.034500 N"
+    },
+    {
+      "field_id": "roof:watermark_present:1",
+      "material_id": "roof",
+      "extraction_task": "watermark",
+      "field_name": "watermark_present",
+      "raw_value": "2026-10-05 | 113.118900 E, 23.034500 N",
+      "normalized_value": "true",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.73,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "图片右下角可见包含日期和经纬度的拍摄水印。"
+    },
+    {
+      "field_id": "roof:watermark_date:2",
+      "material_id": "roof",
+      "extraction_task": "watermark",
+      "field_name": "watermark_date",
+      "raw_value": "2026-10-05",
+      "normalized_value": "2026-10-05",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.73,
+        "y_min": 0.96,
+        "x_max": 0.81,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示为“2026-10-05”。"
+    },
+    {
+      "field_id": "roof:watermark_longitude:3",
+      "material_id": "roof",
+      "extraction_task": "watermark",
+      "field_name": "watermark_longitude",
+      "raw_value": "113.118900 E",
+      "normalized_value": "113.118900 E",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.82,
+        "y_min": 0.96,
+        "x_max": 0.9,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示经度为“113.118900 E”。"
+    },
+    {
+      "field_id": "roof:watermark_latitude:4",
+      "material_id": "roof",
+      "extraction_task": "watermark",
+      "field_name": "watermark_latitude",
+      "raw_value": "23.034500 N",
+      "normalized_value": "23.034500 N",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.91,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示纬度为“23.034500 N”。"
+    },
+    {
+      "field_id": "ground:watermark_present:1",
+      "material_id": "ground",
+      "extraction_task": "watermark",
+      "field_name": "watermark_present",
+      "raw_value": "2026-10-05 | 113.118900 E, 23.034500 N",
+      "normalized_value": "true",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.74,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "图片右下角存在包含日期和经纬度的拍摄信息水印。"
+    },
+    {
+      "field_id": "ground:watermark_date:2",
+      "material_id": "ground",
+      "extraction_task": "watermark",
+      "field_name": "watermark_date",
+      "raw_value": "2026-10-05",
+      "normalized_value": "2026-10-05",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.74,
+        "y_min": 0.96,
+        "x_max": 0.82,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示为“2026-10-05”。"
+    },
+    {
+      "field_id": "ground:watermark_longitude:3",
+      "material_id": "ground",
+      "extraction_task": "watermark",
+      "field_name": "watermark_longitude",
+      "raw_value": "113.118900 E",
+      "normalized_value": "113.118900 E",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.83,
+        "y_min": 0.96,
+        "x_max": 0.91,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示经度为“113.118900 E”。"
+    },
+    {
+      "field_id": "ground:watermark_latitude:4",
+      "material_id": "ground",
+      "extraction_task": "watermark",
+      "field_name": "watermark_latitude",
+      "raw_value": "23.034500 N",
+      "normalized_value": "23.034500 N",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.92,
+        "y_min": 0.96,
+        "x_max": 0.99,
+        "y_max": 0.99,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "水印文字显示纬度为“23.034500 N”。"
+    },
+    {
+      "field_id": "module:watermark_present:1",
+      "material_id": "module",
+      "extraction_task": "watermark",
+      "field_name": "watermark_present",
+      "raw_value": "2026-10-05 | 113.118900 E, 23.034500 N",
+      "normalized_value": "true",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.78,
+        "y_min": 0.95,
+        "x_max": 0.99,
+        "y_max": 0.98,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "图片右下角存在包含日期和经纬度的拍摄水印。"
+    },
+    {
+      "field_id": "module:watermark_date:2",
+      "material_id": "module",
+      "extraction_task": "watermark",
+      "field_name": "watermark_date",
+      "raw_value": "2026-10-05",
+      "normalized_value": "2026-10-05",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.78,
+        "y_min": 0.95,
+        "x_max": 0.84,
+        "y_max": 0.98,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "2026-10-05"
+    },
+    {
+      "field_id": "module:watermark_longitude:3",
+      "material_id": "module",
+      "extraction_task": "watermark",
+      "field_name": "watermark_longitude",
+      "raw_value": "113.118900 E",
+      "normalized_value": "113.118900 E",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.85,
+        "y_min": 0.95,
+        "x_max": 0.91,
+        "y_max": 0.98,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "113.118900 E"
+    },
+    {
+      "field_id": "module:watermark_latitude:4",
+      "material_id": "module",
+      "extraction_task": "watermark",
+      "field_name": "watermark_latitude",
+      "raw_value": "23.034500 N",
+      "normalized_value": "23.034500 N",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.92,
+        "y_min": 0.95,
+        "x_max": 0.98,
+        "y_max": 0.98,
+        "coordinate_space": "normalized_0_1"
+      },
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "23.034500 N"
+    },
+    {
+      "field_id": "filing:document_title:1",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "document_title",
+      "raw_value": "模拟备案信息单 · TEST ONLY",
+      "normalized_value": "模拟备案信息单 · TEST ONLY",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "文档顶部标题"
+    },
+    {
+      "field_id": "filing:document_type:2",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "document_type",
+      "raw_value": "unknown",
+      "normalized_value": "unknown",
+      "value_status": "uncertain",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "文档明确标注为“模拟备案信息单”、“TEST ONLY”、“非真实备案证明”，无法确认为真实的 filing_certificate。"
+    },
+    {
+      "field_id": "filing:document_number:3",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "document_number",
+      "raw_value": "SIM-CARPORT-20261005-001",
+      "normalized_value": "SIM-CARPORT-20261005-001",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "备案编号 SIM-CARPORT-20261005-001"
+    },
+    {
+      "field_id": "filing:project_name:4",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "project_name",
+      "raw_value": "SIM-合规车棚测试项目",
+      "normalized_value": "SIM-合规车棚测试项目",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "项目名称 SIM-合规车棚测试项目"
+    },
+    {
+      "field_id": "filing:project_entity:5",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "project_entity",
+      "raw_value": "模拟测试企业",
+      "normalized_value": "模拟测试企业",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "项目单位 / 被保险人 模拟测试企业"
+    },
+    {
+      "field_id": "filing:insured_name:6",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "insured_name",
+      "raw_value": "模拟测试企业",
+      "normalized_value": "模拟测试企业",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "项目单位 / 被保险人 模拟测试企业"
+    },
+    {
+      "field_id": "filing:site_address:7",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "site_address",
+      "raw_value": "佛山演示工业园1号（虚构地址）",
+      "normalized_value": "佛山演示工业园1号（虚构地址）",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "建设地点 / 被保险人地址 佛山演示工业园1号（虚构地址）"
+    },
+    {
+      "field_id": "filing:insured_address:8",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "insured_address",
+      "raw_value": "佛山演示工业园1号（虚构地址）",
+      "normalized_value": "佛山演示工业园1号（虚构地址）",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "建设地点 / 被保险人地址 佛山演示工业园1号（虚构地址）"
+    },
+    {
+      "field_id": "filing:project_type:9",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "project_type",
+      "raw_value": "车棚顶式分布式光伏",
+      "normalized_value": "车棚顶式分布式光伏",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "建设类型 车棚顶式分布式光伏"
+    },
+    {
+      "field_id": "filing:rated_power_w:10",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "rated_power_w",
+      "raw_value": "50.4 kW (模拟申报值)",
+      "normalized_value": "50400",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "装机容量 50.4 kW (模拟申报值)"
+    },
+    {
+      "field_id": "filing:component_model:11",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "component_model",
+      "raw_value": "JAM72D42-630/LB",
+      "normalized_value": "JAM72D42-630/LB",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "组件型号 JAM72D42-630/LB"
+    },
+    {
+      "field_id": "filing:issue_date:12",
+      "material_id": "filing",
+      "extraction_task": "business",
+      "field_name": "issue_date",
+      "raw_value": "2026-09-30 (模拟)",
+      "normalized_value": "2026-09-30",
+      "value_status": "extracted",
+      "confidence": 1.0,
+      "bbox": null,
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "evidence_text": "备案日期 2026-09-30 (模拟)"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "front:image_quality:1",
+      "material_id": "front",
+      "category": "image_quality",
+      "label": "图片质量",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "画面清晰，光照充足，全景视角完整展示了光伏车棚主体及周边环境，无影响检查的模糊、过暗或裁切。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:agriculture_environment:2",
+      "material_id": "front",
+      "category": "agriculture_environment",
+      "label": "农业环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "可见区域为工业园区硬化地面及厂房建筑，未发现耕地、作物种植区或农业设施。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:aisle_obstruction:3",
+      "material_id": "front",
+      "category": "aisle_obstruction",
+      "label": "通道阻塞",
+      "detection_status": "uncertain",
+      "severity": "unknown",
+      "confidence": 0.6,
+      "bbox": null,
+      "evidence_text": "当前视角主要展示车棚外部结构及下方停车位，未直接展示光伏组件阵列之间的内部检修通道细节，无法判断是否存在线缆或杂物阻塞。建议补拍阵列间通道照片。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": true
+    },
+    {
+      "finding_id": "front:desertification_environment:4",
+      "material_id": "front",
+      "category": "desertification_environment",
+      "label": "沙化环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "周边为水泥硬化路面和工业厂房，未见沙漠或沙化地貌特征。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:fishery_environment:5",
+      "material_id": "front",
+      "category": "fishery_environment",
+      "label": "渔业环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "画面中无养殖池、网箱或其他明确渔业设施。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:forest_environment:6",
+      "material_id": "front",
+      "category": "forest_environment",
+      "label": "林地环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "周围仅有少量绿化树木（如远处路边），未见成片林木或林地。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:livestock_environment:7",
+      "material_id": "front",
+      "category": "livestock_environment",
+      "label": "畜牧环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "场景为工业区，未见圈舍、动物养殖或其他养殖证据。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:minor_shading:8",
+      "material_id": "front",
+      "category": "minor_shading",
+      "label": "轻微遮挡",
+      "detection_status": "detected",
+      "severity": "low",
+      "confidence": 0.85,
+      "bbox": {
+        "x_min": 0.02,
+        "y_min": 0.37,
+        "x_max": 0.12,
+        "y_max": 0.42,
+        "coordinate_space": "normalized_0_1"
+      },
+      "evidence_text": "左侧厂房建筑的屋檐在光伏组件阵列的最左端投下了明显的阴影，属于局部实物遮挡。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:mountain_environment:9",
+      "material_id": "front",
+      "category": "mountain_environment",
+      "label": "山地环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "项目位于平坦的硬化地面，背景虽有建筑物但无坡地或山地地形特征。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:severe_shading:10",
+      "material_id": "front",
+      "category": "severe_shading",
+      "label": "严重遮挡",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "除左侧边缘轻微遮挡外，大部分组件表面受光良好，未见大面积阴影覆盖。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:tidal_flat_environment:11",
+      "material_id": "front",
+      "category": "tidal_flat_environment",
+      "label": "滩涂环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "地面为混凝土铺装，无潮汐滩涂地貌特征。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "front:water_adjacent_environment:12",
+      "material_id": "front",
+      "category": "water_adjacent_environment",
+      "label": "涉水环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "视野范围内未见湖泊、河流、池塘等水体。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:image_quality:1",
+      "material_id": "top",
+      "category": "image_quality",
+      "label": "图片质量",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "图片清晰，光照充足，全景视角完整覆盖了光伏车棚主体及周边环境，无模糊、过暗或关键区域裁切现象。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:agriculture_environment:2",
+      "material_id": "top",
+      "category": "agriculture_environment",
+      "label": "农业环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "画面显示为工业园区或厂区停车场环境，可见硬化路面、厂房建筑及少量绿化树木，未观察到耕地、作物种植区或农业设施。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:aisle_obstruction:3",
+      "material_id": "top",
+      "category": "aisle_obstruction",
+      "label": "通道阻塞",
+      "detection_status": "uncertain",
+      "severity": "unknown",
+      "confidence": 0.6,
+      "bbox": null,
+      "evidence_text": "当前视角主要展示光伏组件阵列上方及侧面，无法清晰观察阵列下方或组件之间的检修通道内部情况（如是否有杂物堆积），需补充近距离地面视角照片以确认通道状况。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": true
+    },
+    {
+      "finding_id": "top:desertification_environment:4",
+      "material_id": "top",
+      "category": "desertification_environment",
+      "label": "沙化环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "周边地面主要为混凝土硬化路面，植被生长正常，未见沙漠或严重沙化地貌特征。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:fishery_environment:5",
+      "material_id": "top",
+      "category": "fishery_environment",
+      "label": "渔业环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "画面中未见养殖池、网箱或其他明确渔业设施。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:forest_environment:6",
+      "material_id": "top",
+      "category": "forest_environment",
+      "label": "林地环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "周边仅有零散的行道树和绿化带，未达到成片林木或林地的认定标准。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:livestock_environment:7",
+      "material_id": "top",
+      "category": "livestock_environment",
+      "label": "畜牧环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "场景为工业/商业园区，未见圈舍、动物养殖或其他养殖证据。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:minor_shading:8",
+      "material_id": "top",
+      "category": "minor_shading",
+      "label": "轻微遮挡",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "光伏板表面清洁，无明显阴影覆盖，未见局部小面积实物遮挡（如树枝、鸟粪等）。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:mountain_environment:9",
+      "material_id": "top",
+      "category": "mountain_environment",
+      "label": "山地环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "项目位于平坦的硬化地面上，背景无坡地或山地地形特征。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:severe_shading:10",
+      "material_id": "top",
+      "category": "severe_shading",
+      "label": "严重遮挡",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "整个光伏阵列受光均匀，未见大面积建筑物投影或高大物体造成的严重遮挡。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:tidal_flat_environment:11",
+      "material_id": "top",
+      "category": "tidal_flat_environment",
+      "label": "滩涂环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "地面为混凝土铺装，非潮汐滩涂地貌。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "top:water_adjacent_environment:12",
+      "material_id": "top",
+      "category": "water_adjacent_environment",
+      "label": "涉水环境",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "画面范围内未见湖泊、河流、池塘或海岸线等水体。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:image_quality:1",
+      "material_id": "roof",
+      "category": "image_quality",
+      "label": "图片质量",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 1.0,
+      "bbox": null,
+      "evidence_text": "图片清晰，光照充足，色彩还原正常。主要检查区域（支架连接处、组件边缘、屋面）均充分展示，无影响判断的模糊或遮挡。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:installation_type:2",
+      "material_id": "roof",
+      "category": "installation_type",
+      "label": "安装类型",
+      "detection_status": "detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": {
+        "x_min": 0.0,
+        "y_min": 0.4,
+        "x_max": 1.0,
+        "y_max": 1.0,
+        "coordinate_space": "normalized_0_1"
+      },
+      "evidence_text": "画面显示光伏组件安装在架空于地面的白色钢结构支架上，下方为带有停车位标线的混凝土路面，属于典型的平屋顶（或地面停车场车棚顶）支架安装方式。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:roof_connection_abnormal:3",
+      "material_id": "roof",
+      "category": "roof_connection_abnormal",
+      "label": "屋顶连接异常",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.85,
+      "bbox": null,
+      "evidence_text": "近景可见中压块和边压块紧固在铝合金导轨上，螺栓未见明显缺失或松脱迹象；钢梁与立柱连接处的法兰盘及螺栓组外观完整。未发现直接可见的连接件断裂或严重锈蚀。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:aisle_obstruction:4",
+      "material_id": "roof",
+      "category": "aisle_obstruction",
+      "label": "检修通道阻塞",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "支架下方空间开阔，地面标线清晰，未观察到杂物堆积阻碍通行或检修作业。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:support_corrosion:5",
+      "material_id": "roof",
+      "category": "support_corrosion",
+      "label": "支架腐蚀",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "前景中的白色工字钢梁、镀锌檩条及铝镁锌压块表面光洁，涂层完好，未见红锈、起皮或明显的氧化腐蚀现象。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:support_deformation:6",
+      "material_id": "roof",
+      "category": "support_deformation",
+      "label": "支架变形",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "主梁、次梁及立柱线条笔直，节点连接平整，肉眼观察未见明显的弯曲、扭曲或下沉变形。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "roof:waterproof_layer_damage:7",
+      "material_id": "roof",
+      "category": "waterproof_layer_damage",
+      "label": "防水层损坏",
+      "detection_status": "uncertain",
+      "severity": "unknown",
+      "confidence": 0.3,
+      "bbox": null,
+      "evidence_text": "当前视角主要拍摄支架结构及上方组件，支架底座与屋面的具体接触点被遮挡或未入画，无法确认屋面防水层是否受损。建议补拍支架底座固定点及周围屋面的特写照片。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": true
+    },
+    {
+      "finding_id": "ground:electrical_grounding_abnormal:1",
+      "material_id": "ground",
+      "category": "electrical_grounding_abnormal",
+      "label": "接地连接异常",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "图片清晰展示了逆变器下方的铜排接地系统。多根黄绿双色接地线通过端子牢固连接在铜排上，铜排通过螺栓固定在立柱上。可见范围内未发现接地线断裂、严重腐蚀或明显松脱现象。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "ground:unprotected_cable:2",
+      "material_id": "ground",
+      "category": "unprotected_cable",
+      "label": "线缆无保护",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.9,
+      "bbox": null,
+      "evidence_text": "画面中可见的电气线路（包括直流输入电缆、交流输出电缆及接地线）均处于受控状态。主电缆使用了黑色波纹管进行保护，接地线绝缘层完好且固定规范。未观察到导体裸露或绝缘层破损的无保护线缆。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    },
+    {
+      "finding_id": "ground:image_quality:3",
+      "material_id": "ground",
+      "category": "image_quality",
+      "label": "图片质量",
+      "detection_status": "detected",
+      "severity": "low",
+      "confidence": 1.0,
+      "bbox": {
+        "x_min": 0.01,
+        "y_min": 0.01,
+        "x_max": 0.28,
+        "y_max": 0.06,
+        "coordinate_space": "normalized_0_1"
+      },
+      "evidence_text": "图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": true
+    },
+    {
+      "finding_id": "module:image_quality:1",
+      "material_id": "module",
+      "category": "image_quality",
+      "label": "图片质量检查",
+      "detection_status": "not_detected",
+      "severity": "info",
+      "confidence": 0.95,
+      "bbox": null,
+      "evidence_text": "图片清晰度高，光照均匀充足。铭牌区域（白色标签）完整展示在画面中，文字内容清晰可读，无遮挡、模糊或过曝现象，满足铭牌识别任务的质量要求。",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "requires_manual_review": false
+    }
+  ],
+  "component_profile": {
+    "component_model": "JAM72D42-630/LB",
+    "model_aliases": [],
+    "manufacturer": "晶澳 JA Solar",
+    "rated_power_w": 630.0,
+    "hail_resistance_mm": null,
+    "wind_load_pa": null,
+    "snow_load_pa": null,
+    "front_static_load_pa": 5400.0,
+    "back_static_load_pa": 2400.0,
+    "hail_impact_velocity_m_s": null,
+    "market_version": "中国",
+    "model_derivation_method": "官网逐项列示",
+    "source_document_type": "中国官网规格书 PDF",
+    "source_note": "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。",
+    "source_url": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+    "source_name": "光伏组件抗灾参数目录_2026-10-01.xlsx, row 289; manufacturer source linked",
+    "retrieved_at": "2026-10-01T00:00:00+08:00",
+    "match_confidence": 0.9,
+    "parameter_sources": {
+      "rated_power_w": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "front_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf",
+      "back_static_load_pa": "https://www.jasolar.com/uploadfile/fujian/2024/0328/a9482c6c8828154.pdf"
+    },
+    "lookup_notes": [
+      "Match the exact nameplate model and market version before underwriting.",
+      "Front/back static loads are reference values, not wind or snow load ratings.",
+      "中国版规格书正面/背面最大静态负载；Nextracker 安装方式须另核对匹配性声明，具体安装方式按手册核实。"
+    ]
+  },
+  "weather_profile": {
+    "longitude": 113.1189,
+    "latitude": 23.0345,
+    "historical_max_wind_m_s": 38.3,
+    "historical_max_hail_mm": null,
+    "historical_max_snow_load_pa": null,
+    "historical_max_daily_snowfall_cm": 0.0,
+    "observation_start": "2016-09-29",
+    "observation_end": "2026-09-27",
+    "source_name": "Open-Meteo Historical Weather API",
+    "source_url": "https://open-meteo.com/en/docs/historical-weather-api",
+    "retrieved_at": "2026-10-04T17:27:36.359530Z"
+  },
+  "catastrophe_assessment": {
+    "resistance_level": "unknown",
+    "expected_loss_risk": "unknown",
+    "factors": [
+      "气候背景：历史最大单日降雪量约 0.0 cm；降雪量未换算为结构雪荷载，不直接用于承载结论",
+      "缺少：风荷载能力或历史最大阵风、冰雹抗性或历史最大冰雹直径、雪荷载能力或历史最大雪荷载"
+    ],
+    "explanation": "部分组件或气象灾害数据缺失，当前无法完成综合抗灾判断。",
+    "triggered_rule_ids": [
+      "CAT-WIND-DATA-MISSING",
+      "CAT-HAIL-DATA-MISSING",
+      "CAT-SNOW-DATA-MISSING"
+    ],
+    "requires_manual_review": true,
+    "critical_shortfall_ratio": 0.75,
+    "adequate_margin_ratio": 1.25
+  },
+  "location_assessment": {
+    "status": "verified",
+    "evidence": [
+      {
+        "source": "投保标的",
+        "material_id": null,
+        "file_name": null,
+        "address": "佛山演示工业园1号（虚构地址）",
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "现场照片水印",
+        "material_id": "front",
+        "file_name": "01_全景_正面平视_模拟.png",
+        "address": null,
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "现场照片水印",
+        "material_id": "top",
+        "file_name": "02_全景_俯拍_模拟.png",
+        "address": null,
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "现场照片水印",
+        "material_id": "roof",
+        "file_name": "03_支架连接节点_模拟.png",
+        "address": null,
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "现场照片水印",
+        "material_id": "ground",
+        "file_name": "04_电气接地_模拟.png",
+        "address": null,
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "现场照片水印",
+        "material_id": "module",
+        "file_name": "05_组件铭牌_模拟.png",
+        "address": null,
+        "longitude": 113.1189,
+        "latitude": 23.0345,
+        "geocode_level": null,
+        "coordinate_system": "未标明"
+      },
+      {
+        "source": "备案/并网材料",
+        "material_id": "filing",
+        "file_name": "06_模拟备案信息单.png",
+        "address": "佛山演示工业园1号（虚构地址）",
+        "longitude": null,
+        "latitude": null,
+        "geocode_level": null,
+        "coordinate_system": null
+      }
+    ],
+    "notes": [
+      "项目地址材料与现场照片的位置一致"
+    ],
+    "missing_requirements": [],
+    "weather_coordinate_source": "现场照片水印（01_全景_正面平视_模拟.png）",
+    "weather_coordinates_verified": true
+  },
+  "package_assessment": {
+    "image_count": 5,
+    "panorama_count": 2,
+    "has_filing_certificate": true,
+    "has_front_level_panorama": true,
+    "has_overhead_panorama": true,
+    "missing_material_categories": [
+      "parapet",
+      "grid_connection_document",
+      "inverter_nameplate",
+      "combiner_box"
+    ],
+    "missing_requirements": [],
+    "requirement_profile": "demo_minimum",
+    "minimum_gate_passed": true,
+    "document_image_count": 1,
+    "coverage_requirements": [
+      "女儿墙及排水照片",
+      "并网许可或调度协议",
+      "逆变器铭牌",
+      "汇流箱照片"
+    ]
+  },
+  "material_reviews": [
+    {
+      "material_id": "front",
+      "action": "warning",
+      "triggered_rule_ids": [
+        "IMG-FINDING-WARNING-001"
+      ],
+      "finding_ids": [
+        "front:aisle_obstruction:3",
+        "front:minor_shading:8"
+      ],
+      "ocr_field_ids": [
+        "front:watermark_present:1",
+        "front:watermark_date:2",
+        "front:watermark_longitude:3",
+        "front:watermark_latitude:4"
+      ],
+      "reasons": [
+        "图片风险判断不确定：通道阻塞；当前视角主要展示车棚外部结构及下方停车位，未直接展示光伏组件阵列之间的内部检修通道细节，无法判断是否存在线缆或杂物阻塞。建议补拍阵列间通道照片。",
+        "发现待核保人确认的风险：轻微遮挡；左侧厂房建筑的屋檐在光伏组件阵列的最左端投下了明显的阴影，属于局部实物遮挡。"
+      ],
+      "missing_requirements": [],
+      "requires_manual_review": true
+    },
+    {
+      "material_id": "top",
+      "action": "warning",
+      "triggered_rule_ids": [
+        "IMG-FINDING-WARNING-001"
+      ],
+      "finding_ids": [
+        "top:aisle_obstruction:3"
+      ],
+      "ocr_field_ids": [
+        "top:watermark_present:1",
+        "top:watermark_date:2",
+        "top:watermark_longitude:3",
+        "top:watermark_latitude:4"
+      ],
+      "reasons": [
+        "图片风险判断不确定：通道阻塞；当前视角主要展示光伏组件阵列上方及侧面，无法清晰观察阵列下方或组件之间的检修通道内部情况（如是否有杂物堆积），需补充近距离地面视角照片以确认通道状况。"
+      ],
+      "missing_requirements": [],
+      "requires_manual_review": true
+    },
+    {
+      "material_id": "roof",
+      "action": "pass",
+      "triggered_rule_ids": [],
+      "finding_ids": [
+        "roof:installation_type:2"
+      ],
+      "ocr_field_ids": [
+        "roof:watermark_present:1",
+        "roof:watermark_date:2",
+        "roof:watermark_longitude:3",
+        "roof:watermark_latitude:4"
+      ],
+      "reasons": [
+        "材料检查未发现需要自动升级处理的事项"
+      ],
+      "missing_requirements": [],
+      "requires_manual_review": false
+    },
+    {
+      "material_id": "ground",
+      "action": "request_more",
+      "triggered_rule_ids": [
+        "IMG-FINDING-WARNING-001",
+        "MAT-QUALITY-001"
+      ],
+      "finding_ids": [
+        "ground:image_quality:3"
+      ],
+      "ocr_field_ids": [
+        "ground:watermark_present:1",
+        "ground:watermark_date:2",
+        "ground:watermark_longitude:3",
+        "ground:watermark_latitude:4"
+      ],
+      "reasons": [
+        "模型要求人工复核：图片质量；图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+        "图片质量不足，无法可靠检查：图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。"
+      ],
+      "missing_requirements": [
+        "补拍光线充足、清晰且完整展示检查区域的照片"
+      ],
+      "requires_manual_review": true
+    },
+    {
+      "material_id": "module",
+      "action": "request_more",
+      "triggered_rule_ids": [
+        "DOC-REQUIRED-FIELDS-001"
+      ],
+      "finding_ids": [],
+      "ocr_field_ids": [
+        "module:watermark_present:1",
+        "module:watermark_date:2",
+        "module:watermark_longitude:3",
+        "module:watermark_latitude:4"
+      ],
+      "reasons": [
+        "材料中的关键字段缺失或 OCR 置信度不足"
+      ],
+      "missing_requirements": [
+        "补充可清晰识别的字段：component_model, rated_power_w, serial_number"
+      ],
+      "requires_manual_review": false
+    },
+    {
+      "material_id": "filing",
+      "action": "pass",
+      "triggered_rule_ids": [],
+      "finding_ids": [],
+      "ocr_field_ids": [
+        "filing:document_title:1",
+        "filing:document_type:2",
+        "filing:document_number:3",
+        "filing:project_name:4",
+        "filing:project_entity:5",
+        "filing:insured_name:6",
+        "filing:site_address:7",
+        "filing:insured_address:8",
+        "filing:project_type:9",
+        "filing:rated_power_w:10",
+        "filing:component_model:11",
+        "filing:issue_date:12"
+      ],
+      "reasons": [
+        "材料检查未发现需要自动升级处理的事项"
+      ],
+      "missing_requirements": [],
+      "requires_manual_review": false
+    }
+  ],
+  "decision": {
+    "decision": "request_more",
+    "decisive_rule_ids": [
+      "IMG-FINDING-WARNING-001",
+      "MAT-QUALITY-001",
+      "DOC-REQUIRED-FIELDS-001",
+      "CAT-WIND-DATA-MISSING",
+      "CAT-HAIL-DATA-MISSING",
+      "CAT-SNOW-DATA-MISSING",
+      "SYS-PROVIDER-FAILURE"
+    ],
+    "rule_explanations": [
+      {
+        "rule_id": "IMG-FINDING-WARNING-001",
+        "title": "图片发现需要人工确认的事项",
+        "trigger": "图像识别发现风险、返回不确定结果，或明确要求人工复核。",
+        "effect": "保留风险证据并转核保人确认，不把模型描述当作已证实事实。"
+      },
+      {
+        "rule_id": "MAT-QUALITY-001",
+        "title": "材料质量不足",
+        "trigger": "文件无法可靠读取，或图像质量检查/视觉检查认为关键区域不清晰。",
+        "effect": "要求重新上传清晰、完整且包含关键区域的材料。"
+      },
+      {
+        "rule_id": "DOC-REQUIRED-FIELDS-001",
+        "title": "关键文档字段缺失或识别不可靠",
+        "trigger": "必需字段缺失，或识别状态、置信度未达到当前程序门槛。",
+        "effect": "要求补充清晰材料；低置信度字段不会被默认为已核实。"
+      },
+      {
+        "rule_id": "CAT-WIND-DATA-MISSING",
+        "title": "风灾比较数据不完整",
+        "trigger": "组件风荷载能力或历史最大阵风数据缺失。",
+        "effect": "不生成完整风灾比较，转人工核实。"
+      },
+      {
+        "rule_id": "CAT-HAIL-DATA-MISSING",
+        "title": "雹灾比较数据不完整",
+        "trigger": "组件抗雹能力或历史最大冰雹直径数据缺失。",
+        "effect": "不生成完整雹灾比较，转人工核实。"
+      },
+      {
+        "rule_id": "CAT-SNOW-DATA-MISSING",
+        "title": "雪灾比较数据不完整",
+        "trigger": "组件雪荷载能力或历史最大雪荷载数据缺失。",
+        "effect": "不生成完整雪灾比较，转人工核实。"
+      },
+      {
+        "rule_id": "SYS-PROVIDER-FAILURE",
+        "title": "自动识别服务未完整执行",
+        "trigger": "处理留痕中存在失败或部分成功步骤。",
+        "effect": "将案件转人工复核，并在处理记录中展示失败步骤和错误信息。"
+      }
+    ],
+    "reasons": [
+      "图片风险判断不确定：通道阻塞；当前视角主要展示车棚外部结构及下方停车位，未直接展示光伏组件阵列之间的内部检修通道细节，无法判断是否存在线缆或杂物阻塞。建议补拍阵列间通道照片。",
+      "发现待核保人确认的风险：轻微遮挡；左侧厂房建筑的屋檐在光伏组件阵列的最左端投下了明显的阴影，属于局部实物遮挡。",
+      "图片风险判断不确定：通道阻塞；当前视角主要展示光伏组件阵列上方及侧面，无法清晰观察阵列下方或组件之间的检修通道内部情况（如是否有杂物堆积），需补充近距离地面视角照片以确认通道状况。",
+      "模型要求人工复核：图片质量；图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+      "图片质量不足，无法可靠检查：图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+      "材料中的关键字段缺失或 OCR 置信度不足",
+      "部分组件或气象灾害数据缺失，当前无法完成综合抗灾判断。",
+      "自动识别服务未完整执行"
+    ],
+    "conditions": [],
+    "warnings": [
+      "气候背景：历史最大单日降雪量约 0.0 cm；降雪量未换算为结构雪荷载，不直接用于承载结论",
+      "缺少：风荷载能力或历史最大阵风、冰雹抗性或历史最大冰雹直径、雪荷载能力或历史最大雪荷载",
+      "部分自动识别服务未完整执行，需要人工检查处理留痕"
+    ],
+    "missing_requirements": [
+      "补拍光线充足、清晰且完整展示检查区域的照片",
+      "补充可清晰识别的字段：component_model, rated_power_w, serial_number"
+    ],
+    "generated_at": "2026-10-04T17:31:40.339146Z"
+  },
+  "processing_trace": [
+    {
+      "step": "vision",
+      "provider": "openai-compatible-vision",
+      "model": "qwen3.8-flash",
+      "started_at": "2026-10-04T17:25:57.980789Z",
+      "finished_at": "2026-10-04T17:26:43.304845Z",
+      "latency_ms": 45323,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    },
+    {
+      "step": "ocr",
+      "provider": "openai-compatible-ocr",
+      "model": "qwen3.8-flash",
+      "started_at": "2026-10-04T17:26:43.308374Z",
+      "finished_at": "2026-10-04T17:27:34.231816Z",
+      "latency_ms": 50923,
+      "status": "partial",
+      "task_executions": [
+        {
+          "material_id": "front",
+          "task": "watermark",
+          "status": "success",
+          "field_ids": [
+            "front:watermark_present:1",
+            "front:watermark_date:2",
+            "front:watermark_longitude:3",
+            "front:watermark_latitude:4"
+          ],
+          "reason": null
+        },
+        {
+          "material_id": "front",
+          "task": "business",
+          "status": "skipped",
+          "field_ids": [],
+          "reason": "此类材料没有独立业务文字提取任务"
+        },
+        {
+          "material_id": "top",
+          "task": "watermark",
+          "status": "success",
+          "field_ids": [
+            "top:watermark_present:1",
+            "top:watermark_date:2",
+            "top:watermark_longitude:3",
+            "top:watermark_latitude:4"
+          ],
+          "reason": null
+        },
+        {
+          "material_id": "top",
+          "task": "business",
+          "status": "skipped",
+          "field_ids": [],
+          "reason": "此类材料没有独立业务文字提取任务"
+        },
+        {
+          "material_id": "roof",
+          "task": "watermark",
+          "status": "success",
+          "field_ids": [
+            "roof:watermark_present:1",
+            "roof:watermark_date:2",
+            "roof:watermark_longitude:3",
+            "roof:watermark_latitude:4"
+          ],
+          "reason": null
+        },
+        {
+          "material_id": "roof",
+          "task": "business",
+          "status": "skipped",
+          "field_ids": [],
+          "reason": "此类材料没有独立业务文字提取任务"
+        },
+        {
+          "material_id": "ground",
+          "task": "watermark",
+          "status": "success",
+          "field_ids": [
+            "ground:watermark_present:1",
+            "ground:watermark_date:2",
+            "ground:watermark_longitude:3",
+            "ground:watermark_latitude:4"
+          ],
+          "reason": null
+        },
+        {
+          "material_id": "ground",
+          "task": "business",
+          "status": "success",
+          "field_ids": [],
+          "reason": "任务执行完成，但没有提取到可靠字段"
+        },
+        {
+          "material_id": "module",
+          "task": "watermark",
+          "status": "success",
+          "field_ids": [
+            "module:watermark_present:1",
+            "module:watermark_date:2",
+            "module:watermark_longitude:3",
+            "module:watermark_latitude:4"
+          ],
+          "reason": null
+        },
+        {
+          "material_id": "module",
+          "task": "business",
+          "status": "failed",
+          "field_ids": [],
+          "reason": "字段提取服务失败，可单独重试此任务"
+        },
+        {
+          "material_id": "filing",
+          "task": "watermark",
+          "status": "skipped",
+          "field_ids": [],
+          "reason": "未确认拍摄水印或该材料不适用"
+        },
+        {
+          "material_id": "filing",
+          "task": "business",
+          "status": "success",
+          "field_ids": [
+            "filing:document_title:1",
+            "filing:document_type:2",
+            "filing:document_number:3",
+            "filing:project_name:4",
+            "filing:project_entity:5",
+            "filing:insured_name:6",
+            "filing:site_address:7",
+            "filing:insured_address:8",
+            "filing:project_type:9",
+            "filing:rated_power_w:10",
+            "filing:component_model:11",
+            "filing:issue_date:12"
+          ],
+          "reason": null
+        }
+      ],
+      "error_code": "OCR_PROVIDER_FAILURE",
+      "error_message": "1 of 8 extraction tasks failed"
+    },
+    {
+      "step": "component_lookup",
+      "provider": "local-component-catalog",
+      "model": null,
+      "started_at": "2026-10-04T17:27:34.238342Z",
+      "finished_at": "2026-10-04T17:27:34.238508Z",
+      "latency_ms": 0,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    },
+    {
+      "step": "weather_lookup",
+      "provider": "open-meteo-historical-weather",
+      "model": null,
+      "started_at": "2026-10-04T17:27:34.240332Z",
+      "finished_at": "2026-10-04T17:27:36.360881Z",
+      "latency_ms": 2120,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    },
+    {
+      "step": "catastrophe_assessment",
+      "provider": "builtin-catastrophe-assessment",
+      "model": null,
+      "started_at": "2026-10-04T17:27:36.364028Z",
+      "finished_at": "2026-10-04T17:27:36.364116Z",
+      "latency_ms": 0,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    },
+    {
+      "step": "rule_engine",
+      "provider": "builtin-rule-engine",
+      "model": null,
+      "started_at": "2026-10-04T17:27:36.366123Z",
+      "finished_at": "2026-10-04T17:27:36.366613Z",
+      "latency_ms": 0,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    },
+    {
+      "step": "decision",
+      "provider": "conservative-decision-engine",
+      "model": null,
+      "started_at": "2026-10-04T17:27:36.368893Z",
+      "finished_at": "2026-10-04T17:27:36.369076Z",
+      "latency_ms": 0,
+      "status": "success",
+      "task_executions": [],
+      "error_code": null,
+      "error_message": null
+    }
+  ]
+}
