@@ -68,6 +68,7 @@ class CatastropheAssessmentEngine:
             explanation = "至少一项历史灾害指标超过组件额定能力，需要人工复核。"
 
         return CatastropheAssessment(
+            comparisons=self.comparisons(component,weather),
             resistance_level=resistance,
             expected_loss_risk=risk,
             factors=factors,
@@ -110,7 +111,7 @@ class CatastropheAssessmentEngine:
         missing: list[str],
         outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
     ) -> None:
-        if component.hail_resistance_mm is None or weather.historical_max_hail_mm is None:
+        if component.hail_resistance_mm is None or weather.historical_max_hail_mm is None or weather.historical_max_hail_mm <= 0:
             missing.append("冰雹抗性或历史最大冰雹直径")
             rule_ids.append("CAT-HAIL-DATA-MISSING")
             return
@@ -132,7 +133,7 @@ class CatastropheAssessmentEngine:
         missing: list[str],
         outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
     ) -> None:
-        if component.snow_load_pa is None or weather.historical_max_snow_load_pa is None:
+        if component.snow_load_pa is None or weather.historical_max_snow_load_pa is None or weather.historical_max_snow_load_pa <= 0:
             missing.append("雪荷载能力或历史最大雪荷载")
             rule_ids.append("CAT-SNOW-DATA-MISSING")
             return
@@ -183,3 +184,22 @@ class CatastropheAssessmentEngine:
         if risks:
             return ResistanceLevel.HIGH, ExpectedLossRisk.LOW
         return ResistanceLevel.UNKNOWN, ExpectedLossRisk.UNKNOWN
+
+    def comparisons(self, component, weather):
+        """Expose numerical screening evidence; zero demand is explicit, never Infinity in JSON."""
+        rows=[]
+        for hazard,capacity_key,event_key,unit in [('WIND','wind_load_pa','historical_max_wind_m_s','Pa'),('HAIL','hail_resistance_mm','historical_max_hail_mm','mm'),('SNOW','snow_load_pa','historical_max_snow_load_pa','Pa')]:
+            capacity=getattr(component,capacity_key,None)
+            event=getattr(weather,event_key,None)
+            demand=WIND_PRESSURE_COEFFICIENT*event**2 if hazard=='WIND' and event is not None else event
+            usable=capacity is not None and demand is not None and (demand>0 or hazard=='WIND')
+            ratio=capacity/demand if usable and demand>0 else None
+            outcome=[];rules=[]
+            if usable:self._record_ratio(hazard,ratio if ratio is not None else float('inf'),rules,outcome)
+            reason=''
+            if not usable:reason='缺少组件能力或灾害指标' if capacity is None or demand is None else '指标为0，未取得可用于比较的正值'
+            elif demand==0:reason='所选历史范围阵风为0；未形成正值比较需求，不能外推项目安全性'
+            rows.append({'hazard':hazard.lower(),'capacity':capacity,'event':event,'demand':demand,'unit':unit,'ratio':ratio,
+                         'status':'calculated' if usable else 'insufficient','risk':outcome[0][1].value if outcome else 'unknown',
+                         'rule_ids':rules,'reason':reason,'formula':'0.613 × 最大阵风²；能力 ÷ 动压' if hazard=='WIND' else '组件能力 ÷ 历史灾害指标'})
+        return rows

@@ -192,7 +192,7 @@ def _decision_priority_explanation(decision: DecisionType) -> str:
     return {
         DecisionType.RECOMMEND_REJECT: "命中建议拒保条件，因此输出建议拒保。",
         DecisionType.REQUEST_MORE: "未先命中建议拒保条件，但存在必需信息或材料缺口，因此输出补充材料。",
-        DecisionType.MANUAL_REVIEW: "未先命中建议拒保或补充材料条件，但存在需人工核实事项，因此转人工复核。",
+        DecisionType.MANUAL_REVIEW: "存在位置冲突或其他需人工核实事项，因此转人工复核；位置冲突可优先于一般补材要求。",
         DecisionType.SURCHARGE: "前序拒保、补充材料和人工复核条件均未触发，规则命中加费建议。",
         DecisionType.CONDITIONAL_ACCEPT: "前序更高优先级条件均未触发，规则命中附条件承保建议。",
         DecisionType.ACCEPT: "前序风险、资料缺口和人工复核条件均未触发，规则输出建议承保。",
@@ -285,6 +285,37 @@ def generate_markdown_report(
             ]
         )
 
+    if case.location_assessment is not None:
+        location = case.location_assessment
+        status_labels = {
+            "verified": "多来源位置一致",
+            "single_source": "仅一个位置来源，待核实",
+            "conflict": "位置冲突，暂停自动通过",
+            "uncertain": "位置证据不足，待核实",
+            "missing": "缺少位置证据",
+        }
+        lines.extend([
+            "### 项目位置核验",
+            "",
+            f"- 核验结果：{status_labels[location.status]}",
+            "- 气象查询位置：" + (
+                f"{location.weather_coordinate_source}（{'已交叉核验' if location.weather_coordinates_verified else '未经交叉核验，仅作候选参考'}）"
+                if location.weather_coordinate_source else "未取得可用坐标"
+            ),
+            *[f"- 说明：{note}" for note in location.notes],
+            "",
+            "| 来源 | 文件 | 地址 | 经度 | 纬度 | 坐标系 | 地图定位精度 |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ])
+        for evidence in location.evidence:
+            lines.append(
+                f"| {_table_cell(evidence.source)} | {_table_cell(evidence.file_name or evidence.material_id)} | "
+                f"{_table_cell(evidence.address)} | {_table_cell(evidence.longitude)} | "
+                f"{_table_cell(evidence.latitude)} | {_table_cell(evidence.coordinate_system)} | "
+                f"{_table_cell(evidence.geocode_level)} |"
+            )
+        lines.append("")
+
     material_by_id = {
         material.material_id: material
         for material in case.materials
@@ -298,7 +329,7 @@ def generate_markdown_report(
             "## 判断过程与追溯",
             "",
             "- **模型与规则分工：** OCR/视觉模型提供字段提取、风险观察和证据文字；模型置信度是参考分数，尚未经过概率校准。材料动作和整单建议由程序规则汇总，模型不直接生成整单结论。",
-            "- **整单汇总顺序：** 建议拒保 → 补充材料 → 转人工复核 → 建议加费 → 附条件承保 → 建议承保；按顺序选择首个成立的结果。",
+            "- **整单汇总顺序：** 明确拒保事实 → 位置冲突人工复核 → 补充材料 → 其他人工复核 → 建议加费 → 附条件承保 → 建议承保；按顺序选择首个成立的结果。",
             "",
         ]
     )
@@ -550,7 +581,7 @@ def generate_markdown_report(
     else:
         lines.append("| 无 | 无 | 无 | 无 | 无 | 无 | 无 |")
 
-    lines.extend(["", "## 6. 自然灾害风险量化", ""])
+    lines.extend(["", "## 6. 自然灾害抗灾筛查", ""])
     if case.catastrophe_assessment is None:
         lines.extend(["- 状态：未评估", "- 原因：没有生成组件与气象数据的联合评估", ""])
     else:
@@ -568,7 +599,7 @@ def generate_markdown_report(
         lines.extend(
             [
                 f"- 抗灾能力等级：{RESISTANCE_LABELS[assessment.resistance_level.value]}",
-                f"- 预期出险风险：{LOSS_RISK_LABELS[assessment.expected_loss_risk.value]}",
+                f"- 抗灾筛查风险档位：{LOSS_RISK_LABELS[assessment.expected_loss_risk.value]}",
                 f"- 评估说明：{_table_cell(assessment.explanation)}",
                 "- 逐项因素：" + ("；".join(assessment.factors) or "无"),
                 ratio_thresholds,
@@ -576,6 +607,23 @@ def generate_markdown_report(
                 "",
             ]
         )
+
+    if case.catastrophe_assessment is not None:
+        rows = case.catastrophe_assessment.comparisons
+        if rows:
+            lines.extend(["### 逐项计算明细", "", "| 灾害 | 组件能力 | 历史指标 | 比较需求 | 能力比 | 判断 |", "| --- | --- | --- | --- | --- | --- |"])
+            for row in rows:
+                label = {"wind":"风灾", "hail":"雹灾", "snow":"雪灾"}[row.hazard]
+                state = LOSS_RISK_LABELS[row.risk.value] if row.status == 'calculated' else '数据不足'
+                event_unit = 'm/s' if row.hazard == 'wind' else row.unit
+                lines.append(f"| {label} | {_display(row.capacity)} {row.unit} | {_display(row.event)} {event_unit} | {_display(row.demand)} {row.unit} | {_display(row.ratio)} | {state} |")
+            lines.append("")
+            for row in rows:
+                label = {"wind":"风灾", "hail":"雹灾", "snow":"雪灾"}[row.hazard]
+                lines.append(f"- {label}计算：{_table_cell(row.formula)}；{_table_cell(row.reason) if row.reason else '按保存的输入进行比较'}；规则：{'、'.join(row.rule_ids) or '该项未完成计算'}")
+        else:
+            lines.append("- 历史记录未保存逐项计算明细；保留原始结论，不用当前规则重新计算。")
+        lines.extend(["", "- 筛查结果不代表出险概率、预计赔款或整套电站承载合格。", ""])
 
     if case.component_profile is not None:
         component = case.component_profile

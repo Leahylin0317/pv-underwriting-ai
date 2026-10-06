@@ -199,6 +199,7 @@ class PdfPageOcrProvider(OcrProvider):
         return MaterialInput(
             material=page_material,
             content=page_content,
+            ocr_task=material_input.ocr_task,
         )
 
     @staticmethod

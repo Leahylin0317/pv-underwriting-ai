@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 from time import sleep
 
 import httpx
@@ -12,6 +13,7 @@ class MaterialInput:
 
     material: Material
     content: bytes
+    ocr_task: Literal["auto", "watermark", "business"] = "auto"
 def post_with_connect_retry(
     client: httpx.Client,
     url: str,

@@ -96,6 +96,7 @@ class MaterialCategory(StrEnum):
     ROOF_CONNECTION = "roof_connection"
     PARAPET = "parapet"
     WORKSHOP = "workshop"
+    PROJECT_DOCUMENT = "project_document"
     FILING_CERTIFICATE = "filing_certificate"
     GRID_CONNECTION_DOCUMENT = "grid_connection_document"
     ELECTRICAL_GROUNDING = "electrical_grounding"

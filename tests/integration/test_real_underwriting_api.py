@@ -27,6 +27,7 @@ from app.providers import (
     VisionProvider,
     WeatherProvider,
 )
+from app.providers.vision.base import VisionAnalysis
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -181,6 +182,14 @@ class RecordingVisionProvider(VisionProvider):
     @property
     def model_name(self) -> str:
         return "recording-vision-v1"
+
+    def analyze_with_watermark(self, material_input: MaterialInput) -> VisionAnalysis:
+        return VisionAnalysis(
+            findings=self.analyze(material_input),
+            watermark_present=(
+                True if material_input.material.category is MaterialCategory.PANORAMA else None
+            ),
+        )
 
     def analyze(
         self,
@@ -416,6 +425,7 @@ def test_runs_complete_real_underwriting_pipeline(
     )
     assert saved_case.status_code == 200
     assert saved_case.json()["case"]["case_id"] == "case-real-api-001"
+    assert saved_case.json()["case"]["catastrophe_assessment"]["comparisons"] == result["catastrophe_assessment"]["comparisons"]
     assert saved_case.json()["review_status"] == "pending"
 
     review_response = client.post(
@@ -434,6 +444,7 @@ def test_runs_complete_real_underwriting_pipeline(
         "/api/v1/cases/case-real-api-001/report"
     )
     assert saved_report.status_code == 200
+    assert "逐项计算明细" in saved_report.text
     assert "人工复核记录" in saved_report.text
     assert "测试核保员" in saved_report.text
     assert "测试人工复核意见" in saved_report.text
@@ -487,6 +498,7 @@ def test_runs_complete_real_underwriting_pipeline(
     assert result["weather_profile"] is not None
     assert result["weather_profile"]["historical_max_wind_m_s"] == 30.0
     assert result["catastrophe_assessment"] is not None
+    assert len(result["catastrophe_assessment"]["comparisons"]) == 3
     assert result["catastrophe_assessment"]["expected_loss_risk"] == "unknown"
     assert result["catastrophe_assessment"]["requires_manual_review"] is True
 
@@ -500,7 +512,8 @@ def test_runs_complete_real_underwriting_pipeline(
 
     assert len(
         ocr_provider.received_inputs
-    ) == 2
+    ) == 3
+    assert [x.ocr_task for x in ocr_provider.received_inputs] == ['watermark','business','watermark']
     assert len(
         vision_provider.received_inputs
     ) == 2
@@ -514,7 +527,7 @@ def test_runs_complete_real_underwriting_pipeline(
     )
     assert (
         ocr_provider
-        .received_inputs[1]
+        .received_inputs[2]
         .material
         .file_name
         == "site-panorama.png"

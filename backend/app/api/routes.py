@@ -27,6 +27,7 @@ from app.intake import (
     inspect_file,
     read_upload_limited,
 )
+from app.location import AmapGeocoder
 from app.pipeline import UnderwritingPipeline
 from app.providers import (
     CompatibleVisionProvider,
@@ -165,6 +166,7 @@ def readiness_check() -> dict[str, object]:
         "component_online_catalog_configured": online_catalog_configured,
         "component_online_connectivity_checked": False,
         "weather_connectivity_checked": False,
+        "address_geocoder_configured": AmapGeocoder.from_environment() is not None,
     }
 
 

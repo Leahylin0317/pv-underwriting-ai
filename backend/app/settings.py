@@ -65,6 +65,7 @@ class VlmSettings:
     api_key: str = field(repr=False)
     model: str
     timeout_seconds: float = 120.0
+    trust_env: bool = False
 
     @classmethod
     def from_environment(
@@ -93,6 +94,7 @@ class VlmSettings:
             model=_required_environment_value(
                 "PV_VLM_MODEL"
             ),
+            trust_env=os.environ.get('PV_VLM_TRUST_ENV', 'false').lower() in {'true', '1', 'yes'},
             timeout_seconds=(
                 _positive_float_environment_value(
                     "PV_VLM_TIMEOUT_SECONDS",

@@ -1,0 +1,19 @@
+{
+  "project_name": "SIM-合规车棚测试项目",
+  "insured_name": "模拟测试企业",
+  "insured_address": "佛山演示工业园1号（虚构地址）",
+  "project_entity": "模拟测试企业",
+  "industry_name": null,
+  "fire_surcharge_confirmed": null,
+  "project_type": "carport",
+  "installation_type": "carport_roof",
+  "site_address": "佛山演示工业园1号（虚构地址）",
+  "province": null,
+  "city": null,
+  "district": null,
+  "longitude": 113.1189,
+  "latitude": 23.0345,
+  "proposed_start_date": "2026-10-06",
+  "component_model": "JAM72D42-630/LB",
+  "submission_ip": null
+}
