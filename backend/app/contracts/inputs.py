@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import Field, IPvAnyAddress
 
@@ -61,6 +62,7 @@ class OcrField(ContractModel):
 
     field_id: str = Field(min_length=1)
     material_id: str = Field(min_length=1)
+    extraction_task: Literal["watermark", "business"] | None = None
     field_name: str = Field(min_length=1)
     raw_value: str | None
     normalized_value: str | None

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
@@ -22,6 +22,10 @@ class PackageAssessment(ContractModel):
     has_overhead_panorama: bool
     missing_material_categories: list[str] = Field(default_factory=list)
     missing_requirements: list[str]
+    requirement_profile: Literal["demo_minimum", "full_intake"] = "demo_minimum"
+    minimum_gate_passed: bool | None = None
+    document_image_count: int = Field(default=0, ge=0)
+    coverage_requirements: list[str] = Field(default_factory=list)
 
 
 class MaterialReview(ContractModel):
@@ -59,6 +63,14 @@ class UnderwritingDecision(ContractModel):
     generated_at: datetime
 
 
+class OcrTaskExecution(ContractModel):
+    material_id: str
+    task: Literal["watermark", "business"]
+    status: Literal["success", "failed", "skipped"]
+    field_ids: list[str]
+    reason: str | None = None
+
+
 class ProcessingTrace(ContractModel):
     """一个核保处理步骤的运行留痕。"""
 
@@ -69,6 +81,7 @@ class ProcessingTrace(ContractModel):
     finished_at: datetime
     latency_ms: int = Field(ge=0)
     status: ProcessingStatus
+    task_executions: list[OcrTaskExecution] = Field(default_factory=list)
     error_code: str | None = None
     error_message: str | None = None
 

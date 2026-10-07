@@ -29,8 +29,12 @@ from app.intake.equipment_inventory import (
     EquipmentInventoryParseError,
     parse_equipment_inventory,
 )
+from app.location import AmapGeocoder, assess_location
+from app.location.coordinates import parse_decimal_coordinate
 from app.providers import MaterialInput, OcrProvider, ProviderError, VisionProvider
 from app.providers.component import ComponentProvider
+from app.providers.ocr.tasks import extract_tasks
+from app.providers.routing import SCENE_PHOTO_CATEGORIES
 from app.providers.weather import WeatherProvider
 from app.rules import RuleEngine
 
@@ -57,6 +61,7 @@ class UnderwritingPipeline:
         catastrophe_engine: CatastropheAssessmentEngine | None = None,
         rule_engine: RuleEngine | None = None,
         decision_engine: DecisionEngine | None = None,
+        location_geocoder: AmapGeocoder | None = None,
         progress_callback: Callable[[str, int], None] | None = None,
     ) -> None:
         self.ocr_provider = ocr_provider
@@ -66,6 +71,7 @@ class UnderwritingPipeline:
         self.catastrophe_engine = catastrophe_engine
         self.rule_engine = RuleEngine() if rule_engine is None else rule_engine
         self.decision_engine = DecisionEngine() if decision_engine is None else decision_engine
+        self.location_geocoder = location_geocoder
         self.progress_callback = progress_callback
 
     def run(
@@ -75,28 +81,35 @@ class UnderwritingPipeline:
         project: ProjectInfo,
         materials: list[MaterialInput],
     ) -> UnderwritingCase:
-        self._notify_progress("正在提取材料文字", 5)
+        self._notify_progress("正在识别图片风险与水印", 5)
+        findings, vision_trace = self._run_vision(materials)
+        self._notify_progress("图片分析完成", 35)
+        self._notify_progress("正在分别提取拍摄水印与业务文字", 38)
         ocr_fields, ocr_trace = self._run_ocr(materials)
-        self._notify_progress("文字提取完成", 15)
+        self._notify_progress("文字提取完成", 43)
         materials = self._apply_ocr_metadata(materials, ocr_fields)
         project = self._apply_ocr_project_fields(project, ocr_fields)
-        self._notify_progress("正在解析设备清单", 16)
+        self._notify_progress("正在解析设备清单", 44)
         equipment_inventory, equipment_trace = self._run_equipment_inventory(materials)
         project = self._apply_inventory_project_fields(project, equipment_inventory)
-        self._notify_progress("设备清单解析完成", 18)
+        self._notify_progress("设备清单解析完成", 46)
         material_models = [item.material for item in materials]
-        self._notify_progress("正在识别图片风险", 20)
-        findings, vision_trace = self._run_vision(materials)
-        self._notify_progress("图片分析完成", 45)
         project = self._apply_vision_project_fields(project, findings)
+        location_assessment, weather_coordinates = assess_location(
+            project, material_models, ocr_fields, geocoder=self.location_geocoder
+        )
+        if weather_coordinates is not None:
+            project = project.model_copy(update={
+                "longitude": weather_coordinates[0],
+                "latitude": weather_coordinates[1],
+            })
 
         component_profile: ComponentProfile | None = None
         weather_profile: WeatherProfile | None = None
         catastrophe_assessment: CatastropheAssessment | None = None
-        processing_traces = [ocr_trace]
+        processing_traces = [vision_trace, ocr_trace]
         if equipment_trace is not None:
             processing_traces.append(equipment_trace)
-        processing_traces.append(vision_trace)
 
         if self.component_provider is not None:
             self._notify_progress("正在查询组件参数", 50)
@@ -108,6 +121,7 @@ class UnderwritingPipeline:
             self.weather_provider is not None
             and project.longitude is not None
             and project.latitude is not None
+            and location_assessment.status != "conflict"
         ):
             self._notify_progress("正在查询历史气象数据", 65)
             weather_profile, weather_trace = self._run_weather_lookup(project)
@@ -148,6 +162,7 @@ class UnderwritingPipeline:
             component_profile=component_profile,
             weather_profile=weather_profile,
             catastrophe_assessment=catastrophe_assessment,
+            location_assessment=location_assessment,
             package_assessment=package_assessment,
             material_reviews=material_reviews,
             decision=None,
@@ -180,14 +195,15 @@ class UnderwritingPipeline:
         fields: list[OcrField] = []
         failures = 0
 
+        executions=[]
         for material_input in materials:
-            try:
-                fields.extend(self.ocr_provider.extract(material_input))
-            except ProviderError:
-                failures += 1
+            output, details = extract_tasks(self.ocr_provider, material_input)
+            fields.extend(output);executions.extend(details)
+        attempted=[d for d in executions if d['status']!='skipped']
+        failures=sum(d['status']=='failed' for d in attempted)
 
         finished_at = datetime.now(UTC)
-        status = processing_status(len(materials), failures)
+        status = processing_status(len(attempted), failures)
 
         return fields, ProcessingTrace(
             step=ProcessingStep.OCR,
@@ -195,13 +211,14 @@ class UnderwritingPipeline:
             model=self.ocr_provider.model_name,
             started_at=started_at,
             finished_at=finished_at,
+            task_executions=executions,
             latency_ms=(perf_counter_ns() - started_ns) // 1_000_000,
             status=status,
             error_code=None if failures == 0 else "OCR_PROVIDER_FAILURE",
             error_message=(
                 None
                 if failures == 0
-                else f"{failures} of {len(materials)} material calls failed"
+                else f"{failures} of {len(attempted)} extraction tasks failed"
             ),
         )
 
@@ -216,8 +233,18 @@ class UnderwritingPipeline:
 
         for material_input in materials:
             try:
-                findings.extend(self.vision_provider.analyze(material_input))
+                analysis = self.vision_provider.analyze_with_watermark(material_input)
+                findings.extend(analysis.findings)
+                if material_input.material.category in SCENE_PHOTO_CATEGORIES:
+                    if analysis.watermark_present is True:
+                        material_input.material.watermark_status = WatermarkStatus.PRESENT
+                    elif analysis.watermark_present is False:
+                        material_input.material.watermark_status = WatermarkStatus.ABSENT
+                    elif material_input.material.watermark_status in {WatermarkStatus.NOT_CHECKED, WatermarkStatus.UNCERTAIN}:
+                        material_input.material.watermark_status = WatermarkStatus.UNCERTAIN
             except ProviderError:
+                if material_input.material.category in SCENE_PHOTO_CATEGORIES:
+                    material_input.material.watermark_status = WatermarkStatus.UNCERTAIN
                 failures += 1
 
         finished_at = datetime.now(UTC)
@@ -347,6 +374,7 @@ class UnderwritingPipeline:
             item
             for item in materials
             if item.material.category is MaterialCategory.EQUIPMENT_INVENTORY
+            and item.material.media_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ]
         if not inventory_materials:
             return [], None
@@ -447,8 +475,16 @@ class UnderwritingPipeline:
             fields = fields_by_material.get(material.material_id, {})
             updates: dict[str, object] = {}
 
+            subtype = fields.get("document_type")
+            if material.category is MaterialCategory.PROJECT_DOCUMENT and subtype is not None and subtype.value_status is OcrValueStatus.EXTRACTED and subtype.confidence >= 0.65:
+                value = subtype.normalized_value or subtype.raw_value
+                if value == "filing_certificate":
+                    updates["category"] = MaterialCategory.FILING_CERTIFICATE
+                elif value in {"grid_connection_permit", "dispatch_agreement"}:
+                    updates["category"] = MaterialCategory.GRID_CONNECTION_DOCUMENT
+
             watermark = fields.get("watermark_present")
-            if watermark is not None:
+            if watermark is not None and material.watermark_status in {WatermarkStatus.NOT_CHECKED, WatermarkStatus.UNCERTAIN}:
                 value = (watermark.normalized_value or watermark.raw_value or "").strip().casefold()
                 if (
                     watermark.value_status is OcrValueStatus.UNCERTAIN
@@ -491,10 +527,9 @@ class UnderwritingPipeline:
                     else None
                 )
                 if value:
-                    try:
-                        updates[target] = float(value)
-                    except ValueError:
-                        continue
+                    coordinate = parse_decimal_coordinate(value, axis=target)
+                    if coordinate is not None:
+                        updates[target] = coordinate
 
             result.append(
                 MaterialInput(

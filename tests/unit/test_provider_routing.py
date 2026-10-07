@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 from app.contracts import (
     Material,
@@ -6,6 +8,7 @@ from app.contracts import (
     MaterialQualityStatus,
     OcrField,
     RiskFinding,
+    WatermarkStatus,
 )
 from app.providers import MaterialInput
 from app.providers.ocr.base import OcrProvider
@@ -246,10 +249,22 @@ def test_routed_ocr_provider_calls_panorama_for_watermark_ocr() -> None:
     material_input = make_material_input(
         MaterialCategory.PANORAMA
     )
+    material_input.material.watermark_status = WatermarkStatus.PRESENT
 
     provider.extract(material_input)
 
-    assert delegate.received_inputs == [material_input]
+    assert delegate.received_inputs == [replace(material_input, ocr_task="watermark")]
+
+
+def test_routed_ocr_skips_panorama_when_vision_confirms_no_watermark() -> None:
+    delegate = RecordingOcrProvider()
+    provider = RoutedOcrProvider(delegate)
+    material_input = make_material_input(MaterialCategory.PANORAMA)
+    material_input.material.watermark_status = WatermarkStatus.ABSENT
+
+    provider.extract(material_input)
+
+    assert delegate.received_inputs == []
 
 
 def test_routed_ocr_provider_calls_delegate() -> None:
@@ -262,9 +277,7 @@ def test_routed_ocr_provider_calls_delegate() -> None:
 
     provider.extract(material_input)
 
-    assert delegate.received_inputs == [
-        material_input
-    ]
+    assert delegate.received_inputs == [replace(material_input, ocr_task="business")]
 
 
 def test_routed_vision_provider_skips_document() -> None:
@@ -293,3 +306,40 @@ def test_routed_vision_provider_calls_delegate() -> None:
     assert delegate.received_inputs == [
         material_input
     ]
+
+@pytest.mark.parametrize('category,status,tasks', [
+    (MaterialCategory.WORKSHOP, WatermarkStatus.PRESENT, ['watermark']),
+    (MaterialCategory.WORKSHOP, WatermarkStatus.UNCERTAIN, ['watermark']),
+    (MaterialCategory.WORKSHOP, WatermarkStatus.ABSENT, []),
+    (MaterialCategory.COMPONENT_NAMEPLATE, WatermarkStatus.PRESENT, ['watermark','business']),
+    (MaterialCategory.COMPONENT_NAMEPLATE, WatermarkStatus.ABSENT, ['business']),
+    (MaterialCategory.PROJECT_DOCUMENT, WatermarkStatus.PRESENT, ['business']),
+])
+def test_independent_extraction_routes(category, status, tasks):
+    from app.providers.ocr.tasks import extract_tasks
+    provider = RecordingOcrProvider()
+    source = make_material_input(category)
+    source.material.watermark_status = status
+    _, details = extract_tasks(provider, source)
+    assert [x.ocr_task for x in provider.received_inputs] == tasks
+    assert [x['task'] for x in details if x['status']=='success'] == tasks
+
+@pytest.mark.parametrize('failed_task', ['watermark','business'])
+def test_extraction_failure_preserves_other_task(failed_task):
+    from app.providers.common import ProviderError
+    from app.providers.ocr.tasks import extract_tasks
+    class PartialProvider(RecordingOcrProvider):
+        def extract(self, source):
+            if source.ocr_task == failed_task:
+                raise ProviderError('upstream failure')
+            return [OcrField(field_id='field', material_id=source.material.material_id,
+                             field_name='watermark_date' if source.ocr_task=='watermark' else 'component_model',
+                             raw_value='visible', normalized_value='visible', confidence=0.9,
+                             value_status='extracted', evidence_text='visible text', provider='test', model='test')]
+    source = make_material_input(MaterialCategory.COMPONENT_NAMEPLATE)
+    source.material.watermark_status = WatermarkStatus.PRESENT
+    fields, details = extract_tasks(PartialProvider(), source)
+    assert len(fields)==1
+    assert fields[0].extraction_task != failed_task
+    assert next(x for x in details if x['task']==failed_task)['status']=='failed'
+    assert next(x for x in details if x['task']!=failed_task)['status']=='success'

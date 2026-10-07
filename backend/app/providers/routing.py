@@ -2,11 +2,12 @@ from app.contracts import (
     MaterialCategory,
     OcrField,
     RiskFinding,
+    WatermarkStatus,
 )
 
 from .common import MaterialInput
 from .ocr.base import OcrProvider
-from .vision.base import VisionProvider
+from .vision.base import VisionAnalysis, VisionProvider
 
 OCR_MEDIA_TYPES = frozenset(
     {
@@ -25,7 +26,8 @@ VISION_MEDIA_TYPES = frozenset(
 
 OCR_MATERIAL_CATEGORIES = frozenset(
     {
-        MaterialCategory.PANORAMA,
+        MaterialCategory.PROJECT_DOCUMENT,
+        MaterialCategory.EQUIPMENT_INVENTORY,
         MaterialCategory.FILING_CERTIFICATE,
         MaterialCategory.GRID_CONNECTION_DOCUMENT,
         MaterialCategory.ELECTRICAL_GROUNDING,
@@ -54,18 +56,25 @@ VISION_MATERIAL_CATEGORIES = frozenset(
 )
 
 
-def should_run_ocr(
-    material_input: MaterialInput,
-) -> bool:
-    """判断当前材料是否需要调用 OCR。"""
+# Includes scene photos and equipment photos; documents do not inherit this task.
+SCENE_PHOTO_CATEGORIES = VISION_MATERIAL_CATEGORIES
 
-    material = material_input.material
 
-    return (
-        material.media_type in OCR_MEDIA_TYPES
-        and material.category
-        in OCR_MATERIAL_CATEGORIES
-    )
+def should_run_watermark_ocr(material_input: MaterialInput) -> bool:
+    material=material_input.material
+    return material.media_type in VISION_MEDIA_TYPES and material.category in SCENE_PHOTO_CATEGORIES and (
+        material.watermark_status in {WatermarkStatus.PRESENT, WatermarkStatus.UNCERTAIN}
+        or material.category is MaterialCategory.PANORAMA and material.watermark_status is WatermarkStatus.NOT_CHECKED)
+
+
+def should_run_business_ocr(material_input: MaterialInput) -> bool:
+    return material_input.material.media_type in OCR_MEDIA_TYPES and material_input.material.category in OCR_MATERIAL_CATEGORIES
+
+
+def should_run_ocr(material_input: MaterialInput) -> bool:
+    if material_input.ocr_task=='watermark': return should_run_watermark_ocr(material_input)
+    if material_input.ocr_task=='business': return should_run_business_ocr(material_input)
+    return should_run_watermark_ocr(material_input) or should_run_business_ocr(material_input)
 
 
 def should_run_vision(
@@ -106,6 +115,9 @@ class RoutedOcrProvider(OcrProvider):
         if not should_run_ocr(material_input):
             return []
 
+        if material_input.ocr_task == 'auto':
+            from app.providers.ocr.tasks import extract_tasks
+            return extract_tasks(self._delegate,material_input,raise_errors=True)[0]
         return self._delegate.extract(
             material_input
         )
@@ -138,3 +150,8 @@ class RoutedVisionProvider(VisionProvider):
         return self._delegate.analyze(
             material_input
         )
+
+    def analyze_with_watermark(self, material_input: MaterialInput) -> VisionAnalysis:
+        if not should_run_vision(material_input):
+            return VisionAnalysis(findings=[])
+        return self._delegate.analyze_with_watermark(material_input)
