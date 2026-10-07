@@ -71,7 +71,7 @@ def config():
     except ProviderConfigurationError:
         model = None
     bundle = load_bundle(PROMPT_DEFAULT_PATH)
-    legacy = (ROOT / 'legacy_v1.txt').read_text().replace('{RISK_CATEGORY_VALUES}', '、'.join(c.value for c in RiskCategory))
+    legacy = (ROOT / 'legacy_v1.txt').read_text(encoding='utf-8').replace('{RISK_CATEGORY_VALUES}', '、'.join(c.value for c in RiskCategory))
     return {'model': model, **bundle, 'original_prompt': SYSTEM_PROMPT,
             'builtin_bundle': builtin_bundle(), 'legacy_prompt': legacy, 'contract': output_contract(), 'legacy_contract': LAB_CONTRACT,
             'categories': {c: expected(MaterialCategory(c)) for c in MATERIAL_CATALOG},

@@ -17,8 +17,8 @@ def expected_checks(category):
 
 
 def builtin_bundle():
-    return {'version_name': VERSION, 'prompt': (ROOT / 'common.txt').read_text(),
-            'specialized_prompts': {c.value: (ROOT / f'{c.value}.txt').read_text()
+    return {'version_name': VERSION, 'prompt': (ROOT / 'common.txt').read_text(encoding='utf-8'),
+            'specialized_prompts': {c.value: (ROOT / f'{c.value}.txt').read_text(encoding='utf-8')
                                     for c in MaterialCategory if (ROOT / f'{c.value}.txt').exists()}}
 
 
@@ -31,14 +31,14 @@ def load_bundle(path):
         if '【水印】' in bundle['prompt']:
             before, section = bundle['prompt'].split('【水印】',1)
             if '只有 panorama' in section:
-                bundle['prompt'] = before+'【水印】\n'+(ROOT/'common.txt').read_text().split('【水印】\n',1)[1]
+                bundle['prompt'] = before+'【水印】\n'+(ROOT/'common.txt').read_text(encoding='utf-8').split('【水印】\n',1)[1]
         if bundle['version_name'] in {'v2 · 按材料组合','v3 · 照片与文档分流'}:
             bundle['version_name'] = VERSION
     return bundle
 
 
 def output_contract():
-    return (ROOT / 'output.txt').read_text() + '\n允许的 category：' + '、'.join(c.value for c in RiskCategory)
+    return (ROOT / 'output.txt').read_text(encoding='utf-8') + '\n允许的 category：' + '、'.join(c.value for c in RiskCategory)
 
 
 def compose_prompt(common, specialized, category):
