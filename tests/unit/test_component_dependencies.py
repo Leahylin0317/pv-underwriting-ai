@@ -6,7 +6,10 @@ from app.api.component_dependencies import (
     get_component_catalog_path,
     get_component_provider,
 )
-from app.providers.component import LocalFirstComponentProvider
+from app.providers.component import (
+    LocalFirstComponentProvider,
+    SolarStackPartnerApiComponentProvider,
+)
 from fastapi import HTTPException
 
 
@@ -61,8 +64,7 @@ def test_uses_default_imported_catalog(
     exact_ja = provider.lookup("JAM72D42-630/LB")
     listed_ja = provider.lookup("JAM72D42-630W")
     assert exact_ja is not None
-    assert listed_ja is not None
-    assert exact_ja.component_model != listed_ja.component_model
+    assert listed_ja is None  # candidate model stays out of automatic matching
     assert exact_ja.front_static_load_pa == 5400
     assert exact_ja.wind_load_pa is None
 
@@ -140,3 +142,16 @@ def test_configured_online_catalog_is_connected_to_underwriting_dependency(
 
     assert isinstance(provider, LocalFirstComponentProvider)
     assert provider.local.lookup("JAM66D42-580/MB") is not None
+
+
+def test_solar_stack_key_connects_partner_api_after_local_catalog(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PV_COMPONENT_CATALOG_PATH", "")
+    monkeypatch.setenv("PV_COMPONENT_ONLINE_CATALOG_URL", "")
+    monkeypatch.setenv("PV_SOLAR_STACK_API_KEY", "test-key")
+
+    provider = get_component_provider()
+
+    assert isinstance(provider, LocalFirstComponentProvider)
+    assert isinstance(provider.online, SolarStackPartnerApiComponentProvider)

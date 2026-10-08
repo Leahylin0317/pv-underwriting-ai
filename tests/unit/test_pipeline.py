@@ -97,7 +97,8 @@ def test_pipeline_builds_case_with_mock_provider_results() -> None:
     assert len(case.material_reviews) == 2
     assert len(case.processing_trace) == 4
     assert case.decision is not None
-    assert case.decision.decision is DecisionType.RECOMMEND_REJECT
+    assert case.decision.decision is DecisionType.REQUEST_MORE
+    assert "ENV-SITE-RELATION-REVIEW-001" in case.decision.decisive_rule_ids
     assert all(
         trace.status is ProcessingStatus.SUCCESS
         for trace in case.processing_trace
@@ -130,7 +131,8 @@ def test_pipeline_keeps_running_when_ocr_provider_fails() -> None:
     assert ocr_trace.error_code == "OCR_PROVIDER_FAILURE"
     assert "sensitive upstream error details" not in (ocr_trace.error_message or "")
     assert case.decision is not None
-    assert case.decision.decision is DecisionType.RECOMMEND_REJECT
+    assert case.decision.decision is DecisionType.REQUEST_MORE
+    assert "ENV-SITE-RELATION-REVIEW-001" in case.decision.decisive_rule_ids
     assert "SYS-PROVIDER-FAILURE" in case.decision.decisive_rule_ids
 
 
@@ -178,11 +180,12 @@ def test_pipeline_adds_request_more_review_for_poor_material() -> None:
     )
 
     assert len(case.material_reviews) == 1
-    assert case.material_reviews[0].action is MaterialReviewAction.RECOMMEND_REJECT
+    assert case.material_reviews[0].action is MaterialReviewAction.REQUEST_MORE
     assert "MAT-QUALITY-001" in case.material_reviews[0].triggered_rule_ids
-    assert "ENV-EXCLUDED-001" in case.material_reviews[0].triggered_rule_ids
+    assert "ENV-SITE-RELATION-REVIEW-001" in case.material_reviews[0].triggered_rule_ids
+    assert "ENV-EXCLUDED-001" not in case.material_reviews[0].triggered_rule_ids
     assert case.decision is not None
-    assert case.decision.decision is DecisionType.RECOMMEND_REJECT
+    assert case.decision.decision is DecisionType.REQUEST_MORE
     assert "MAT-QUALITY-001" in case.decision.decisive_rule_ids
     rule_trace = next(
         trace

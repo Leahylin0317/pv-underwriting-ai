@@ -1,6 +1,8 @@
+import os
 import sqlite3
 from typing import Annotated
 
+from dotenv import load_dotenv
 from fastapi import (
     APIRouter,
     Depends,
@@ -41,8 +43,11 @@ from app.providers.routing import (
     RoutedVisionProvider,
 )
 from app.reports import generate_markdown_report
+from app.rules.config import BusinessRulesConfig
 from app.settings import (
+    AmapJsApiSettings,
     ProviderConfigurationError,
+    SentinelHubSettings,
     VlmSettings,
 )
 from app.storage import CaseRepository
@@ -81,8 +86,15 @@ def get_vision_provider() -> VisionProvider:
             detail="Vision provider is not configured",
         ) from exc
 
+    business_rules = BusinessRulesConfig.load()
     image_provider = CompatibleVisionProvider(
         settings=settings,
+        environment_auto_reject_relations=(
+            business_rules.environment_auto_reject_relations
+        ),
+        environment_auto_reject_min_confidence=(
+            business_rules.environment_auto_reject_min_confidence
+        ),
     )
 
     return RoutedVisionProvider(
@@ -122,6 +134,11 @@ def health_check() -> dict[str, str]:
 def readiness_check() -> dict[str, object]:
     """Report local configuration readiness without revealing credentials."""
 
+    load_dotenv(PROJECT_ROOT / ".env", override=False)
+    solar_stack_partner_api_configured = bool(
+        os.getenv("PV_SOLAR_STACK_API_KEY", "").strip()
+    )
+
     checks = {
         "ocr_model_configured": False,
         "vision_model_configured": False,
@@ -130,6 +147,11 @@ def readiness_check() -> dict[str, object]:
         "case_database_available": False,
     }
     online_catalog_configured = False
+    optional_capabilities = {
+        "map_review_configured": False,
+        "amap_satellite_configured": False,
+        "sentinel2_configured": False,
+    }
 
     try:
         VlmSettings.from_environment(env_file=PROJECT_ROOT / ".env")
@@ -153,6 +175,20 @@ def readiness_check() -> dict[str, object]:
     except ValueError:
         pass
 
+    optional_capabilities["map_review_configured"] = bool(
+        os.getenv("PV_AMAP_WEB_SERVICE_KEY", "").strip()
+    )
+    try:
+        AmapJsApiSettings.from_environment(env_file=PROJECT_ROOT / ".env")
+        optional_capabilities["amap_satellite_configured"] = True
+    except ProviderConfigurationError:
+        pass
+    try:
+        SentinelHubSettings.from_environment(env_file=PROJECT_ROOT / ".env")
+        optional_capabilities["sentinel2_configured"] = True
+    except ProviderConfigurationError:
+        pass
+
     try:
         CaseRepository().list_cases(limit=1)
         checks["case_database_available"] = True
@@ -164,6 +200,9 @@ def readiness_check() -> dict[str, object]:
         "checks": checks,
         "component_online_catalog_configured": online_catalog_configured,
         "component_online_connectivity_checked": False,
+        "solar_stack_partner_api_configured": solar_stack_partner_api_configured,
+        "solar_stack_partner_api_connectivity_checked": False,
+        "optional_capabilities": optional_capabilities,
         "weather_connectivity_checked": False,
     }
 

@@ -24,7 +24,10 @@ def get_geocoding_provider() -> AmapGeocodingProvider:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Address lookup is not configured",
         )
-    return AmapGeocodingProvider(key)
+    use_system_proxy = os.getenv("PV_AMAP_USE_SYSTEM_PROXY", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    return AmapGeocodingProvider(key, trust_env=use_system_proxy)
 
 
 @router.get("/resolve")

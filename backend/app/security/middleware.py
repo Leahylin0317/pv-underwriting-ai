@@ -77,6 +77,8 @@ class RoleAccessMiddleware(BaseHTTPMiddleware):
             return "viewer"
         if method == "POST" and path == "/api/v1/reports/render":
             return "viewer"
+        if method == "POST" and path == "/api/v1/components/corrections":
+            return "underwriter"
         if "/review" in path:
             return "underwriter"
         if path.startswith(

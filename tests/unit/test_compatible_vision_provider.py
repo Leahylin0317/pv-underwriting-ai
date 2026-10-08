@@ -4,6 +4,7 @@ import httpx
 import pytest
 from app.contracts import (
     DetectionStatus,
+    EnvironmentRelation,
     Material,
     MaterialCategory,
     MaterialParseStatus,
@@ -58,6 +59,7 @@ def successful_response_content() -> str:
       "detection_status": "detected",
       "severity": "high",
       "confidence": 0.86,
+      "environment_relation": "project_site",
       "bbox": {
         "x_min": 0.5,
         "y_min": 0.1,
@@ -115,6 +117,9 @@ def test_calls_compatible_api_and_converts_findings() -> None:
         assert request_body["response_format"] == {
             "type": "json_object"
         }
+        prompt_text = request_body["messages"][1]["content"][0]["text"]
+        assert "project_site" in prompt_text
+        assert "0.65" in prompt_text
 
         image_url = request_body[
             "messages"
@@ -165,6 +170,7 @@ def test_calls_compatible_api_and_converts_findings() -> None:
     )
 
     assert findings[0].bbox is not None
+    assert findings[0].environment_relation is EnvironmentRelation.PROJECT_SITE
 
     assert (
         findings[1].detection_status
@@ -176,6 +182,38 @@ def test_calls_compatible_api_and_converts_findings() -> None:
         is True
     )
     assert findings[2].detection_status is DetectionStatus.NOT_DETECTED
+
+
+def test_sends_configured_environment_rejection_policy_to_model() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        request_body = json.loads(request.content)
+        prompt_text = request_body["messages"][1]["content"][0]["text"]
+        assert "project_site、operational_surroundings" in prompt_text
+        assert "0.80" in prompt_text
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "content": '{"findings": []}',
+                        }
+                    }
+                ]
+            },
+        )
+
+    provider = CompatibleVisionProvider(
+        make_settings(),
+        transport=httpx.MockTransport(handler),
+        environment_auto_reject_relations=(
+            EnvironmentRelation.PROJECT_SITE,
+            EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+        ),
+        environment_auto_reject_min_confidence=0.8,
+    )
+
+    assert provider.analyze(make_material_input()) == []
 
 
 def test_defaults_bbox_coordinate_space() -> None:

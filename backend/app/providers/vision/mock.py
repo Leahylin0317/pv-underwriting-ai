@@ -1,6 +1,7 @@
 from app.contracts import (
     Bbox,
     DetectionStatus,
+    EnvironmentRelation,
     MaterialCategory,
     RiskCategory,
     RiskFinding,
@@ -37,6 +38,7 @@ class MockVisionProvider(VisionProvider):
                 detection_status=DetectionStatus.DETECTED,
                 severity=RiskSeverity.HIGH,
                 confidence=0.86,
+                environment_relation=EnvironmentRelation.UNCERTAIN,
                 bbox=Bbox(
                     x_min=0.52,
                     y_min=0.18,

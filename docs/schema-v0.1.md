@@ -34,7 +34,7 @@
 3\. 未识别成功的字段使用 `null`，不允许编造内容。
 4\. `uncertain` 与 `not\_detected` 含义不同。
 5\. 低置信度结果必须标记为 `uncertain`。
-6\. 低质量或低置信度材料进入 `request\_more`，不能强行判断承保或拒保。
+6\. 图片质量不足或必需 OCR 字段缺失/低置信时进入 `request\_more`；风险存在但现场关系或结论不确定时转 `manual\_review`，不能强行拒保或当作通过。
 7\. 每个识别结果必须能够追溯到具体材料。
 8\. 图片风险点应尽可能提供 bbox。
 9\. bbox 使用 0 到 1 的归一化坐标。
@@ -59,10 +59,11 @@
 | decision | UnderwritingDecision 或 null | 否 | 决策模块 | 整单综合核保意见 |
 | processing\_trace | ProcessingTrace\[] | 是 | 各处理模块 | 模型、耗时和异常留痕 |
 | package\_assessment | PackageAssessment 或 null | 否 | 材料门禁 | 照片数量、备案证和全景视角完整性 |
+| map\_reviews | MapImageryReview\[] | 否 | 核保员人工复核 | 可选外部地图位置观察；不进入自动风险事实 |
 
 `PackageAssessment` 会计算图片数量、全景照数量、是否含备案证、是否已标注正面平视和俯拍视角、缺失的必需材料类别，以及需要补充的项目。Demo 门槛包括至少 5 张图片、2 张全景照、1 份备案证，并要求提供屋顶连接处、女儿墙/排水、并网材料、电气接地、组件铭牌、逆变器铭牌和汇流箱材料；屋顶式项目还要求车间照片，监控照片为可选。门槛不满足时整案建议补充材料。
 
-图片数量只统计 JPEG/PNG；全景数量只统计图像格式的全景材料。每张全景图都须具备可核验的日期、经纬度水印，且拍摄日期须处于拟起保日前 15 日内。PDF 备案材料不计入图片数量。
+图片数量只统计 JPEG/PNG；全景数量只统计图像格式的全景材料。每张全景图建议具备日期和经纬度水印。当前赛题阶段缺少水印仅提示建议补充，不单独阻断；水印日期已识别时，仍须处于拟起保日前 15 日内。若日期或坐标进入校验但无法可靠读取，系统要求补充可核验材料。PDF 备案材料不计入图片数量。
 
 设备清单可作为 `equipment_inventory` 类别上传 XLSX。系统读取工作表行并保留原文件、工作表和行号来源；明确且唯一的光伏组件型号可用于补充案件型号。清单价格只作为原始资料展示，不用于推算保额或保费；清单不能替代铭牌照片和组件抗灾规格来源。
 
@@ -152,11 +153,14 @@
 | detection\_status | enum | 是 | detected、not\_detected、uncertain、not\_applicable |
 | severity | enum | 是 | info、low、medium、high、critical、unknown |
 | confidence | number | 是 | 识别置信度 |
+| environment\_relation | enum | 否 | 拒保环境与项目关系：project\_site、operational\_surroundings、distant\_background、uncertain；其他风险默认 uncertain |
 | bbox | Bbox 或 null | 否 | 风险区域坐标 |
 | evidence\_text | string | 是 | 模型识别依据 |
 | provider | string | 是 | 视觉服务名称 |
 | model | string | 是 | 模型名称或版本 |
 | requires\_manual\_review | boolean | 是 | 是否需要人工复核 |
+
+自动拒保门槛只适用于 8 类拒保环境：必须为 `detected`、`environment_relation` 属于 `data/rules/challenge_open_ai_01.json` 配置范围、置信度达到配置门槛且 `requires_manual_review=false`。当前仅启用 `project_site`，默认分数门槛为 0.65；该分数未做业务概率校准。邻近周边或关系不确定转人工核验，远处背景不允许配置为现场拒保事实。旧接口或模型未返回 `environment_relation` 时默认 `uncertain`，不会被当作现场确认。多张全景的检查覆盖按案件合并；仅当所有全景均缺少某项结果时才针对该项要求补充。
 
 阶段一风险类别 `category`：
 
@@ -204,13 +208,17 @@
 | component\_model | string | 是 | 标准化组件型号 |
 | manufacturer | string 或 null | 否 | 厂商 |
 | rated\_power\_w | number 或 null | 否 | 标称功率，单位 W |
-| hail\_resistance\_mm | number 或 null | 否 | 可抵御冰雹直径，单位 mm |
-| wind\_load\_pa | number 或 null | 否 | 风荷载能力，单位 Pa |
-| snow\_load\_pa | number 或 null | 否 | 雪荷载能力，单位 Pa |
+| front\_static\_load\_pa / back\_static\_load\_pa | number 或 null | 否 | 厂家正面/背面最大静态载荷；保留原方向和口径，不转换成项目设计风压或结构雪荷载 |
+| hail\_resistance\_mm | number 或 null | 否 | 厂家冰雹试验直径，单位 mm；不是现场可抵御直径的保证 |
+| hail\_impact\_velocity\_m\_s | number 或 null | 否 | 厂家冰雹试验冲击速度，单位 m/s |
+| wind\_load\_pa / snow\_load\_pa | number 或 null | 否 | 厂家明确列示的风/雪荷载值，单位 Pa；来源和测试条件需结合 `source_note` 核对，当前不与历史天气指标直接计算能力比 |
+| market\_version / model\_derivation\_method | string 或 null | 否 | 市场版本及型号是否逐项列示或经展开 |
+| source\_document\_type / source\_note | string 或 null | 否 | 来源文档类型及参数适用说明 |
+| parameter\_sources | object | 是 | 数值参数到厂家来源 URL 的逐字段映射 |
 | source\_url | string 或 null | 是 | 厂商或公开资料来源 |
 | source\_name | string | 是 | 数据来源名称 |
 | retrieved\_at | datetime | 是 | 数据获取时间 |
-| match\_confidence | number | 是 | 型号匹配置信度 |
+| match\_confidence | number | 是 | 目录型号匹配参考分；不代表参数经人工核实或风险概率 |
 
 ## 11 WeatherProfile 气象数据
 
@@ -218,11 +226,21 @@
 | --- | --- | --- | --- |
 | longitude | number | 是 | 查询经度 |
 | latitude | number | 是 | 查询纬度 |
-| historical\_max\_wind\_m\_s | number 或 null | 否 | 历史最大风速，单位 m/s |
+| historical\_max\_wind\_m\_s | number 或 null | 否 | 历史最大 10 米日阵风，单位 m/s；Open-Meteo 再分析值，不是项目规范设计风速 |
+| historical\_max\_daily\_wind\_speed\_m\_s | number 或 null | 否 | 历史最大 10 米日持续风速，单位 m/s；不是项目规范设计风速 |
+| historical\_max\_daily\_precipitation\_mm / historical\_max\_daily\_rain\_mm | number 或 null | 否 | 单日总降水（含降雪）和单日降雨历史最大值，单位 mm；不是洪水或内涝结论 |
+| historical\_max\_daily\_precipitation\_hours | number 或 null | 否 | 有降水的单日最长时数，范围 0–24 h |
 | historical\_max\_hail\_mm | number 或 null | 否 | 历史最大冰雹直径，单位 mm |
 | historical\_max\_snow\_load\_pa | number 或 null | 否 | 历史雪荷载估计，单位 Pa |
-| observation\_start | date 或 null | 否 | 历史数据起始日期 |
-| observation\_end | date 或 null | 否 | 历史数据结束日期 |
+| historical\_max\_daily\_snowfall\_cm | number 或 null | 否 | 历史最大单日降雪量，单位 cm；不得换算为结构雪荷载 |
+| observation\_start / observation\_end | date 或 null | 否 | 请求的数据起止日期，不代表完整返回覆盖 |
+| returned\_data\_start / returned\_data\_end | date 或 null | 否 | 上游实际返回的序列日期范围 |
+| expected\_day\_count / returned\_day\_count | integer 或 null | 否 | 请求期间预期日数及实际返回日数 |
+| wind\_valid\_day\_count / wind\_speed\_valid\_day\_count / precipitation\_valid\_day\_count / rain\_valid\_day\_count / precipitation\_hours\_valid\_day\_count / snowfall\_valid\_day\_count | integer 或 null | 否 | 每种每日序列的有效值日数，用于揭示缺测 |
+| grid\_longitude / grid\_latitude / grid\_distance\_km | number 或 null | 否 | 上游实际采用的气象网格坐标及与项目查询点的距离 |
+| grid\_elevation\_m / timezone / dataset\_selection | number/string 或 null | 否 | 网格 DEM 高程、日汇总时区及数据集选择 |
+| wind\_unit / wind\_speed\_unit / precipitation\_unit / rain\_unit / precipitation\_hours\_unit / snowfall\_unit | string 或 null | 否 | API 返回并经校验的单位 |
+| data\_quality\_notes | string\[] | 是 | 网格元数据、有效日数等数据质量说明 |
 | source\_name | string | 是 | 气象数据来源 |
 | source\_url | string 或 null | 否 | 来源地址 |
 | retrieved\_at | datetime | 是 | 获取时间 |
@@ -238,7 +256,7 @@
 | triggered\_rule\_ids | string\[] | 是 | 命中的规则编号 |
 | requires\_manual\_review | boolean | 是 | 是否需要人工判断 |
 
-该对象只输出风险等级和理由，不输出具体保费。
+该对象只输出风险等级和理由，不输出具体保费。风、雹、雪资料口径未验证时，等级和能力比保持 `unknown`/`null` 并要求人工核验；不能把未知解释成通过。
 
 ## 13 MaterialReview 逐项审核结果
 
@@ -290,6 +308,16 @@
 | error\_code | string 或 null | 否 | 错误编号 |
 | error\_message | string 或 null | 否 | 脱敏后的错误信息 |
 
+`ProcessingStep` 另包含 `map_review`，表示核保员在原分析完成后执行了地图辅助复核。
+
+### MapImageryReview 外部地图人工观察
+
+`map_reviews` 默认是空数组。记录字段包括：复核编号、触发复核的低质量材料编号、地图服务、地址来源与查询/匹配地址、地理编码置信分与地址理解度、精确匹配状态、BD-09 坐标、地图官方链接、查询及复核时间、复核人、是否确认该点对应本项目、光伏组件可见性、观察到的安装载体、影像日期（未知时为 `null`）和人工观察说明。
+
+每条记录的 `decision_effect` 固定为 `manual_context_only`。地图观察不修改 `findings`、材料规则动作或系统综合结论。“地图中未见”不代表现场没有组件。高德影像仍只通过高德地图页面人工查看，系统不下载或转发高德影像。
+
+记录可选的 `sentinel_context`，用于保存 Copernicus Sentinel-2 L2A 周边环境影像的审计元数据：数据集/场景编号、获取日期、场景/瓦片云量估计及其口径说明、云/云影/无数据像元遮罩比例、WGS84 查询中心与范围、查询半径、约 10 米输出像元尺度、署名、影像质量提示及可选 VLM 环境描述。原始 PNG 不写入案件数据。地址级坐标属于近似定位；云量估算不是项目地块级实测。VLM 环境类别、置信度和证据只作为人工复核建议，不能代替现场材料或直接改变自动核保结论。
+
 ## 16 需要金融成员确认的问题
 
 1\. 低置信度阈值具体是多少？
@@ -302,8 +330,17 @@
 8\. 车间易燃物和危险品分别触发提示、加费还是拒保？
 9\. 自然灾害风险等级如何触发加费或附加条件？
 10\. 综合决策优先级是否认可？
-11\. 无水印照片是提示还是必须补材？
+11\. 对项目邻近的农田、林地、水体或山地，业务定义的拒保环境边界是什么？
 12\. 哪些材料在首期属于强制材料？
+
+### 通过、补件和人工复核的触发条件
+
+- **建议承保**：材料数量和类别门槛已满足；适用检查均有可用结果；必需 OCR 字段及交叉核验完整；未出现确认属于项目现场的禁保环境、明确拒保项或未解决的人工复核事项。水印缺失提示和远处背景景物等非阻断警示可以同时展示。
+- **建议补件**：明确缺少必需材料/字段，图像无法解码或关键区域模糊，某项检查在所有全景中都没有结果，或已识别的水印日期不符合时效要求。
+- **转人工复核**：高风险环境关系不明或只在邻近周边、模型主动要求复核、OCR 交叉冲突、识别服务失败、业务规则清单缺失，或灾害评估的必要数据不全。
+- **建议拒保**：规则定义的硬拒保事实被明确识别且满足相应自动触发条件。对于环境类，必须是项目现场本身、置信度达到当前技术门槛且模型未要求人工复核；邻近环境边界待业务确认。
+
+这些是系统建议结论的程序条件，不替代有权限核保人的最终审批。
 
 ## 17 案件历史与人工复核记录
 

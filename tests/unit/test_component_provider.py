@@ -37,7 +37,7 @@ def component_profile(
 def test_normalizes_component_model() -> None:
     assert normalize_component_model(
         " PV-Module 580W "
-    ) == "pvmodule580w"
+    ) == "pv-module580w"
 
 
 def test_finds_exact_component_model() -> None:
@@ -64,19 +64,26 @@ def test_finds_exact_component_model() -> None:
     )
 
 
-def test_matches_case_and_separator_variants() -> None:
+def test_matches_case_space_and_unicode_dash_variants() -> None:
     provider = CatalogComponentProvider(
         profiles=[component_profile()]
     )
 
     result = provider.lookup(
-        "pv module_580w"
+        " pv‐module‐580w "
     )
 
     assert result is not None
     assert result.component_model == (
         "PV-MODULE-580W"
     )
+
+
+def test_does_not_drop_model_variant_punctuation() -> None:
+    provider = CatalogComponentProvider(profiles=[component_profile("ABC-123/XY")])
+
+    assert provider.lookup("ABC123XY") is None
+    assert provider.lookup("ABC-123/XY") is not None
 
 
 def test_returns_none_for_unknown_or_empty_model() -> None:
@@ -88,6 +95,16 @@ def test_returns_none_for_unknown_or_empty_model() -> None:
         "UNKNOWN-MODEL"
     ) is None
     assert provider.lookup("   ") is None
+    assert provider.lookup("---///") is None
+
+
+def test_does_not_use_low_confidence_demo_model_as_automatic_match() -> None:
+    uncertain = component_profile("JAM72D42-630W").model_copy(
+        update={"match_confidence": 0.5}
+    )
+    provider = CatalogComponentProvider(profiles=[uncertain])
+
+    assert provider.lookup("JAM72D42-630W") is None
 
 
 def test_only_explicit_aliases_match_other_model_suffixes() -> None:
@@ -125,7 +142,7 @@ def test_rejects_duplicate_normalized_models() -> None:
                     "PV-MODULE-580W"
                 ),
                 component_profile(
-                    "pv module 580w"
+                    "pv‐module‐580w"
                 ),
             ]
         )

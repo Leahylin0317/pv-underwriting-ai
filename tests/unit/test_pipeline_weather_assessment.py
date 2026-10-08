@@ -99,7 +99,11 @@ def test_pipeline_adds_weather_and_catastrophe_results() -> None:
     assert case.weather_profile is not None
     assert case.weather_profile.historical_max_wind_m_s == 30
     assert case.catastrophe_assessment is not None
-    assert case.catastrophe_assessment.requires_manual_review is False
+    assert case.catastrophe_assessment.requires_manual_review is True
+    assert case.catastrophe_assessment.expected_loss_risk.value == "unknown"
+    assert "CAT-WIND-COMPARABILITY-UNVERIFIED" in (
+        case.catastrophe_assessment.triggered_rule_ids
+    )
 
     steps = [trace.step for trace in case.processing_trace]
     assert ProcessingStep.WEATHER_LOOKUP in steps

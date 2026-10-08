@@ -13,7 +13,10 @@ from .catalog import normalize_component_model
 
 _PARAMETERS = (
     "rated_power_w",
+    "front_static_load_pa",
+    "back_static_load_pa",
     "hail_resistance_mm",
+    "hail_impact_velocity_m_s",
     "wind_load_pa",
     "snow_load_pa",
 )
@@ -173,7 +176,11 @@ class LocalFirstComponentProvider(ComponentProvider):
                 if getattr(local, field) is not None
                 and field not in local.parameter_sources
             },
-            **{field: online.source_url or online.source_name for field in update},
+            **{
+                field: online.parameter_sources[field]
+                for field in update
+                if field in online.parameter_sources
+            },
         }
         update["source_name"] = f"{local.source_name}; {online.source_name}"
         update["source_url"] = online.source_url
@@ -182,3 +189,55 @@ class LocalFirstComponentProvider(ComponentProvider):
             local.match_confidence, online.match_confidence
         )
         return local.model_copy(update=update)
+
+
+class ComponentCatalogOverlayProvider(ComponentProvider):
+    """Fill only missing local values with operator-confirmed corrections."""
+
+    def __init__(self, base: ComponentProvider, corrections: ComponentProvider) -> None:
+        self.base = base
+        self.corrections = corrections
+
+    @property
+    def name(self) -> str:
+        return "local-catalog-with-reviewed-corrections"
+
+    def lookup(self, component_model: str) -> ComponentProfile | None:
+        base = self.base.lookup(component_model)
+        correction = self.corrections.lookup(component_model)
+        if correction is None:
+            return base
+        if base is None:
+            return correction
+
+        value_fields = (
+            "rated_power_w",
+            "hail_resistance_mm",
+            "wind_load_pa",
+            "snow_load_pa",
+            "front_static_load_pa",
+            "back_static_load_pa",
+            "hail_impact_velocity_m_s",
+        )
+        updates = {
+            field: getattr(correction, field)
+            for field in value_fields
+            if getattr(base, field) is None and getattr(correction, field) is not None
+        }
+        if not updates:
+            return base
+        updates["parameter_sources"] = {
+            **base.parameter_sources,
+            **{
+                field: correction.parameter_sources[field]
+                for field in updates
+                if field in correction.parameter_sources
+            },
+        }
+        updates["source_name"] = f"{base.source_name}; {correction.source_name}"
+        updates["lookup_notes"] = [
+            *base.lookup_notes,
+            *correction.lookup_notes,
+            "人工补正仅填充原目录缺失字段；已有目录数值不会被覆盖。",
+        ]
+        return base.model_copy(update=updates)

@@ -3,6 +3,7 @@ from io import BytesIO
 
 from app.contracts import (
     DetectionStatus,
+    EnvironmentRelation,
     Material,
     MaterialCategory,
     MaterialParseStatus,
@@ -64,6 +65,12 @@ def finding(
         detection_status=status,
         severity=RiskSeverity.HIGH,
         confidence=0.95,
+        environment_relation=(
+            EnvironmentRelation.PROJECT_SITE
+            if category.value.endswith("_environment")
+            and status is DetectionStatus.DETECTED
+            else EnvironmentRelation.UNCERTAIN
+        ),
         bbox=None,
         evidence_text="可见测试证据",
         provider="test-vision",
@@ -185,6 +192,23 @@ def test_unprotected_cable_is_rejected_under_the_midterm_rule() -> None:
     assert "ELEC-UNPROTECTED-CABLE-REJECT-001" in review.triggered_rule_ids
 
 
+def test_ambiguous_severe_shading_candidate_routes_to_human_review() -> None:
+    engine = RuleEngine()
+    item = material(MaterialCategory.PANORAMA)
+    findings = negative_findings(engine, item)
+    findings.append(
+        finding(item.material_id, RiskCategory.SEVERE_SHADING, DetectionStatus.DETECTED).model_copy(
+            update={"requires_manual_review": True}
+        )
+    )
+
+    review = engine.evaluate_material(item, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "IMG-SHADING-SEVERE-001" not in review.triggered_rule_ids
+
+
 def test_stage_two_checks_do_not_trigger_in_initial_phase() -> None:
     engine = RuleEngine()
     item = material(MaterialCategory.ELECTRICAL_GROUNDING)
@@ -233,6 +257,54 @@ def test_prohibited_environment_still_rejects_when_visible_at_roof_connection() 
 
     assert review.action is MaterialReviewAction.RECOMMEND_REJECT
     assert "ENV-EXCLUDED-001" in review.triggered_rule_ids
+
+
+def test_business_can_configure_a_confirmed_environment_boundary() -> None:
+    config = BusinessRulesConfig(
+        ruleset_id="approved-environment-boundary",
+        version="1",
+        source_note="Test fixture simulates an approved adjacent-environment rule",
+        environment_auto_reject_relations=(
+            EnvironmentRelation.PROJECT_SITE,
+            EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+        ),
+        environment_auto_reject_min_confidence=0.8,
+    )
+    engine = RuleEngine(config=config)
+    item = material(MaterialCategory.PANORAMA)
+    findings = negative_findings(engine, item)
+    findings.append(
+        finding(
+            item.material_id,
+            RiskCategory.AGRICULTURE_ENVIRONMENT,
+            DetectionStatus.DETECTED,
+        ).model_copy(
+            update={
+                "environment_relation": EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+                "confidence": 0.86,
+            }
+        )
+    )
+
+    review = engine.evaluate_material(item, findings=findings)
+
+    assert review.action is MaterialReviewAction.RECOMMEND_REJECT
+    assert "ENV-EXCLUDED-001" in review.triggered_rule_ids
+    assert any("项目邻近周边" in reason and "0.80" in reason for reason in review.reasons)
+
+
+def test_environment_auto_reject_config_cannot_include_background_or_unknown() -> None:
+    try:
+        BusinessRulesConfig(
+            ruleset_id="invalid-environment-boundary",
+            version="1",
+            source_note="test",
+            environment_auto_reject_relations=(EnvironmentRelation.DISTANT_BACKGROUND,),
+        )
+    except ValueError as error:
+        assert "cannot trigger automatic rejection" in str(error)
+    else:
+        raise AssertionError("a background relation was allowed to auto-reject")
 
 
 def test_monitoring_coverage_is_a_discount_candidate_not_an_automatic_discount() -> None:

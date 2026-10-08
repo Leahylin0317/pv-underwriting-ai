@@ -12,3 +12,5 @@ def isolate_case_database(
         "PV_CASE_DB_PATH",
         str(tmp_path / "cases.sqlite3"),
     )
+    # Tests never use the developer's live component-service credentials.
+    monkeypatch.setenv("PV_SOLAR_STACK_API_KEY", "")

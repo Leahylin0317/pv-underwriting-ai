@@ -14,6 +14,7 @@ from app.api import (
     case_router,
     component_router,
     geocoding_router,
+    map_review_router,
     ocr_router,
     report_router,
     router,
@@ -53,6 +54,7 @@ app.include_router(ocr_router)
 app.include_router(case_router)
 app.include_router(component_router)
 app.include_router(geocoding_router)
+app.include_router(map_review_router)
 app.include_router(underwriting_router)
 app.include_router(report_router)
 

@@ -11,6 +11,7 @@ ENVIRONMENT_NAMES = (
     "PV_VLM_API_KEY",
     "PV_VLM_MODEL",
     "PV_VLM_TIMEOUT_SECONDS",
+    "PV_VLM_USE_SYSTEM_PROXY",
 )
 
 
@@ -217,3 +218,18 @@ def test_rejects_invalid_base_url(
         VlmSettings.from_environment(
             env_file="missing.env"
         )
+
+
+def test_vlm_system_proxy_setting_defaults_to_direct_and_can_be_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PV_VLM_BASE_URL", "https://api.example.com/v1")
+    monkeypatch.setenv("PV_VLM_API_KEY", "secret")
+    monkeypatch.setenv("PV_VLM_MODEL", "example-model")
+
+    settings = VlmSettings.from_environment(env_file="missing.env")
+    assert settings.use_system_proxy is False
+
+    monkeypatch.setenv("PV_VLM_USE_SYSTEM_PROXY", "true")
+    settings = VlmSettings.from_environment(env_file="missing.env")
+    assert settings.use_system_proxy is True

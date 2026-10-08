@@ -6,6 +6,7 @@ from .enums import (
     CaptureView,
     DecisionType,
     DetectionStatus,
+    EnvironmentRelation,
     ExpectedLossRisk,
     InstallationType,
     MaterialCategory,
@@ -13,6 +14,7 @@ from .enums import (
     MaterialQualityStatus,
     MaterialReviewAction,
     OcrValueStatus,
+    ParameterApplicabilityStatus,
     ProcessingStatus,
     ProcessingStep,
     ProjectType,
@@ -24,6 +26,12 @@ from .enums import (
 from .equipment import EquipmentInventoryItem
 from .findings import RiskFinding
 from .inputs import Material, OcrField, ProjectInfo
+from .map_review import (
+    MapImageryReview,
+    SentinelContextRecord,
+    SentinelEnvironmentAnalysis,
+    SentinelEnvironmentObservation,
+)
 from .outputs import (
     MaterialReview,
     PackageAssessment,
@@ -31,7 +39,12 @@ from .outputs import (
     RuleExplanation,
     UnderwritingDecision,
 )
-from .profiles import CatastropheAssessment, ComponentProfile, WeatherProfile
+from .profiles import (
+    CatastropheAssessment,
+    ComponentProfile,
+    InstallationParameterReview,
+    WeatherProfile,
+)
 
 __all__ = [
     "Bbox",
@@ -41,9 +54,12 @@ __all__ = [
     "ContractModel",
     "DecisionType",
     "DetectionStatus",
+    "EnvironmentRelation",
     "EquipmentInventoryItem",
     "ExpectedLossRisk",
+    "InstallationParameterReview",
     "InstallationType",
+    "MapImageryReview",
     "Material",
     "MaterialCategory",
     "MaterialParseStatus",
@@ -53,6 +69,7 @@ __all__ = [
     "OcrField",
     "OcrValueStatus",
     "PackageAssessment",
+    "ParameterApplicabilityStatus",
     "ProcessingStatus",
     "ProcessingStep",
     "ProcessingTrace",
@@ -63,6 +80,9 @@ __all__ = [
     "RiskFinding",
     "RiskSeverity",
     "RuleExplanation",
+    "SentinelContextRecord",
+    "SentinelEnvironmentAnalysis",
+    "SentinelEnvironmentObservation",
     "UnderwritingCase",
     "UnderwritingDecision",
     "WatermarkStatus",

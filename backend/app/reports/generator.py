@@ -94,6 +94,13 @@ DETECTION_STATUS_LABELS = {
     DetectionStatus.NOT_APPLICABLE: "不适用",
 }
 
+ENVIRONMENT_RELATION_LABELS = {
+    "project_site": "项目现场本身",
+    "operational_surroundings": "项目邻近周边（边界待核）",
+    "distant_background": "远处背景景物",
+    "uncertain": "现场关系不确定",
+}
+
 RISK_SEVERITY_LABELS = {
     RiskSeverity.INFO: "信息",
     RiskSeverity.LOW: "低",
@@ -111,6 +118,7 @@ PROCESSING_STEP_LABELS = {
     ProcessingStep.COMPONENT_LOOKUP: "组件参数查询",
     ProcessingStep.WEATHER_LOOKUP: "气象数据查询",
     ProcessingStep.CATASTROPHE_ASSESSMENT: "灾害风险评估",
+    ProcessingStep.MAP_REVIEW: "地图辅助复核",
     ProcessingStep.RULE_ENGINE: "规则判断",
     ProcessingStep.DECISION: "综合决策",
 }
@@ -129,6 +137,7 @@ PROCESSING_STEP_PURPOSE = {
     ProcessingStep.COMPONENT_LOOKUP: "查询组件型号和抗灾参数来源",
     ProcessingStep.WEATHER_LOOKUP: "查询项目坐标对应的历史气象指标",
     ProcessingStep.CATASTROPHE_ASSESSMENT: "比较组件额定能力与历史灾害指标",
+    ProcessingStep.MAP_REVIEW: "记录人工查看第三方地图页面后的补充观察，不改变自动结论",
     ProcessingStep.RULE_ENGINE: "把材料事实与确定性规则逐项比对",
     ProcessingStep.DECISION: "按固定优先顺序汇总材料动作和评估结果",
 }
@@ -153,6 +162,12 @@ def _display(value: object | None) -> str:
     if value is None or value == "":
         return "未提供"
     return str(value)
+
+
+def _display_measurement(value: float | None) -> str:
+    if value is None:
+        return "未提供"
+    return f"{value:g}"
 
 
 def _table_cell(value: object | None) -> str:
@@ -350,9 +365,18 @@ def generate_markdown_report(
                     if finding is None:
                         lines.append(f"  - {finding_id}：引用记录未找到。")
                         continue
+                    environment_relation = (
+                        ENVIRONMENT_RELATION_LABELS.get(
+                            finding.environment_relation.value,
+                            finding.environment_relation.value,
+                        )
+                        if finding.category.value.endswith("_environment")
+                        else "不适用"
+                    )
                     lines.append(
                         f"  - {finding_id}｜{_table_cell(finding.label)}｜"
                         f"{DETECTION_STATUS_LABELS[finding.detection_status]}｜"
+                        f"环境关系：{environment_relation}｜"
                         f"证据：{_table_cell(finding.evidence_text)}｜"
                         f"参考置信度：{finding.confidence:.2f}（未校准）"
                     )
@@ -521,14 +545,22 @@ def generate_markdown_report(
             "",
             "## 5. 图片风险识别结果",
             "",
-            "| 材料 | 风险点 | 状态 | 严重程度 | 识别参考分数（未校准） | 位置 | 判断依据 |",
-            "| --- | --- | --- | --- | --- | --- | --- |",
+            "| 材料 | 风险点 | 状态 | 环境与现场关系 | 严重程度 | 识别参考分数（未校准） | 位置 | 判断依据 |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
     )
 
     if report_findings:
         for finding in report_findings:
             material = material_by_id[finding.material_id]
+            environment_relation = (
+                ENVIRONMENT_RELATION_LABELS.get(
+                    finding.environment_relation.value,
+                    finding.environment_relation.value,
+                )
+                if finding.category.value.endswith("_environment")
+                else "不适用"
+            )
             location = (
                 "未定位"
                 if finding.bbox is None
@@ -542,13 +574,14 @@ def generate_markdown_report(
                 f"| {_table_cell(material.file_name)} "
                 f"| {_table_cell(finding.label)} "
                 f"| {DETECTION_STATUS_LABELS[finding.detection_status]} "
+                f"| {environment_relation} "
                 f"| {RISK_SEVERITY_LABELS[finding.severity]} "
                 f"| {finding.confidence:.2f} "
                 f"| {location} "
                 f"| {_table_cell(finding.evidence_text)} |"
             )
     else:
-        lines.append("| 无 | 无 | 无 | 无 | 无 | 无 | 无 |")
+        lines.append("| 无 | 无 | 无 | 无 | 无 | 无 | 无 | 无 |")
 
     lines.extend(["", "## 6. 自然灾害风险量化", ""])
     if case.catastrophe_assessment is None:
@@ -559,11 +592,11 @@ def generate_markdown_report(
             (
                 f"- 能力比分级门槛：严重不足 < {assessment.critical_shortfall_ratio:.2f}；"
                 f"能力不足 < 1.00；余量有限 < {assessment.adequate_margin_ratio:.2f}；"
-                "达到余量门槛后该灾种单项筛查通过"
+                "此处为旧版演示算法阈值，未经结构设计或业务审批，不等同工程判断"
             )
             if assessment.critical_shortfall_ratio is not None
             and assessment.adequate_margin_ratio is not None
-            else "- 能力比分级门槛：历史记录未保存具体阈值"
+            else "- 能力比：未计算；现有厂家试验参数与历史天气指标尚无经验证的同口径比较方法"
         )
         lines.extend(
             [
@@ -576,6 +609,36 @@ def generate_markdown_report(
                 "",
             ]
         )
+        if assessment.installation_parameter_reviews:
+            hazard_labels = {"wind": "大风", "hail": "冰雹", "snow": "积雪"}
+            status_labels = {
+                "usable": "可用",
+                "not_applicable": "不适用",
+                "pending_confirmation": "待确认",
+            }
+            parameter_labels = {
+                "wind_load_pa": "厂家风荷载",
+                "front_static_load_pa": "正面最大静载",
+                "back_static_load_pa": "背面最大静载",
+                "hail_resistance_mm": "冰雹试验直径",
+                "hail_impact_velocity_m_s": "冰雹试验速度",
+                "snow_load_pa": "厂家雪荷载",
+            }
+            lines.extend(["### 逐灾种安装参数适用性", ""])
+            for review in assessment.installation_parameter_reviews:
+                parameters = "、".join(
+                    parameter_labels.get(field, field)
+                    for field in review.parameter_fields
+                )
+                requirements = "；".join(review.required_evidence)
+                lines.append(
+                    f"- {hazard_labels[review.hazard]}："
+                    f"{status_labels[review.status.value]}；参数：{_table_cell(parameters)}；"
+                    f"原因：{_table_cell(review.explanation)}；"
+                    f"需核对：{_table_cell(requirements)}；"
+                    f"规则：{review.triggered_rule_id}"
+                )
+            lines.append("")
 
     if case.component_profile is not None:
         component = case.component_profile
@@ -585,17 +648,30 @@ def generate_markdown_report(
                 "",
                 (
                     f"- 型号：{_table_cell(component.component_model)}；厂商：{_table_cell(component.manufacturer)}；"
-                    f"型号匹配置信度：{component.match_confidence:.2f}"
+                    f"目录型号匹配参考分：{component.match_confidence:.2f}；"
+                    f"市场版本：{_table_cell(component.market_version)}"
                 ),
                 (
-                    f"- 抗冰雹：{_display(component.hail_resistance_mm)} mm；"
-                    f"风荷载：{_display(component.wind_load_pa)} Pa；"
-                    f"雪荷载：{_display(component.snow_load_pa)} Pa"
+                    f"- 额定功率：{_display_measurement(component.rated_power_w)} W；"
+                    f"正面最大静态载荷：{_display_measurement(component.front_static_load_pa)} Pa；"
+                    f"背面最大静态载荷：{_display_measurement(component.back_static_load_pa)} Pa"
                 ),
+                (
+                    f"- 厂家冰雹试验：{_display_measurement(component.hail_resistance_mm)} mm；"
+                    f"试验冲击速度：{_display_measurement(component.hail_impact_velocity_m_s)} m/s；"
+                    f"单独列示的风荷载：{_display_measurement(component.wind_load_pa)} Pa；"
+                    f"单独列示的雪荷载：{_display_measurement(component.snow_load_pa)} Pa"
+                ),
+                (
+                    f"- 型号来源方式：{_table_cell(component.model_derivation_method)}；"
+                    f"文件类型：{_table_cell(component.source_document_type)}"
+                ),
+                f"- 厂家参数说明：{_table_cell(component.source_note)}",
                 (
                     f"- 来源：{_table_cell(component.source_name)}；"
                     f"链接：{_table_cell(component.source_url)}；获取时间：{component.retrieved_at.isoformat()}"
                 ),
+                "- 口径边界：正反面最大静载作为厂家参数记录，不折算为项目设计风压或屋面结构雪荷载；参数有值不等于该灾种自动通过。",
                 "",
             ]
         )
@@ -603,6 +679,9 @@ def generate_markdown_report(
             labels = {
                 "rated_power_w": "额定功率",
                 "hail_resistance_mm": "抗冰雹",
+                "hail_impact_velocity_m_s": "冰雹试验冲击速度",
+                "front_static_load_pa": "正面最大静态载荷",
+                "back_static_load_pa": "背面最大静态载荷",
                 "wind_load_pa": "风荷载",
                 "snow_load_pa": "雪荷载",
             }
@@ -620,19 +699,157 @@ def generate_markdown_report(
             [
                 "### 气象数据范围",
                 "",
-                f"- 查询坐标：{weather.longitude:.5f}, {weather.latitude:.5f}",
+                f"- 项目查询坐标（WGS84）：{weather.longitude:.5f}, {weather.latitude:.5f}",
                 (
-                    f"- 观测期：{_display(weather.observation_start)} 至 {_display(weather.observation_end)}；"
+                    f"- 请求期间：{_display(weather.observation_start)} 至 {_display(weather.observation_end)}；"
+                    f"上游返回日期：{_display(weather.returned_data_start)} 至 {_display(weather.returned_data_end)}；"
                     f"来源：{_table_cell(weather.source_name)}；链接：{_table_cell(weather.source_url)}"
                 ),
                 (
-                    f"- 历史最大阵风：{_display(weather.historical_max_wind_m_s)} m/s；"
-                    f"冰雹数据：{_display(weather.historical_max_hail_mm)} mm；"
-                    f"雪荷载数据：{_display(weather.historical_max_snow_load_pa)} Pa"
+                    f"- 阵风有效日数：{_display(weather.wind_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，历史最大值："
+                    f"{_display_measurement(weather.historical_max_wind_m_s)} {weather.wind_unit or 'm/s'}；"
+                    f"日持续风速有效日数：{_display(weather.wind_speed_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，历史最大值："
+                    f"{_display_measurement(weather.historical_max_daily_wind_speed_m_s)} "
+                    f"{weather.wind_speed_unit or 'm/s'}；"
+                    f"单日总降水有效日数：{_display(weather.precipitation_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，最大值："
+                    f"{_display_measurement(weather.historical_max_daily_precipitation_mm)} "
+                    f"{weather.precipitation_unit or 'mm'}；"
+                    f"单日降雨有效日数：{_display(weather.rain_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，最大值："
+                    f"{_display_measurement(weather.historical_max_daily_rain_mm)} "
+                    f"{weather.rain_unit or 'mm'}；"
+                    f"降水时数有效日数：{_display(weather.precipitation_hours_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，最长单日有降水时数："
+                    f"{_display_measurement(weather.historical_max_daily_precipitation_hours)} "
+                    f"{weather.precipitation_hours_unit or 'h'}；"
+                    f"降雪有效日数：{_display(weather.snowfall_valid_day_count)}/"
+                    f"{_display(weather.expected_day_count)}，历史最大单日降雪："
+                    f"{_display_measurement(weather.historical_max_daily_snowfall_cm)} {weather.snowfall_unit or 'cm'}"
+                ),
+                (
+                    f"- 数据集选择：{_table_cell(weather.dataset_selection)}；"
+                    f"网格选择：{_table_cell(weather.grid_selection_method)}；"
+                    f"时区：{_table_cell(weather.timezone)}；"
+                    f"实际气象网格：{_display(weather.grid_longitude)}, {_display(weather.grid_latitude)}；"
+                    f"网格距项目点：{_display(weather.grid_distance_km)} km；"
+                    f"网格 DEM 高程：{_display(weather.grid_elevation_m)} m"
+                ),
+                (
+                    f"- 当前源未提供可用于量化的历史冰雹直径：{_display(weather.historical_max_hail_mm)} mm；"
+                    f"项目规范雪荷载：{_display(weather.historical_max_snow_load_pa)} Pa"
+                ),
+                "- 资料说明：历史再分析和网格点用于气候背景筛查，不等同于项目现场气象站实测或结构设计参数。",
+                "",
+            ]
+        )
+        lines.extend(
+            f"- 数据质量提示：{_table_cell(note)}"
+            for note in weather.data_quality_notes
+        )
+        if weather.data_quality_notes:
+            lines.append("")
+
+    if case.map_reviews:
+        lines.extend(
+            [
+                "",
+                "### 地图影像辅助复核（外部参考）",
+                "",
+                (
+                    "> 地图影像是第三方存档影像，不代表实时现场状态。拍摄日期可能未知；"
+                    "位置和可见范围必须由人工核实。此信息不会自动改变核保结论。"
                 ),
                 "",
             ]
         )
+        visibility_labels = {
+            "visible": "可见",
+            "not_visible": "未见",
+            "unclear": "不确定",
+        }
+        address_source_labels = {
+            "project_info": "项目基本信息",
+            "material_ocr": "材料文字识别/人工核对",
+            "human_corrected": "人工更正",
+        }
+        for review in case.map_reviews:
+            address_match_details = (
+                "高德接口未返回可信度评分；已由核保员人工确认候选位置"
+                if review.geocoding_confidence is None
+                or review.address_comprehension is None
+                else (
+                    f"匹配度 {review.address_comprehension}/100；"
+                    f"定位置信分 {review.geocoding_confidence}/100；"
+                    f"精确匹配 {'是' if review.precise_match else '否'}"
+                )
+            )
+            if review.match_level:
+                address_match_details += f"；解析级别 {_table_cell(review.match_level)}"
+            lines.extend(
+                [
+                    f"#### 复核记录 {_table_cell(review.review_id)}",
+                    "",
+                    f"- 地图服务：{_table_cell(review.provider)}；地址来源：{address_source_labels[review.address_source]}",
+                    f"- 触发复核的模糊/低质量材料：{_table_cell('、'.join(review.triggering_material_ids))}",
+                    f"- 查询地址：{_table_cell(review.query_address)}；匹配地址：{_table_cell(review.matched_address)}",
+                    f"- 地址匹配依据：{address_match_details}",
+                    (
+                        f"- 地图坐标（GCJ-02）：{review.longitude_gcj02}, {review.latitude_gcj02}"
+                        if review.provider == "amap_maps"
+                        else f"- 地图坐标（BD-09）：{review.longitude_bd09}, {review.latitude_bd09}"
+                    ),
+                    (
+                        f"- 天气查询坐标（WGS84 近似）：{review.longitude_wgs84}, {review.latitude_wgs84}"
+                        if review.longitude_wgs84 is not None
+                        else "- 天气查询坐标：未记录"
+                    ),
+                    f"- 地图查看入口：{review.provider_map_url}",
+                    f"- 复核人：{_table_cell(review.reviewer_name)}；项目位置确认：{'是' if review.site_match_confirmed else '否'}",
+                    (
+                        f"- 地图可见光伏组件：{visibility_labels[review.photovoltaic_visibility]}；"
+                        f"观察到的安装载体：{INSTALLATION_TYPE_LABELS[review.observed_installation_type]}"
+                    ),
+                    f"- 影像拍摄日期：{_display(review.imagery_capture_date)}；查询时间：{review.queried_at.isoformat()}；记录时间：{review.reviewed_at.isoformat()}",
+                    f"- 人工观察：{_table_cell(review.observations)}",
+                    "- 对自动核保结论的作用：仅供人工参考；未作为自动规则事实。",
+                    "",
+                ]
+            )
+            if review.sentinel_context:
+                context = review.sentinel_context
+                cloud = (
+                    "unknown"
+                    if context.tile_cloud_cover_percent is None
+                    else f"{context.tile_cloud_cover_percent:.1f}% (scene/tile estimate)"
+                )
+                lines.extend(
+                    [
+                        "##### Sentinel-2 surroundings image",
+                        "",
+                        f"- Source: Copernicus Sentinel-2 L2A; acquisition: {context.acquired_at.isoformat()}",
+                        f"- Scene: {_table_cell(context.scene_id)}; cloud cover: {cloud}; masked pixels: {context.masked_pixel_fraction:.1%}",
+                        f"- Scale: about {context.pixel_size_m:.1f} m per pixel; radius: {context.radius_m} m; WGS84 bbox: {context.bbox_wgs84}",
+                        f"- Cloud note: {_table_cell(context.tile_cloud_cover_note)}",
+                        f"- Attribution: {_table_cell(context.attribution)}",
+                    ]
+                )
+                if context.quality_warning:
+                    lines.append(f"- Image quality warning: {_table_cell(context.quality_warning)}")
+                if context.analysis_warning:
+                    lines.append(f"- VLM warning: {_table_cell(context.analysis_warning)}")
+                if context.analysis:
+                    lines.append(f"- Optional VLM summary (not an underwriting result): {_table_cell(context.analysis.summary)}")
+                    lines.extend(
+                        f"  - {item.category} / {item.presence} / confidence {item.confidence:.2f}: {_table_cell(item.evidence)}"
+                        for item in context.analysis.observations
+                    )
+                lines.append("")
+    else:
+        lines.extend([
+"", "### 地图影像辅助复核", "", "- 未执行。", ""])
 
     lines.extend(
         [

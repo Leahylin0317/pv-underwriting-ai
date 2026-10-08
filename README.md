@@ -4,6 +4,8 @@
 [判断透明化与证据追溯](docs/判断透明化与证据追溯.md)
 [官方材料规则对照](docs/官方材料规则对照.md)
 
+[地图影像辅助复核说明](docs/地图影像辅助复核.md)
+
 
 本项目提供一个可运行的分布式光伏财产险核保后端，用于检查投保材料、提取结构化字段、识别图片风险、查询组件与历史气象数据、执行确定性规则，并生成核保结论和 Markdown 报告。
 
@@ -17,17 +19,18 @@
 - 按材料类别把文件路由到适用的 OCR 或视觉 Provider
 - OCR/设备清单提取型号后先查本地 JSON 目录；配置经审核的在线组件目录后，仅为缺失参数查询并补充完全一致型号的数据，保留逐项来源
 - 可通过独立的在线资料检索接口查找厂商规格书候选；候选链接需人工核对，不会直接生成抗灾参数
-- 通过 Open-Meteo 历史气象 API 查询项目坐标的历史最大阵风和最大单日降雪量
-- 比较组件能力和风、雹、雪灾害指标，缺少可靠数据时转人工复核
+- 通过 Open-Meteo 历史气象 API 查询 10 米最大日阵风、最大持续风速、单日总降水/降雨/降水时数和降雪量；逐变量记录单位与有效覆盖，并保留实际天气网格元数据
+- 展示组件厂家参数与历史气象证据；对不具备同口径依据的风、雹、雪指标不计算能力比，明确转人工核验
 - 执行材料规则、保守整单决策和完整处理留痕
 - 展示判断路径、逐材料证据关联、规则触发条件/处理作用、整单优先顺序和自动化失败影响；识别分数标为未校准参考值
 - 输出结构化 JSON 和 Markdown 核保报告
 - 通过 FastAPI 和 Swagger UI 提供真实及 Mock 接口
 - 在本地 SQLite 中保存结构化案件结果，提供历史查询和人工复核留痕；原始上传文件不落盘
 - 检查材料包最低要求：至少 5 张图片、2 张全景照、备案证及各必需材料类别，并登记正面平视和俯拍视角
-- 对 8 类明确拒保环境逐项要求模型返回“已发现、未发现或不确定”；未覆盖和不确定不能视为安全结论
+- 对 8 类明确拒保环境记录项目现场/邻近周边/远处背景关系；只对证据明确关联项目现场的环境自动建议拒保，其他可疑环境转人工核验
+- 多张互补全景按案件合并检查覆盖，只对所有全景均未给出结果的项目要求补充对应视角
 - 对每张视觉材料强制检查清晰度；模糊、过暗、关键区域缺失或视角不适用时要求补拍
-- 从全景照片 OCR 提取水印状态、拍摄日期和坐标，校验是否处于拟起保日前 15 天内
+- 从全景照片 OCR 提取水印状态、拍摄日期和坐标；当前赛题阶段缺少水印只提示建议补充，已识别日期仍按 15 日窗口校验
 - 交叉核验备案证中的项目名称、项目单位、地址和被保险人；禁投关键词命中时给出拒保建议
 - 从组件铭牌 OCR 提取型号、额定功率和序列号，并核对型号与案件信息是否一致
 - 检查屋顶连接件、组件、逆变器、接地和汇流箱的可见异常；不根据普通照片推断电气性能或接地电阻
@@ -35,7 +38,7 @@
 - 对监控材料提示核保人员复核优惠资格；没有正式费率配置时不自动计算折扣或保费
 - 对监控覆盖图识别优惠候选；覆盖有效性及优惠条件由核保人员按正式条款确认
 - 对车间材料要求登记企业所属行业；高火险行业列表和加费确认项可配置，官方名单缺失时显式转人工核验
-- 通过 `data/rules/challenge_open_ai_01.json` 维护赛题规则版本、阶段二检查开关、高火险行业关键词及灾害能力比阈值；阶段二默认关闭，须由业务确认后启用
+- 通过 `data/rules/challenge_open_ai_01.json` 维护赛题规则版本、自动拒保环境关系与置信度门槛、阶段二检查开关和高火险行业关键词；灾害能力比阈值保留为配置材料，但在正式比较口径获批前不会用于评级
 - 可选阶段二演示检查：背板鼓包/变色、支架锈蚀/变形、防水层损坏、未保护裸露线缆、危险工艺、洁净车间和消防设施
 - 将明确拒保事实设为整案优先动作，并在报告中保留证据、图片位置和规则编号
 
@@ -87,20 +90,25 @@ PV_COMPONENT_ONLINE_CATALOG_API_KEY=
 PV_COMPONENT_APPROVED_SOURCE_DOMAINS=jasolar.com
 PV_COMPONENT_SEARCH_API_KEY=
 PV_AMAP_WEB_SERVICE_KEY=
+PV_AMAP_JS_API_KEY=
+PV_AMAP_JS_SECURITY_CODE=
 PV_WEATHER_BASE_URL=https://archive-api.open-meteo.com/v1/archive
 PV_WEATHER_LOOKBACK_DAYS=3650
 PV_WEATHER_DATA_LAG_DAYS=7
 PV_WEATHER_TIMEOUT_SECONDS=30
+PV_MAP_TIMEOUT_SECONDS=10
 PV_CASE_DB_PATH=outputs/pv-underwriting.sqlite3
 ~~~
 
-填写 `PV_AMAP_WEB_SERVICE_KEY` 后，工作台可按项目地址查询高德地理编码候选。用户必须核对并点击候选项，系统才会把近似转换后的 WGS84 经纬度用于 Open-Meteo 历史天气查询；地址变更时已选坐标会自动清空。该坐标只用于风险筛查，不是测绘结果。
+填写 `PV_AMAP_WEB_SERVICE_KEY` 后，工作台可从材料 OCR 地址或手动地址查询高德地理编码候选。核保员确认候选后，系统使用高德坐标近似反算出的 WGS84 坐标，在正式核保时请求 Open-Meteo Historical Weather API，读取历史 10 米最大日阵风、最大日持续风速、单日总降水、单日降雨、单日有降水时数和最大单日降雪量；结果保留逐变量有效日数、单位、查询时段、实际网格、高程和网格距离。地址变更时已选坐标会自动清空。近似坐标只用于风险筛查，不是测绘结果。
+
+图片质量不合格时，工作台可把 OCR 地址或项目地址交由高德 Web 服务解析，并在核保员确认后展示卫星图层供人工复核。卫星图层需要单独申请 Web 端（JS API）Key 和安全密钥，配置到 `PV_AMAP_JS_API_KEY`、`PV_AMAP_JS_SECURITY_CODE`；当前 Web 服务 Key 不能代替 JS API Key。JS API 凭证会在同意地图复核后交给浏览器，因此应在高德控制台限制允许域名。卫星影像并非实时数据，可能看不到拍摄日期。高德服务协议禁止抓取、存储或截图地图内容；系统因此不把地图画面转发给视觉模型，也不让卫星影像自动改变核保结论。详见 **docs/地图影像辅助复核.md**。
 
 **PV_COMPONENT_CATALOG_PATH** 留空时会使用 **data/catalogs/component_catalog_2026-10-01.json**。该目录保留原有的两个示例条目，并从《光伏组件抗灾参数目录_2026-10-01.xlsx》导入 69 条中国市场且官网逐项列示的型号；全部 364 条原始记录保存在 **data/reference/component_parameters_2026-10-01.json** 供复核，其他市场版本、简写及范围展开型号不参与自动匹配。导入脚本为 **scripts/import_component_workbook.py**，更新源表后可重新生成两份 JSON。正反面最大静态载荷作为独立参考字段保存，不会换算成抗风或雪载；空缺的灾害参数仍会触发人工复核。导入数据尚需逐条核对官网版本和安装条件，不能直接作为生产核保依据。
 
-示例目录还收录了设备清单写法 `JAM72D42-630W` 的演示条目。型号别名仅在目录中显式登记后才会匹配；`630W` 与厂商 `/LB` 后缀的对应关系仍须核对铭牌。不同版本的厂商规格书静载参数不同，因此该条目的风、雪能力暂留空，不能据此给出抗灾结论。填写 `PV_COMPONENT_SEARCH_API_KEY` 后，可用 `GET /api/v1/components/sources?model=...` 搜索晶澳官网资料候选。该接口使用 [Brave Search API](https://api-dashboard.search.brave.com/api-reference/web/search/get)，只返回 `jasolar.com` 的 HTTPS 链接，不自动把搜索摘要当成核保参数。
+示例目录还收录了设备清单写法 `JAM72D42-630W` 的演示条目。型号匹配会统一大小写、全角字符、破折号字形和空格，但保留 `-`、`/`、`.` 等型号标点；不同后缀不会被当作同一型号，别名必须经核对后显式登记。该演示条目的 `630W` 与厂商 `/LB` 后缀对应关系仍须核对铭牌；由于型号匹配参考分仅 0.5，现已从自动匹配中排除。系统会把目录中同功率、不同后缀的型号列为候选，但只供核保员核对铭牌，不会自动套用候选参数。组件参数缺失时，工作台按“确认完整型号与厂商 → 厂商官网精确型号 → 厂商系列 → Solar-Stack 完整型号/系列 → 配置的受信域名 → 人工补正”检索资料。Solar-Stack 阶段会打开型号搜索页，供核保员按 **Documents → Datasheet** 查看原始规格书；未配置 Brave Search API Key 时，工作台提供浏览器搜索链接和 Solar-Stack 手动入口，但不会在后台抓取网页。搜索摘要不会自动变成核保参数。核保员逐字段填写 HTTPS 来源并确认型号后，`POST /api/v1/components/corrections` 会把经人工确认的值写入本机 `outputs/component-corrections.json`，只补目录空字段，不覆盖已有值；详情见 [组件参数检索与人工补正](docs/组件参数检索与人工补正.md)。
 
-若已有**经过审核的在线组件目录服务**，将其 HTTPS 地址填入 `PV_COMPONENT_ONLINE_CATALOG_URL`。核保流程会在本地型号缺失或本地风、雹、雪等字段为空时，向该服务发送 `GET ?model=<完整型号>`。服务以 404 表示无记录，或返回 `{"verified":true,"profile":{...ComponentProfile 字段...}}`。`profile.parameter_sources` 必须为每个非空数值字段提供厂商 HTTPS 来源链接。系统只接受完全一致的型号及 `PV_COMPONENT_APPROVED_SOURCE_DOMAINS` 列表中的厂商来源；本地已有值不被覆盖。需要认证时可设置 `PV_COMPONENT_ONLINE_CATALOG_API_KEY`（Bearer），不要将密钥提交到仓库。**仓库目前没有通用、可靠的厂商参数 API 地址，留空时仅使用本地目录**；资料搜索接口只能给出候选链接，不会凭搜索摘要填数。气象部分已有 Open-Meteo 在线历史阵风查询；冰雹直径和结构雪荷载仍需经核验的数据源。
+若已有**经过审核的在线组件目录服务**，将其 HTTPS 地址填入 `PV_COMPONENT_ONLINE_CATALOG_URL`。核保流程会在本地型号缺失或本地风、雹、雪等字段为空时，向该服务发送 `GET ?model=<完整型号>`。服务以 404 表示无记录，或返回 `{"verified":true,"profile":{...ComponentProfile 字段...}}`。`profile.parameter_sources` 必须为每个非空数值字段提供厂商 HTTPS 来源链接。系统只接受完全一致的型号及 `PV_COMPONENT_APPROVED_SOURCE_DOMAINS` 列表中的厂商来源；本地已有值不被覆盖。需要认证时可设置 `PV_COMPONENT_ONLINE_CATALOG_API_KEY`（Bearer），不要将密钥提交到仓库。气象部分通过 Open-Meteo 获取可用的历史风、降水和降雪背景数据；该服务不提供可用于核保的历史冰雹直径或当地规范设计雪荷载。
 
 **.env** 已被 Git 忽略，不要把真实 API Key 写入 **.env.example** 或其他受版本控制的文件。
 
@@ -124,6 +132,7 @@ python -m uvicorn app.main:app --reload
 | GET | /health | 服务健康检查 |
 | GET | /ready | 检查模型、组件目录、天气配置和案件数据库就绪状态，不返回密钥 |
 | GET | /api/v1/components/sources?model=... | 查询厂商资料候选，供人工核对和入库 |
+| POST | /api/v1/components/corrections | 保存带逐字段 HTTPS 来源的人工核验组件参数，供后续案件补齐空字段 |
 | GET | /api/v1/locations/resolve?address=... | 查询项目地址候选和天气查询用近似坐标 |
 | GET | / | 本地核保工作台 |
 | POST | /api/v1/files/inspect | 检查上传文件 |
@@ -136,6 +145,8 @@ python -m uvicorn app.main:app --reload
 | GET | /api/v1/cases/{case_id} | 查询案件分析结果与人工复核历史 |
 | GET | /api/v1/cases/{case_id}/report | 下载包含机器结论和人工复核意见的 Markdown 报告 |
 | POST | /api/v1/cases/{case_id}/review | 记录人工核保最终结论和意见 |
+| POST | /api/v1/cases/{case_id}/map-review/prepare | 用户同意后用高德解析地址并返回候选位置和卫星层配置 |
+| POST | /api/v1/cases/{case_id}/map-review | 记录地图页面人工观察及其位置/日期不确定性 |
 | POST | /api/v1/reports/render | 把结构化核保结果渲染为 Markdown 报告 |
 | POST | /api/v1/analyze/mock | 执行 Mock 核保流水线 |
 | POST | /api/v1/reports/mock | 生成 Mock 核保报告 |
@@ -147,6 +158,8 @@ python -m uvicorn app.main:app --reload
 | POST | /api/v1/auth/logout | 撤销当前会话 |
 
 工作台可下载带机器与人工复核信息的 Markdown 报告，也可使用浏览器“打印 / 保存为 PDF”。
+
+当图片质量预检或视觉模型标记图片模糊/信息不足时，核保员可选择地图辅助复核。该功能用高德地理编码解析用户确认的地址；配置 Web 端 JS API Key 和安全密钥后，工作台展示卫星图层供核保员人工核对。影像不是实时画面，日期可能未知；系统不抓取、截图或转发地图影像，也不把影像发给视觉模型。地图观察单独留痕，不自动覆盖原图结论或改变机器核保建议。完整配置及边界见 [地图影像辅助复核说明](docs/地图影像辅助复核.md)。
 
 整单真实核保接口使用 **multipart/form-data**：
 
@@ -208,16 +221,19 @@ python .\scripts\evaluate_cases.py --truth .\data\private\ground-truth.jsonl --p
 
 ## 数据来源与判断边界
 
-- 历史最大阵风来自 [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)。
-- 历史最大单日降雪量也来自该接口；降雪量仅作为气候背景展示，不换算成结构雪荷载。
-- 当前风灾结果使用历史阵风动压与组件额定风荷载进行初步筛查，不替代结构工程设计验算。
-- Open-Meteo 不提供可直接用于本项目的历史最大冰雹直径。
+- 历史最大 10 米日阵风、日持续风速、单日总降水、单日降雨、降水时数和最大单日降雪量来自 [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api)。
+- 降水/降雨/降雪指标只作为网格化气候背景；不单独推断洪水、内涝或屋面结构雪荷载。
+- Open-Meteo 历史阵风来自网格化再分析资料；报告保留项目点和实际网格点、高程及有效日数，避免把请求日期误当成完整观测覆盖。
+- 项目地址经高德解析得到的是 GCJ-02 坐标；系统在核保员确认后使用近似反算的 WGS84 坐标调用 Open-Meteo。坐标精度、网格化气象分辨率和地址匹配级别都需要人工复核。
+- 10 米历史阵风不能直接转换成屋面项目设计风压；组件正反面最大静态载荷也不能当作风荷载或结构雪荷载。当前不再对这些不同口径的数据计算能力比。
+- 组件目录的 69 个精确列示中国市场型号保留正反面最大静载及字段级来源；其中 9 个另有冰雹试验直径和冲击速度。这些数据用于证据展示，不足以单独推出现场承载结论。
+- Open-Meteo 不提供可直接用于本项目的历史最大冰雹直径，也不返回当地规范设计风压或结构雪荷载。
 - 降雪量/雪深不能直接等同为结构雪荷载，当前不会伪造冰雹直径、冰雹频次或结构雪荷载值。
 - 冰雹、雪荷载或组件参数缺失时，系统明确标记数据缺口并要求人工复核。
 - 最终承保、拒保、加费和附加条件仍需由授权核保人员确认。
 - 材料门槛、检查项和裁决顺序用于比赛 Demo 首期验收；投入真实业务前需由核保业务负责人确认。
 - 本机已取得《光伏自核材料及规则-v2.xlsx》；高火险行业清单和 C 包仍缺失。规则配置中的行业列表因此留空，留空会触发人工复核，不会推定行业安全。
-- 灾害能力比的默认 0.75/1.25 仅为可配置的演示阈值，尚未由业务方确认；组件参数缺失、冰雹数据缺失或没有雪荷载数据时，报告必须保留未知状态并人工复核。
+- 风灾需要当地规范设计风压、场地/屋面和安装条件；冰雹需要可配对的现场事件和厂家试验方法；雪灾需要项目结构设计雪荷载及组件安装条件。现有默认 0.75/1.25 尚未经业务方确认，当前不用于灾害评级；资料口径未验证时保持未知并转人工复核。
 - 照片质量启发式阈值尚未通过完整比赛样本校准；它用于发现明显低分辨率、过暗或细节不足的照片，最终检查仍须结合视觉模型和人工复核。
 - 高风险环境目标为召回率 ≥ 90% 且拒保场景零漏检；在完整 A/B/C 真值包回归前，不能宣称已通过该指标。
 
@@ -239,3 +255,10 @@ python .\scripts\evaluate_cases.py --truth .\data\private\ground-truth.jsonl --p
 - AI Provider 使用 **feature/ai-\*** 分支
 - 每个任务通过 Pull Request 审核后合并
 - 所有模块通过 **docs/schema-v0.1.md** 中的统一数据契约对接
+
+## Sentinel-2 auxiliary imagery
+
+The map-review panel can request Copernicus Sentinel-2 L2A imagery for a confirmed Amap address. It displays a recent, cloud-screened, approximately 10 m/pixel context image; an optional, separately consented VLM description is retained only as a human-review suggestion. The imagery never changes the underwriting decision.
+
+Configure the server-side Copernicus OAuth client in `.env` using `PV_SENTINEL_HUB_CLIENT_ID` and `PV_SENTINEL_HUB_CLIENT_SECRET`. See [the Sentinel-2 auxiliary review guide](docs/sentinel2-environment-review.md) for limits, consent, the API request, audit fields, and official references. Do not commit `.env`.
+

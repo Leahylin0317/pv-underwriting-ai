@@ -3,6 +3,7 @@ from typing import ClassVar
 from app.contracts import (
     CaptureView,
     DetectionStatus,
+    EnvironmentRelation,
     Material,
     MaterialCategory,
     MaterialQualityStatus,
@@ -158,6 +159,12 @@ RISK_CATEGORY_LABELS = {
     RiskCategory.CLEANROOM: "洁净车间",
     RiskCategory.FIRE_PROTECTION_ABSENT: "消防设施缺失或异常",
 }
+ENVIRONMENT_RELATION_DESCRIPTIONS = {
+    EnvironmentRelation.PROJECT_SITE: "项目现场本身",
+    EnvironmentRelation.OPERATIONAL_SURROUNDINGS: "项目邻近周边",
+    EnvironmentRelation.DISTANT_BACKGROUND: "远处背景景物",
+    EnvironmentRelation.UNCERTAIN: "现场关系不确定",
+}
 
 
 def _normalized_text(value: str | None) -> str:
@@ -176,6 +183,8 @@ class RuleEngine:
     PACKAGE_MINIMUM_RULE_ID = "PKG-MINIMUM-001"
     ENVIRONMENT_REJECT_RULE_ID = "ENV-EXCLUDED-001"
     ENVIRONMENT_COVERAGE_RULE_ID = "ENV-COVERAGE-001"
+    ENVIRONMENT_RELATION_REVIEW_RULE_ID = "ENV-SITE-RELATION-REVIEW-001"
+    ENVIRONMENT_BACKGROUND_RULE_ID = "ENV-BACKGROUND-CONTEXT-001"
     FILING_PROHIBITED_RULE_ID = "DOC-FILING-EXCLUDED-001"
     CROSS_CHECK_RULE_ID = "DOC-CROSS-CHECK-001"
     WATERMARK_RULE_ID = "IMG-WATERMARK-001"
@@ -297,6 +306,8 @@ class RuleEngine:
                     project=project,
                 )
             )
+
+        reviews = self._apply_panorama_coverage(reviews, materials, findings)
 
         for review_index, material in enumerate(materials):
             if material.category is not MaterialCategory.WORKSHOP or project is None:
@@ -421,11 +432,20 @@ class RuleEngine:
                     missing.append("补拍光线充足、清晰且完整展示检查区域的照片")
                     manual_review = True
                 elif finding.category in CRITICAL_ENVIRONMENT_CHECKS:
-                    rule_ids.append(self.ENVIRONMENT_COVERAGE_RULE_ID)
-                    actions.append(MaterialReviewAction.REQUEST_MORE)
-                    reasons.append(f"拒保环境检查不确定：{finding.label}；{finding.evidence_text}")
-                    missing.append("补充能清楚显示电站周边环境的白天全景照片")
-                    manual_review = True
+                    actions.append(MaterialReviewAction.WARNING)
+                    if finding.environment_relation is EnvironmentRelation.DISTANT_BACKGROUND:
+                        rule_ids.append(self.ENVIRONMENT_BACKGROUND_RULE_ID)
+                        reasons.append(
+                            f"环境识别状态不确定，但其位置关系被标记为远处背景；"
+                            f"不作为项目现场拒保事实：{finding.label}；{finding.evidence_text}"
+                        )
+                    else:
+                        rule_ids.append(self.ENVIRONMENT_RELATION_REVIEW_RULE_ID)
+                        reasons.append(
+                            f"拒保环境或其与项目现场的关系尚不确定，暂不自动拒保；"
+                            f"由核保人员结合原图确认：{finding.label}；{finding.evidence_text}"
+                        )
+                        manual_review = True
                 else:
                     rule_ids.append(self.FINDING_WARNING_RULE_ID)
                     actions.append(MaterialReviewAction.WARNING)
@@ -433,17 +453,75 @@ class RuleEngine:
                     manual_review = True
                 continue
 
+            if finding.category in REJECT_ENVIRONMENT_CATEGORIES:
+                if finding.environment_relation is EnvironmentRelation.DISTANT_BACKGROUND:
+                    rule_ids.append(self.ENVIRONMENT_BACKGROUND_RULE_ID)
+                    actions.append(MaterialReviewAction.WARNING)
+                    reasons.append(
+                        f"识别到的{finding.label}属于远处背景景物，不作为项目现场拒保事实；"
+                        f"证据：{finding.evidence_text}"
+                    )
+                    continue
+
+                auto_reject_eligible = (
+                    finding.environment_relation
+                    in self.config.environment_auto_reject_relations
+                    and finding.confidence
+                    >= self.config.environment_auto_reject_min_confidence
+                    and not finding.requires_manual_review
+                )
+                if not auto_reject_eligible:
+                    rule_ids.append(self.ENVIRONMENT_RELATION_REVIEW_RULE_ID)
+                    actions.append(MaterialReviewAction.WARNING)
+                    manual_review = True
+                    relation_reasons = []
+                    if finding.requires_manual_review:
+                        relation_reasons.append("模型明确要求人工复核")
+                    if (
+                        finding.environment_relation
+                        not in self.config.environment_auto_reject_relations
+                    ):
+                        if finding.environment_relation is EnvironmentRelation.OPERATIONAL_SURROUNDINGS:
+                            relation_reasons.append(
+                                "识别对象位于项目邻近周边，适用边界尚待业务确认"
+                            )
+                        else:
+                            relation_reasons.append(
+                                "无法确认该环境是否属于项目现场"
+                            )
+                    if (
+                        finding.confidence
+                        < self.config.environment_auto_reject_min_confidence
+                    ):
+                        relation_reasons.append(
+                            f"模型参考置信度{finding.confidence:.2f}低于当前配置门槛"
+                            f"{self.config.environment_auto_reject_min_confidence:.2f}"
+                        )
+                    reasons.append(
+                        f"{'；'.join(relation_reasons)}，保留风险证据并转人工核验，不自动拒保："
+                        f"{finding.label}；{finding.evidence_text}"
+                    )
+                    continue
+
+                rule_ids.append(self.ENVIRONMENT_REJECT_RULE_ID)
+                actions.append(MaterialReviewAction.RECOMMEND_REJECT)
+                relation_description = ENVIRONMENT_RELATION_DESCRIPTIONS[
+                    finding.environment_relation
+                ]
+                reasons.append(
+                    f"高风险环境被识别为{relation_description}，模型参考置信度"
+                    f"{finding.confidence:.2f}达到当前配置门槛"
+                    f"{self.config.environment_auto_reject_min_confidence:.2f}，且未要求人工复核；"
+                    f"触发拒保环境规则："
+                    f"{finding.label}；{finding.evidence_text}"
+                )
+                continue
+
             if finding.requires_manual_review:
                 rule_ids.append(self.FINDING_WARNING_RULE_ID)
                 actions.append(MaterialReviewAction.WARNING)
                 reasons.append(f"模型要求人工复核：{finding.label}；{finding.evidence_text}")
                 manual_review = True
-
-            if finding.category in REJECT_ENVIRONMENT_CATEGORIES:
-                rule_ids.append(self.ENVIRONMENT_REJECT_RULE_ID)
-                actions.append(MaterialReviewAction.RECOMMEND_REJECT)
-                reasons.append(f"发现拒保候选环境：{finding.label}；{finding.evidence_text}")
-                continue
 
             if finding.category is RiskCategory.IMAGE_QUALITY:
                 rule_ids.append(self.MATERIAL_QUALITY_RULE_ID)
@@ -453,12 +531,26 @@ class RuleEngine:
                 continue
 
             if finding.category is RiskCategory.SEVERE_SHADING:
+                if finding.requires_manual_review:
+                    reasons.append(
+                        f"模型要求人工复核严重遮挡候选；自动流程保留图片证据，不直接拒保："
+                        f"{finding.label}；{finding.evidence_text}"
+                    )
+                    manual_review = True
+                    continue
                 rule_ids.append(self.SEVERE_SHADING_RULE_ID)
                 actions.append(MaterialReviewAction.RECOMMEND_REJECT)
                 reasons.append(f"发现大面积遮挡：{finding.label}；{finding.evidence_text}")
                 continue
 
             if finding.category is RiskCategory.UNPROTECTED_CABLE:
+                if finding.requires_manual_review:
+                    reasons.append(
+                        f"模型要求人工复核裸露电缆候选；自动流程保留图片证据，不直接拒保："
+                        f"{finding.label}；{finding.evidence_text}"
+                    )
+                    manual_review = True
+                    continue
                 rule_ids.append("ELEC-UNPROTECTED-CABLE-REJECT-001")
                 actions.append(MaterialReviewAction.RECOMMEND_REJECT)
                 reasons.append(
@@ -519,28 +611,8 @@ class RuleEngine:
                 manual_review = True
 
         if (
-            material.category is MaterialCategory.PANORAMA
-            and material.media_type in {"image/jpeg", "image/png"}
-        ):
-            covered = {
-                item.category
-                for item in findings
-                if item.detection_status is not DetectionStatus.NOT_APPLICABLE
-            }
-            expected = self._expected_checks_for_material(material.category)
-            uncovered = (expected or frozenset()) - covered
-            if uncovered:
-                rule_ids.append(self.ENVIRONMENT_COVERAGE_RULE_ID)
-                actions.append(MaterialReviewAction.REQUEST_MORE)
-                names = "、".join(
-                    sorted(RISK_CATEGORY_LABELS.get(item, item.value) for item in uncovered)
-                )
-                reasons.append(f"全景照缺少以下检查项的明确状态：{names}")
-                missing.append("补充能够覆盖这些检查项的全景照片或检查记录：" + names)
-                manual_review = True
-
-        elif (
-            self._expected_checks_for_material(material.category) is not None
+            material.category is not MaterialCategory.PANORAMA
+            and self._expected_checks_for_material(material.category) is not None
             and material.media_type in {"image/jpeg", "image/png"}
         ):
             covered = {
@@ -650,9 +722,11 @@ class RuleEngine:
         ):
             if material.watermark_status is not WatermarkStatus.PRESENT:
                 rule_ids.append(self.WATERMARK_RULE_ID)
-                actions.append(MaterialReviewAction.REQUEST_MORE)
-                reasons.append("未能确认照片含有日期及经纬度水印，建议补充带水印的现场照片")
-                missing.append(reasons[-1])
+                actions.append(MaterialReviewAction.WARNING)
+                reasons.append(
+                    "当前赛题阶段将未确认水印作为改进建议，不单独阻断材料；"
+                    "建议后续补充带日期及经纬度水印的现场照片"
+                )
             else:
                 missing_watermark_fields = []
                 if material.captured_at is None:
@@ -694,6 +768,68 @@ class RuleEngine:
             missing_requirements=list(dict.fromkeys(missing)),
             requires_manual_review=manual_review,
         )
+
+    def _apply_panorama_coverage(
+        self,
+        reviews: list[MaterialReview],
+        materials: list[Material],
+        findings: list[RiskFinding],
+    ) -> list[MaterialReview]:
+        """Aggregate checks across complementary panorama views in one case."""
+        panorama_ids = {
+            item.material_id
+            for item in materials
+            if item.category is MaterialCategory.PANORAMA
+            and item.media_type in {"image/jpeg", "image/png"}
+        }
+        if not panorama_ids:
+            return reviews
+
+        expected = EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+        covered = {
+            item.category
+            for item in findings
+            if item.material_id in panorama_ids
+            and item.detection_status is not DetectionStatus.NOT_APPLICABLE
+        }
+        uncovered = expected - covered
+        if not uncovered:
+            return reviews
+
+        target_index = next(
+            index
+            for index, material in enumerate(materials)
+            if material.material_id in panorama_ids
+        )
+        review = reviews[target_index]
+        names = "、".join(
+            sorted(RISK_CATEGORY_LABELS.get(item, item.value) for item in uncovered)
+        )
+        reasons = [
+            *review.reasons,
+            f"合并检查{len(panorama_ids)}张全景后，以下检查项仍没有明确结果：{names}",
+        ]
+        missing = [
+            *review.missing_requirements,
+            "补充能覆盖未检查项目的全景视角，或由核保人员记录检查结果：" + names,
+        ]
+        reviews[target_index] = review.model_copy(
+            update={
+                "action": max(
+                    [review.action, MaterialReviewAction.REQUEST_MORE],
+                    key=self._ACTION_PRIORITY.__getitem__,
+                ),
+                "triggered_rule_ids": list(
+                    dict.fromkeys(
+                        [*review.triggered_rule_ids, self.ENVIRONMENT_COVERAGE_RULE_ID]
+                    )
+                ),
+                "reasons": list(dict.fromkeys(reasons)),
+                "missing_requirements": list(dict.fromkeys(missing)),
+                "requires_manual_review": True,
+            }
+        )
+        return reviews
 
     def _apply_filing_cross_checks(
         self,

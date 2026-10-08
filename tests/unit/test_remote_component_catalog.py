@@ -81,7 +81,17 @@ def verified(model: str, **updates: object) -> httpx.Response:
 def test_complete_local_record_never_calls_online() -> None:
     calls: list[str] = []
     local = CatalogComponentProvider(
-        [profile("MODEL-1", hail_resistance_mm=25, wind_load_pa=2400, snow_load_pa=5400)]
+        [
+            profile(
+                "MODEL-1",
+                hail_resistance_mm=25,
+                hail_impact_velocity_m_s=23,
+                front_static_load_pa=5400,
+                back_static_load_pa=2400,
+                wind_load_pa=2400,
+                snow_load_pa=5400,
+            )
+        ]
     )
     provider = LocalFirstComponentProvider(local, remote(verified("MODEL-1"), calls))
 
@@ -93,7 +103,18 @@ def test_missing_local_parameter_is_filled_with_online_provenance() -> None:
     calls: list[str] = []
     local = CatalogComponentProvider([profile("JAM72D42-630/LB")])
     provider = LocalFirstComponentProvider(
-        local, remote(verified("JAM72D42-630/LB"), calls)
+        local,
+        remote(
+            verified(
+                "JAM72D42-630/LB",
+                source_url="https://www.jasolar.com/index.html",
+                parameter_sources={
+                    "rated_power_w": "https://www.jasolar.com/local.pdf",
+                    "wind_load_pa": "https://www.jasolar.com/verified-wind-test.pdf",
+                },
+            ),
+            calls,
+        ),
     )
 
     result = provider.lookup("JAM72D42-630/LB")
@@ -103,7 +124,7 @@ def test_missing_local_parameter_is_filled_with_online_provenance() -> None:
     assert result.wind_load_pa == 1600
     assert result.hail_resistance_mm is None
     assert result.parameter_sources["rated_power_w"] == "https://www.jasolar.com/local.pdf"
-    assert result.parameter_sources["wind_load_pa"] == "https://www.jasolar.com/verified.pdf"
+    assert result.parameter_sources["wind_load_pa"] == "https://www.jasolar.com/verified-wind-test.pdf"
     assert calls == ["JAM72D42-630/LB"]
 
 
@@ -143,6 +164,20 @@ def test_unverified_or_redirected_data_is_rejected(response: httpx.Response) -> 
         remote(response, []).lookup("MODEL-NEW")
 
 
+def test_online_static_load_requires_field_level_provenance() -> None:
+    response = verified(
+        "MODEL-NEW",
+        front_static_load_pa=5400,
+        parameter_sources={
+            "rated_power_w": "https://www.jasolar.com/verified.pdf",
+            "wind_load_pa": "https://www.jasolar.com/verified.pdf",
+        },
+    )
+
+    with pytest.raises(ProviderError, match="unverified data"):
+        remote(response, []).lookup("MODEL-NEW")
+
+
 def test_online_404_keeps_local_unknown() -> None:
     local = CatalogComponentProvider([profile("MODEL-1")])
     provider = LocalFirstComponentProvider(local, remote(httpx.Response(404), []))
@@ -173,9 +208,25 @@ def test_ocr_model_flows_through_online_fallback_and_weather_assessment() -> Non
         return httpx.Response(
             200,
             json={
+                "latitude": 23.12,
+                "longitude": 113.25,
+                "elevation": 12.0,
+                "timezone": "UTC",
+                "daily_units": {
+                    "wind_gusts_10m_max": "m/s",
+                    "wind_speed_10m_max": "m/s",
+                    "precipitation_sum": "mm",
+                    "rain_sum": "mm",
+                    "precipitation_hours": "h",
+                    "snowfall_sum": "cm",
+                },
                 "daily": {
                     "time": ["2026-09-01"],
                     "wind_gusts_10m_max": [30.0],
+                    "wind_speed_10m_max": [19.0],
+                    "precipitation_sum": [1.0],
+                    "rain_sum": [1.0],
+                    "precipitation_hours": [0.5],
                     "snowfall_sum": [0.0],
                 }
             },
@@ -221,7 +272,7 @@ def test_ocr_model_flows_through_online_fallback_and_weather_assessment() -> Non
     assert calls == ["JAM66D42-580/MB"]
     assert case.component_profile.wind_load_pa == 1600
     assert case.weather_profile.historical_max_wind_m_s == 30.0
-    assert "CAT-WIND-CAPACITY-ADEQUATE" in (
+    assert "CAT-WIND-COMPARABILITY-UNVERIFIED" in (
         case.catastrophe_assessment.triggered_rule_ids
     )
     assert case.catastrophe_assessment.requires_manual_review is True

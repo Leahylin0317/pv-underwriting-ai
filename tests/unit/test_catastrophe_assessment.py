@@ -51,44 +51,50 @@ def weather(
     )
 
 
-def test_marks_complete_adequate_capacity_as_low_risk() -> None:
+def test_reports_complete_metrics_without_claiming_unverified_comparability() -> None:
     result = CatastropheAssessmentEngine().assess(
         component=component(),
         weather=weather(),
     )
 
-    assert result.resistance_level is ResistanceLevel.HIGH
-    assert result.expected_loss_risk is ExpectedLossRisk.LOW
-    assert result.requires_manual_review is False
-    assert result.critical_shortfall_ratio == 0.75
-    assert result.adequate_margin_ratio == 1.25
-    assert "CAT-WIND-CAPACITY-ADEQUATE" in result.triggered_rule_ids
-    assert "CAT-HAIL-CAPACITY-ADEQUATE" in result.triggered_rule_ids
-    assert "CAT-SNOW-CAPACITY-ADEQUATE" in result.triggered_rule_ids
+    assert result.resistance_level is ResistanceLevel.UNKNOWN
+    assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
+    assert result.requires_manual_review is True
+    assert result.critical_shortfall_ratio is None
+    assert result.adequate_margin_ratio is None
+    assert "CAT-WIND-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
+    assert "CAT-HAIL-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
+    assert "CAT-SNOW-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
+    assert "CAT-INSTALL-WIND-APPLICABILITY-PENDING" in result.triggered_rule_ids
+    assert "CAT-INSTALL-HAIL-APPLICABILITY-PENDING" in result.triggered_rule_ids
+    assert "CAT-INSTALL-SNOW-APPLICABILITY-PENDING" in result.triggered_rule_ids
+    assert len(result.installation_parameter_reviews) == 3
+    assert all(review.status.value == "pending_confirmation" for review in result.installation_parameter_reviews)
+    assert any("10米历史阵风不是屋面项目设计风压" in factor for factor in result.factors)
 
 
-def test_marks_capacity_shortfall_as_high_risk() -> None:
+def test_does_not_turn_historic_gust_pressure_into_false_critical_risk() -> None:
     result = CatastropheAssessmentEngine().assess(
         component=component(wind_load_pa=500),
         weather=weather(wind_m_s=35),
     )
 
-    assert result.resistance_level is ResistanceLevel.LOW
-    assert result.expected_loss_risk is ExpectedLossRisk.CRITICAL
+    assert result.resistance_level is ResistanceLevel.UNKNOWN
+    assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
     assert result.requires_manual_review is True
-    assert "CAT-WIND-CRITICAL" in result.triggered_rule_ids
+    assert "CAT-WIND-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
 
 
-def test_marks_limited_margin_as_medium_risk() -> None:
+def test_does_not_compare_hail_diameter_without_a_compatible_event_basis() -> None:
     result = CatastropheAssessmentEngine().assess(
         component=component(hail_resistance_mm=22),
         weather=weather(hail_mm=20),
     )
 
-    assert result.resistance_level is ResistanceLevel.MEDIUM
-    assert result.expected_loss_risk is ExpectedLossRisk.MEDIUM
+    assert result.resistance_level is ResistanceLevel.UNKNOWN
+    assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
     assert result.requires_manual_review is True
-    assert "CAT-HAIL-LIMITED-MARGIN" in result.triggered_rule_ids
+    assert "CAT-HAIL-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
 
 
 def test_missing_hail_and_snow_data_remains_unknown() -> None:
@@ -100,9 +106,11 @@ def test_missing_hail_and_snow_data_remains_unknown() -> None:
     assert result.resistance_level is ResistanceLevel.UNKNOWN
     assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
     assert result.requires_manual_review is True
-    assert "CAT-HAIL-DATA-MISSING" in result.triggered_rule_ids
-    assert "CAT-SNOW-DATA-MISSING" in result.triggered_rule_ids
-    assert any("缺少" in factor for factor in result.factors)
+    assert "CAT-HAIL-WEATHER-DATA-MISSING" in result.triggered_rule_ids
+    assert "CAT-SNOW-WEATHER-DATA-MISSING" in result.triggered_rule_ids
+    assert "CAT-HAIL-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
+    assert "CAT-SNOW-COMPARABILITY-UNVERIFIED" in result.triggered_rule_ids
+    assert any("人工复核事项" in factor for factor in result.factors)
 
 
 def test_snowfall_indicator_is_reported_without_being_misrepresented_as_load() -> None:
@@ -112,8 +120,8 @@ def test_snowfall_indicator_is_reported_without_being_misrepresented_as_load() -
     )
 
     assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
-    assert any("18.0 cm" in factor and "未换算为结构雪荷载" in factor for factor in result.factors)
-    assert "CAT-SNOW-DATA-MISSING" in result.triggered_rule_ids
+    assert any("18.0 cm" in factor and "不换算为屋面或组件结构雪荷载" in factor for factor in result.factors)
+    assert "CAT-SNOW-WEATHER-DATA-MISSING" in result.triggered_rule_ids
 
 
 def test_missing_profiles_are_explicit() -> None:
@@ -123,6 +131,9 @@ def test_missing_profiles_are_explicit() -> None:
     assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
     assert result.requires_manual_review is True
     assert result.triggered_rule_ids == [
+        "CAT-INSTALL-WIND-APPLICABILITY-PENDING",
+        "CAT-INSTALL-HAIL-APPLICABILITY-PENDING",
+        "CAT-INSTALL-SNOW-APPLICABILITY-PENDING",
         "CAT-COMPONENT-PROFILE-MISSING",
         "CAT-WEATHER-PROFILE-MISSING",
     ]

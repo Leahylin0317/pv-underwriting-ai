@@ -2,23 +2,15 @@ from app.contracts import (
     CatastropheAssessment,
     ComponentProfile,
     ExpectedLossRisk,
+    InstallationParameterReview,
+    ParameterApplicabilityStatus,
     ResistanceLevel,
     WeatherProfile,
 )
-from app.rules.config import BusinessRulesConfig
-
-WIND_PRESSURE_COEFFICIENT = 0.613
-ADEQUATE_MARGIN_RATIO = 1.25
-CRITICAL_SHORTFALL_RATIO = 0.75
 
 
 class CatastropheAssessmentEngine:
-    """比较组件额定能力与项目所在地历史灾害指标。"""
-
-    def __init__(self, config: BusinessRulesConfig | None = None) -> None:
-        rules = config or BusinessRulesConfig.load()
-        self.adequate_margin_ratio = rules.catastrophe_adequate_margin_ratio
-        self.critical_shortfall_ratio = rules.catastrophe_critical_shortfall_ratio
+    """Summarize source evidence without comparing unlike engineering quantities."""
 
     def assess(
         self,
@@ -29,157 +21,243 @@ class CatastropheAssessmentEngine:
         factors: list[str] = []
         rule_ids: list[str] = []
         missing: list[str] = []
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]] = []
+        installation_reviews = self._installation_reviews()
+        rule_ids.extend(review.triggered_rule_id for review in installation_reviews)
+        missing.append("组件灾害参数与现场安装配置的逐项适用性证据")
 
         if component is None:
-            missing.append("组件抗灾参数")
+            missing.append("可核验的组件型号及厂家参数")
             rule_ids.append("CAT-COMPONENT-PROFILE-MISSING")
-
         if weather is None:
-            missing.append("项目所在地历史气象数据")
+            missing.append("项目所在地历史气象资料")
             rule_ids.append("CAT-WEATHER-PROFILE-MISSING")
 
         if component is not None and weather is not None:
-            if weather.historical_max_daily_snowfall_cm is not None:
-                factors.append(
-                    "气候背景：历史最大单日降雪量约 "
-                    f"{weather.historical_max_daily_snowfall_cm:.1f} cm；"
-                    "降雪量未换算为结构雪荷载，不直接用于承载结论"
-                )
-            self._assess_wind(component, weather, factors, rule_ids, missing, outcomes)
-            self._assess_hail(component, weather, factors, rule_ids, missing, outcomes)
-            self._assess_snow(component, weather, factors, rule_ids, missing, outcomes)
-
-        resistance, risk = self._aggregate(outcomes, bool(missing))
-        requires_manual_review = bool(missing) or risk is not ExpectedLossRisk.LOW
+            self._assess_wind(component, weather, factors, rule_ids, missing)
+            self._assess_hail(component, weather, factors, rule_ids, missing)
+            self._assess_snow(component, weather, factors, rule_ids, missing)
 
         if missing:
-            factors.append("缺少：" + "、".join(missing))
+            factors.append("人工复核事项：" + "；".join(dict.fromkeys(missing)))
 
-        if missing and risk in {ExpectedLossRisk.HIGH, ExpectedLossRisk.CRITICAL}:
-            explanation = "已发现组件能力不足，且部分灾害数据缺失，需要人工复核。"
-        elif missing:
-            explanation = "部分组件或气象灾害数据缺失，当前无法完成综合抗灾判断。"
-        elif risk is ExpectedLossRisk.LOW:
-            explanation = "组件风、雹、雪额定能力均通过当前历史数据筛查。"
-        elif risk is ExpectedLossRisk.MEDIUM:
-            explanation = "组件抗灾能力余量有限，需要人工确认设计条件和安全系数。"
-        else:
-            explanation = "至少一项历史灾害指标超过组件额定能力，需要人工复核。"
+        factors.append(
+            "安装参数适用性待确认：组件型号参数尚未与厂家手册中的固定方式、固定边、固定点、"
+            "夹持位置和支撑条件逐项匹配；未知条件不会按满足处理。"
+        )
 
         return CatastropheAssessment(
-            resistance_level=resistance,
-            expected_loss_risk=risk,
+            resistance_level=ResistanceLevel.UNKNOWN,
+            expected_loss_risk=ExpectedLossRisk.UNKNOWN,
             factors=factors,
-            explanation=explanation,
+            explanation=(
+                "目前没有经核验的厂家安装配置证据，也没有可与组件参数逐年比较的同口径风、雹、雪历史序列；"
+                "系统不生成 A/B/C 或 R1/R2/R3 候选等级，也不计算真实出险概率。请先核对精确型号、"
+                "厂家手册版本、安装配置和对应证据，再补齐可比历史数据。未知表示尚不能评估，不表示已经通过或超限。"
+            ),
             triggered_rule_ids=list(dict.fromkeys(rule_ids)),
-            requires_manual_review=requires_manual_review,
-            critical_shortfall_ratio=self.critical_shortfall_ratio,
-            adequate_margin_ratio=self.adequate_margin_ratio,
+            requires_manual_review=True,
+            installation_parameter_reviews=installation_reviews,
+            critical_shortfall_ratio=None,
+            adequate_margin_ratio=None,
         )
-
-    def _assess_wind(
-        self,
-        component: ComponentProfile,
-        weather: WeatherProfile,
-        factors: list[str],
-        rule_ids: list[str],
-        missing: list[str],
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
-    ) -> None:
-        if component.wind_load_pa is None or weather.historical_max_wind_m_s is None:
-            missing.append("风荷载能力或历史最大阵风")
-            rule_ids.append("CAT-WIND-DATA-MISSING")
-            return
-
-        demand_pa = WIND_PRESSURE_COEFFICIENT * weather.historical_max_wind_m_s**2
-        ratio = component.wind_load_pa / demand_pa if demand_pa > 0 else float("inf")
-        factors.append(
-            "风灾筛查：组件额定风荷载 "
-            f"{component.wind_load_pa:.0f} Pa，历史阵风动压约 {demand_pa:.0f} Pa，"
-            f"能力比 {ratio:.2f}"
-        )
-        self._record_ratio("WIND", ratio, rule_ids, outcomes)
-
-    def _assess_hail(
-        self,
-        component: ComponentProfile,
-        weather: WeatherProfile,
-        factors: list[str],
-        rule_ids: list[str],
-        missing: list[str],
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
-    ) -> None:
-        if component.hail_resistance_mm is None or weather.historical_max_hail_mm is None:
-            missing.append("冰雹抗性或历史最大冰雹直径")
-            rule_ids.append("CAT-HAIL-DATA-MISSING")
-            return
-
-        ratio = component.hail_resistance_mm / weather.historical_max_hail_mm
-        factors.append(
-            "雹灾筛查：组件抗冰雹直径 "
-            f"{component.hail_resistance_mm:.1f} mm，历史最大冰雹 "
-            f"{weather.historical_max_hail_mm:.1f} mm，能力比 {ratio:.2f}"
-        )
-        self._record_ratio("HAIL", ratio, rule_ids, outcomes)
-
-    def _assess_snow(
-        self,
-        component: ComponentProfile,
-        weather: WeatherProfile,
-        factors: list[str],
-        rule_ids: list[str],
-        missing: list[str],
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
-    ) -> None:
-        if component.snow_load_pa is None or weather.historical_max_snow_load_pa is None:
-            missing.append("雪荷载能力或历史最大雪荷载")
-            rule_ids.append("CAT-SNOW-DATA-MISSING")
-            return
-
-        ratio = component.snow_load_pa / weather.historical_max_snow_load_pa
-        factors.append(
-            "雪灾筛查：组件额定雪荷载 "
-            f"{component.snow_load_pa:.0f} Pa，历史最大雪荷载 "
-            f"{weather.historical_max_snow_load_pa:.0f} Pa，能力比 {ratio:.2f}"
-        )
-        self._record_ratio("SNOW", ratio, rule_ids, outcomes)
-
-    def _record_ratio(
-        self,
-        hazard: str,
-        ratio: float,
-        rule_ids: list[str],
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
-    ) -> None:
-        if ratio < self.critical_shortfall_ratio:
-            rule_ids.append(f"CAT-{hazard}-CRITICAL")
-            outcomes.append((ResistanceLevel.LOW, ExpectedLossRisk.CRITICAL))
-        elif ratio < 1.0:
-            rule_ids.append(f"CAT-{hazard}-CAPACITY-SHORTFALL")
-            outcomes.append((ResistanceLevel.LOW, ExpectedLossRisk.HIGH))
-        elif ratio < self.adequate_margin_ratio:
-            rule_ids.append(f"CAT-{hazard}-LIMITED-MARGIN")
-            outcomes.append((ResistanceLevel.MEDIUM, ExpectedLossRisk.MEDIUM))
-        else:
-            rule_ids.append(f"CAT-{hazard}-CAPACITY-ADEQUATE")
-            outcomes.append((ResistanceLevel.HIGH, ExpectedLossRisk.LOW))
 
     @staticmethod
-    def _aggregate(
-        outcomes: list[tuple[ResistanceLevel, ExpectedLossRisk]],
-        has_missing_data: bool,
-    ) -> tuple[ResistanceLevel, ExpectedLossRisk]:
-        risks = [risk for _, risk in outcomes]
+    def _installation_reviews() -> list[InstallationParameterReview]:
+        """The supplied installation scheme requires evidence absent from each case."""
 
-        if ExpectedLossRisk.CRITICAL in risks:
-            return ResistanceLevel.LOW, ExpectedLossRisk.CRITICAL
-        if ExpectedLossRisk.HIGH in risks:
-            return ResistanceLevel.LOW, ExpectedLossRisk.HIGH
-        if has_missing_data:
-            return ResistanceLevel.UNKNOWN, ExpectedLossRisk.UNKNOWN
-        if ExpectedLossRisk.MEDIUM in risks:
-            return ResistanceLevel.MEDIUM, ExpectedLossRisk.MEDIUM
-        if risks:
-            return ResistanceLevel.HIGH, ExpectedLossRisk.LOW
-        return ResistanceLevel.UNKNOWN, ExpectedLossRisk.UNKNOWN
+        pending = ParameterApplicabilityStatus.PENDING_CONFIRMATION
+        return [
+            InstallationParameterReview(
+                hazard="wind",
+                parameter_fields=[
+                    "wind_load_pa",
+                    "front_static_load_pa",
+                    "back_static_load_pa",
+                ],
+                status=pending,
+                explanation=(
+                    "缺少精确型号对应的厂家抗风配置及现场安装事实；静态载荷参数不能直接代表项目设计风压。"
+                ),
+                required_evidence=[
+                    "型号、后缀、规格书/安装手册版本及配置编号",
+                    "组件固定方式、固定边、固定点数量、夹持位置、导轨方向和支撑条件",
+                    "可定位的近照、厂家安装图或安装验收记录；照片无法证明的隐蔽连接转人工核验",
+                ],
+                triggered_rule_id="CAT-INSTALL-WIND-APPLICABILITY-PENDING",
+            ),
+            InstallationParameterReview(
+                hazard="hail",
+                parameter_fields=["hail_resistance_mm", "hail_impact_velocity_m_s"],
+                status=pending,
+                explanation=(
+                    "缺少与精确型号、规格书版本及试验方法绑定的厂家冰雹测试依据；"
+                    "试验参数还不能与当前历史天气源同口径比较。"
+                ),
+                required_evidence=[
+                    "精确型号对应的厂家 Datasheet/检测报告及版本",
+                    "冰雹直径、冲击速度、试验方法和适用范围",
+                    "可用于逐年比较的当地历史冰雹事件数据及其统计口径",
+                ],
+                triggered_rule_id="CAT-INSTALL-HAIL-APPLICABILITY-PENDING",
+            ),
+            InstallationParameterReview(
+                hazard="snow",
+                parameter_fields=[
+                    "snow_load_pa",
+                    "front_static_load_pa",
+                    "back_static_load_pa",
+                ],
+                status=pending,
+                explanation=(
+                    "缺少与实际固定配置对应的厂家承载参数及屋面结构设计雪荷载；"
+                    "降雪量或组件静载不能相互换算。"
+                ),
+                required_evidence=[
+                    "精确型号、厂家安装配置编号、受力方向及固定条件",
+                    "屋面/支架承载设计或检测、验收资料",
+                    "与厂家能力同单位、同定义的项目历史/设计雪荷载数据",
+                ],
+                triggered_rule_id="CAT-INSTALL-SNOW-APPLICABILITY-PENDING",
+            ),
+        ]
+
+    @staticmethod
+    def _assess_wind(
+        component: ComponentProfile,
+        weather: WeatherProfile,
+        factors: list[str],
+        rule_ids: list[str],
+        missing: list[str],
+    ) -> None:
+        if weather.historical_max_wind_m_s is None:
+            missing.append("历史最大阵风")
+            rule_ids.append("CAT-WIND-DATA-MISSING")
+        else:
+            factors.append(
+                "风灾气象背景：历史最大10米阵风 "
+                f"{weather.historical_max_wind_m_s:.1f} m/s"
+                f"（{weather.source_name}；再分析资料）"
+            )
+        if weather.historical_max_daily_wind_speed_m_s is not None:
+            factors.append(
+                "风灾气候背景：历史最大10米日持续风速 "
+                f"{weather.historical_max_daily_wind_speed_m_s:.1f} m/s；"
+                "该值不等于项目规范设计风速或设计风压"
+            )
+        if weather.historical_max_daily_precipitation_mm is not None:
+            factors.append(
+                "降水背景：历史最大单日总降水 "
+                f"{weather.historical_max_daily_precipitation_mm:.1f} mm"
+                + (
+                    f"，最大单日降雨 {weather.historical_max_daily_rain_mm:.1f} mm"
+                    if weather.historical_max_daily_rain_mm is not None
+                    else ""
+                )
+                + "；仅作气候背景，不单独推出内涝/洪水风险结论"
+            )
+        if weather.historical_max_daily_precipitation_hours is not None:
+            factors.append(
+                "历史最长单日有降水时数 "
+                f"{weather.historical_max_daily_precipitation_hours:.1f} h；"
+                "不替代排水条件和洪水风险资料"
+            )
+
+        if component.wind_load_pa is not None:
+            factors.append(f"组件目录另有风荷载字段 {component.wind_load_pa:.0f} Pa，需核对试验口径")
+        if (
+            component.front_static_load_pa is not None
+            or component.back_static_load_pa is not None
+        ):
+            factors.append(
+                "厂家正面/背面最大静态载荷只作为组件试验参数展示，"
+                "不会换算成项目设计风压"
+            )
+
+        factors.append(
+            "风灾未计算能力比：10米历史阵风不是屋面项目设计风压；"
+            "还需当地规范风荷载、地形/高度、阵风和体型系数、组件安装及支架条件"
+        )
+        rule_ids.append("CAT-WIND-COMPARABILITY-UNVERIFIED")
+        missing.append("经核验的项目设计风压与组件安装/试验口径")
+
+    @staticmethod
+    def _assess_hail(
+        component: ComponentProfile,
+        weather: WeatherProfile,
+        factors: list[str],
+        rule_ids: list[str],
+        missing: list[str],
+    ) -> None:
+        if component.hail_resistance_mm is not None:
+            impact = (
+                f" @ {component.hail_impact_velocity_m_s:.1f} m/s"
+                if component.hail_impact_velocity_m_s is not None
+                else "（厂家试验速度未记录）"
+            )
+            factors.append(
+                f"组件厂家冰雹试验记录：{component.hail_resistance_mm:.1f} mm{impact}"
+            )
+        else:
+            missing.append("组件厂家冰雹试验参数")
+            rule_ids.append("CAT-HAIL-COMPONENT-DATA-MISSING")
+
+        if weather.historical_max_hail_mm is None:
+            missing.append("可靠的当地历史冰雹事件数据")
+            rule_ids.append("CAT-HAIL-WEATHER-DATA-MISSING")
+        else:
+            factors.append(
+                f"气象源报告历史最大冰雹直径 {weather.historical_max_hail_mm:.1f} mm；"
+                "该单一数值不含与厂家试验可配对的冲击速度和事件方法"
+            )
+
+        factors.append(
+            "冰雹未计算能力比：厂家冲击试验点不能只按直径与气象最大直径直接比较"
+        )
+        rule_ids.append("CAT-HAIL-COMPARABILITY-UNVERIFIED")
+        missing.append("同一冰雹事件的直径、冲击条件及厂家试验标准")
+
+    @staticmethod
+    def _assess_snow(
+        component: ComponentProfile,
+        weather: WeatherProfile,
+        factors: list[str],
+        rule_ids: list[str],
+        missing: list[str],
+    ) -> None:
+        if weather.historical_max_daily_snowfall_cm is not None:
+            factors.append(
+                "气候背景：历史最大单日降雪量约 "
+                f"{weather.historical_max_daily_snowfall_cm:.1f} cm；"
+                "降雪量不换算为屋面或组件结构雪荷载"
+            )
+
+        if component.snow_load_pa is not None:
+            factors.append(
+                f"组件目录另有雪荷载字段 {component.snow_load_pa:.0f} Pa，需核对厂家试验定义"
+            )
+        else:
+            missing.append("适用的组件雪荷载试验参数")
+            rule_ids.append("CAT-SNOW-COMPONENT-DATA-MISSING")
+
+        if weather.historical_max_snow_load_pa is None:
+            missing.append("项目所在地规范雪荷载/结构设计参数")
+            rule_ids.append("CAT-SNOW-WEATHER-DATA-MISSING")
+        else:
+            factors.append(
+                f"气象源提供雪荷载值 {weather.historical_max_snow_load_pa:.0f} Pa，"
+                "仍需确认其是否为项目所在地规范设计值"
+            )
+
+        if (
+            component.front_static_load_pa is not None
+            or component.back_static_load_pa is not None
+        ):
+            factors.append(
+                "厂家正面/背面最大静态载荷不是屋面设计雪荷载，系统不作换算"
+            )
+
+        factors.append(
+            "雪灾未计算能力比：须由屋面结构设计雪荷载、组件安装方式和厂家允许荷载共同确认"
+        )
+        rule_ids.append("CAT-SNOW-COMPARABILITY-UNVERIFIED")
+        missing.append("经核验的屋面规范雪荷载与组件安装条件")

@@ -1,10 +1,22 @@
+from datetime import UTC, datetime
+
+from app.catastrophe import CatastropheAssessmentEngine
 from app.contracts import (
+    ComponentProfile,
     DetectionStatus,
+    EnvironmentRelation,
     EquipmentInventoryItem,
+    MapImageryReview,
     OcrField,
     OcrValueStatus,
     RiskCategory,
+    RiskFinding,
+    RiskSeverity,
+    SentinelContextRecord,
+    SentinelEnvironmentAnalysis,
+    SentinelEnvironmentObservation,
     UnderwritingCase,
+    WeatherProfile,
 )
 from app.reports import generate_markdown_report
 
@@ -132,6 +144,32 @@ def test_report_explains_the_end_to_end_decision_path_and_linked_evidence() -> N
     assert "规则说明待补充" in report
 
 
+def test_report_shows_environment_relation_separately_from_detection() -> None:
+    case = make_case()
+    finding = RiskFinding(
+        finding_id="finding-forest",
+        material_id="material-panorama-001",
+        category=RiskCategory.FOREST_ENVIRONMENT,
+        label="林地环境",
+        detection_status=DetectionStatus.DETECTED,
+        severity=RiskSeverity.HIGH,
+        confidence=0.88,
+        environment_relation=EnvironmentRelation.PROJECT_SITE,
+        evidence_text="项目设施所在用地为林地",
+        provider="test-vision",
+        model="test-model",
+        requires_manual_review=False,
+    )
+    case.findings.append(finding)
+    case.material_reviews[0].finding_ids.append(finding.finding_id)
+
+    report = generate_markdown_report(case)
+
+    assert "环境与现场关系" in report
+    assert "项目现场本身" in report
+    assert "项目设施所在用地为林地" in report
+
+
 def test_report_includes_extracted_ocr_fields() -> None:
     case = make_case()
     field = OcrField(
@@ -182,7 +220,143 @@ def test_report_includes_structured_equipment_inventory() -> None:
     assert "8525" in report
 
 
+def test_report_shows_component_evidence_and_weather_data_coverage() -> None:
+    case = make_case()
+    component = ComponentProfile(
+        component_model="LR5-54HTB-440M",
+        manufacturer="LONGi",
+        rated_power_w=440,
+        front_static_load_pa=5400,
+        back_static_load_pa=2400,
+        hail_resistance_mm=25,
+        hail_impact_velocity_m_s=23,
+        market_version="中国",
+        model_derivation_method="官网逐项列示",
+        source_document_type="官网产品页",
+        source_note="安装条件需另核",
+        source_url="https://www.longi.com/cn/products/modules/example/",
+        source_name="厂家参数目录，第 208 行",
+        retrieved_at="2026-10-01T00:00:00+08:00",
+        match_confidence=0.9,
+        parameter_sources={
+            "front_static_load_pa": "https://www.longi.com/cn/products/modules/example/",
+            "back_static_load_pa": "https://www.longi.com/cn/products/modules/example/",
+        },
+        lookup_notes=["正反面最大静载是组件试验参数，不是项目设计风压"],
+    )
+    weather = WeatherProfile(
+        longitude=113.25,
+        latitude=23.12,
+        historical_max_wind_m_s=30,
+        historical_max_daily_snowfall_cm=12.5,
+        observation_start="2025-01-01",
+        observation_end="2025-01-31",
+        returned_data_start="2025-01-01",
+        returned_data_end="2025-01-31",
+        expected_day_count=31,
+        returned_day_count=31,
+        wind_valid_day_count=30,
+        snowfall_valid_day_count=31,
+        grid_longitude=113.3,
+        grid_latitude=23.1,
+        grid_distance_km=6.1,
+        grid_elevation_m=18,
+        timezone="UTC",
+        dataset_selection="best_match",
+        grid_selection_method="land",
+        wind_unit="m/s",
+        snowfall_unit="cm",
+        data_quality_notes=["阵风序列缺少 1 天有效值"],
+        source_name="Open-Meteo Historical Weather API",
+        source_url="https://open-meteo.com/en/docs/historical-weather-api",
+        retrieved_at="2026-10-01T00:00:00+00:00",
+    )
+    assessment = CatastropheAssessmentEngine().assess(component=component, weather=weather)
+    report = generate_markdown_report(
+        case.model_copy(
+            update={
+                "component_profile": component,
+                "weather_profile": weather,
+                "catastrophe_assessment": assessment,
+            }
+        )
+    )
 
+    assert "正面最大静态载荷：5400 Pa" in report
+    assert "背面最大静态载荷：2400 Pa" in report
+    assert "冰雹试验：25 mm" in report
+    assert "参数逐项来源" in report
+    assert "不折算为项目设计风压或屋面结构雪荷载" in report
+    assert "阵风有效日数：30/31" in report
+    assert "网格距项目点：6.1 km" in report
+    assert "阵风序列缺少 1 天有效值" in report
+    assert "能力比：未计算" in report
+
+
+def test_report_explains_amap_coordinates_and_no_geocode_confidence_score() -> None:
+    now = datetime(2026, 10, 7, tzinfo=UTC)
+    review = MapImageryReview(
+        review_id="map-review-amap-01",
+        provider="amap_maps",
+        address_source="material_ocr",
+        triggering_material_ids=["material-panorama-001"],
+        query_address="广东省示例市示例区",
+        matched_address="广东省示例市示例区",
+        match_level="区县",
+        longitude_gcj02=113.255,
+        latitude_gcj02=23.126,
+        longitude_wgs84=113.25,
+        latitude_wgs84=23.12,
+        provider_map_url="https://uri.amap.com/marker?position=113.255%2C23.126",
+        queried_at=now,
+        reviewed_at=now,
+        reviewer_name="核保员甲",
+        site_match_confirmed=True,
+        photovoltaic_visibility="visible",
+        observed_installation_type="color_steel_roof",
+        observations="可见屋面有光伏组件，但影像日期未知。",
+        sentinel_context=SentinelContextRecord(
+            scene_id="S2A-test-scene",
+            acquired_at=now,
+            tile_cloud_cover_percent=10.0,
+            tile_cloud_cover_note="Tile-level cloud estimate, not parcel cloud cover.",
+            masked_pixel_fraction=0.08,
+            center_longitude=113.25,
+            center_latitude=23.12,
+            bbox_wgs84=(113.23, 23.10, 113.27, 23.14),
+            radius_m=1000,
+            pixel_size_m=10,
+            image_width=200,
+            image_height=200,
+            attribution="Contains modified Copernicus Sentinel data 2026",
+            analysis=SentinelEnvironmentAnalysis(
+                summary="Possible tree cover appears around the selected point.",
+                observations=[
+                    SentinelEnvironmentObservation(
+                        category="tree_cover",
+                        presence="possible",
+                        confidence=0.7,
+                        evidence="Irregular dark-green patches surround built-up shapes.",
+                    )
+                ],
+            ),
+        ),
+    )
+    report = generate_markdown_report(
+        make_case().model_copy(update={"map_reviews": [review]})
+    )
+
+    assert "高德接口未返回可信度评分" in report
+    assert "地图坐标（GCJ-02）：113.255, 23.126" in report
+    assert "天气查询坐标（WGS84 近似）：113.25, 23.12" in report
+    assert "不会自动改写" in report or "未作为自动规则事实" in report
+
+
+
+    assert "Sentinel-2 surroundings image" in report
+    assert "S2A-test-scene" in report
+    assert "Contains modified Copernicus Sentinel data 2026" in report
+    assert "not an underwriting result" in report
 def test_renders_catastrophe_assessment_trace_label() -> None:
     case = make_case()
     trace_payload = case.processing_trace[0].model_dump(mode="python")
@@ -193,6 +367,18 @@ def test_renders_catastrophe_assessment_trace_label() -> None:
     )
 
     assert "灾害风险评估" in report
+
+
+def test_report_explains_installation_applicability_review_items() -> None:
+    assessment = CatastropheAssessmentEngine().assess(component=None, weather=None)
+    case = make_case().model_copy(update={"catastrophe_assessment": assessment})
+
+    report = generate_markdown_report(case)
+
+    assert "逐灾种安装参数适用性" in report
+    assert "大风：待确认" in report
+    assert "安装手册版本" in report
+    assert "CAT-INSTALL-SNOW-APPLICABILITY-PENDING" in report
 
 
 def test_report_hides_findings_outside_the_reviewed_material_scope() -> None:

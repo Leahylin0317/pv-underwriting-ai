@@ -148,6 +148,33 @@ def test_decision_engine_uses_material_review() -> None:
     assert "补充清晰材料" in decision.missing_requirements
 
 
+def test_non_blocking_warning_can_still_reach_accept_recommendation() -> None:
+    clean_material = material().model_copy(
+        update={
+            "quality_status": MaterialQualityStatus.USABLE,
+            "quality_confidence": 0.98,
+            "quality_issues": [],
+        }
+    )
+    review = MaterialReview(
+        material_id=clean_material.material_id,
+        action=MaterialReviewAction.WARNING,
+        triggered_rule_ids=["IMG-WATERMARK-001"],
+        finding_ids=[],
+        ocr_field_ids=[],
+        reasons=["当前阶段水印缺失仅作补充建议"],
+        missing_requirements=[],
+        requires_manual_review=False,
+    )
+    case = underwriting_case(materials=[clean_material], reviews=[review])
+
+    decision = DecisionEngine().decide(case)
+
+    assert decision.decision is DecisionType.ACCEPT
+    assert "IMG-WATERMARK-001" in decision.decisive_rule_ids
+    assert decision.missing_requirements == []
+
+
 def test_decision_engine_sends_provider_failure_to_manual_review() -> None:
     case = underwriting_case(
         traces=[processing_trace(ProcessingStatus.FAILED)]

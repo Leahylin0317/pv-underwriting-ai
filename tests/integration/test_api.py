@@ -13,6 +13,8 @@ def test_readiness_reports_configured_components_without_secrets() -> None:
     assert result["weather_connectivity_checked"] is False
     assert isinstance(result["component_online_catalog_configured"], bool)
     assert result["component_online_connectivity_checked"] is False
+    assert isinstance(result["solar_stack_partner_api_configured"], bool)
+    assert result["solar_stack_partner_api_connectivity_checked"] is False
     assert "checks" in result
     assert "api_key" not in response.text.casefold()
 
@@ -80,7 +82,7 @@ def test_mock_analyze_returns_complete_case() -> None:
     assert len(result["findings"]) == 1
     assert len(result["material_reviews"]) == 2
     assert len(result["processing_trace"]) == 4
-    assert result["decision"]["decision"] == "recommend_reject"
+    assert result["decision"]["decision"] == "request_more"
 
 
 def test_mock_analyze_rejects_empty_materials() -> None:
@@ -109,6 +111,6 @@ def test_mock_report_returns_downloadable_markdown() -> None:
     assert response.text.startswith(
         "# 分布式光伏财产险 AI 核保报告"
     )
-    assert "建议结论：**建议拒保**" in response.text
+    assert "建议结论：**建议补充材料**" in response.text
     assert "site-panorama.jpg" in response.text
     assert "临近水体" in response.text

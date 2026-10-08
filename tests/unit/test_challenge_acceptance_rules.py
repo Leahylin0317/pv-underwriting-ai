@@ -2,6 +2,7 @@ from app.contracts import (
     CaptureView,
     DecisionType,
     DetectionStatus,
+    EnvironmentRelation,
     Material,
     MaterialCategory,
     MaterialParseStatus,
@@ -62,7 +63,19 @@ def make_finding(
     material_id: str,
     category: RiskCategory,
     status: DetectionStatus,
+    *,
+    environment_relation: EnvironmentRelation | None = None,
+    confidence: float = 0.95,
+    requires_manual_review: bool = False,
 ) -> RiskFinding:
+    if environment_relation is None:
+        environment_relation = (
+            EnvironmentRelation.PROJECT_SITE
+            if category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+            and category.value.endswith("_environment")
+            and status is DetectionStatus.DETECTED
+            else EnvironmentRelation.UNCERTAIN
+        )
     return RiskFinding(
         finding_id=f"{material_id}:{category.value}",
         material_id=material_id,
@@ -70,12 +83,13 @@ def make_finding(
         label=category.value,
         detection_status=status,
         severity=RiskSeverity.HIGH,
-        confidence=0.95,
+        confidence=confidence,
+        environment_relation=environment_relation,
         bbox=None,
         evidence_text="测试证据",
         provider="test-vision",
         model="test-model",
-        requires_manual_review=False,
+        requires_manual_review=requires_manual_review,
     )
 
 
@@ -202,19 +216,195 @@ def test_uncovered_environment_check_requests_more_material() -> None:
         )
     ]
 
-    review = RuleEngine().evaluate_material(material, findings=findings)
+    review = RuleEngine().evaluate_materials([material], findings=findings)[0]
 
     assert review.action is MaterialReviewAction.REQUEST_MORE
     assert "ENV-COVERAGE-001" in review.triggered_rule_ids
 
 
-def test_panorama_without_verifiable_watermark_requests_more() -> None:
+def test_missing_panorama_watermark_is_a_non_blocking_suggestion() -> None:
     material = make_material("panorama", MaterialCategory.PANORAMA)
-    review = RuleEngine().evaluate_material(material)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    review = RuleEngine().evaluate_material(material, findings=findings)
 
-    assert review.action is MaterialReviewAction.REQUEST_MORE
+    assert review.action is MaterialReviewAction.WARNING
     assert "IMG-WATERMARK-001" in review.triggered_rule_ids
-    assert review.missing_requirements
+    assert review.missing_requirements == []
+
+
+def test_complementary_panorama_views_share_environment_and_risk_coverage() -> None:
+    first = make_material("front", MaterialCategory.PANORAMA, view=CaptureView.FRONT_LEVEL)
+    second = make_material("overhead", MaterialCategory.PANORAMA, view=CaptureView.OVERHEAD)
+    expected = EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    first_findings = [
+        make_finding(first.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in expected
+        if category is not RiskCategory.FOREST_ENVIRONMENT
+    ]
+    second_findings = [
+        make_finding(second.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in expected
+        if category is not RiskCategory.AGRICULTURE_ENVIRONMENT
+    ]
+
+    reviews = RuleEngine().evaluate_materials(
+        [first, second], findings=[*first_findings, *second_findings]
+    )
+
+    assert all(review.action is MaterialReviewAction.WARNING for review in reviews)
+    assert all("ENV-COVERAGE-001" not in review.triggered_rule_ids for review in reviews)
+    assert all(not review.missing_requirements for review in reviews)
+
+
+def test_environment_visible_only_in_distant_background_does_not_reject() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    environment_categories = {
+        category
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+        if category.value.endswith("_environment")
+    }
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+        if category not in environment_categories
+    ]
+    findings.extend(
+        make_finding(
+            material.material_id,
+            category,
+            DetectionStatus.DETECTED,
+            environment_relation=EnvironmentRelation.DISTANT_BACKGROUND,
+        )
+        for category in sorted(environment_categories, key=lambda item: item.value)
+    )
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
+    assert "ENV-BACKGROUND-CONTEXT-001" in review.triggered_rule_ids
+    assert review.requires_manual_review is False
+
+
+def test_nearby_environment_routes_to_manual_review_until_boundary_is_defined() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    findings.append(
+        make_finding(
+            material.material_id,
+            RiskCategory.AGRICULTURE_ENVIRONMENT,
+            DetectionStatus.DETECTED,
+            environment_relation=EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+        )
+    )
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
+    assert "ENV-SITE-RELATION-REVIEW-001" in review.triggered_rule_ids
+    assert any("边界尚待业务确认" in reason for reason in review.reasons)
+
+
+def test_uncertain_site_relation_routes_to_manual_review_without_auto_rejection() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    findings.append(
+        make_finding(
+            material.material_id,
+            RiskCategory.AGRICULTURE_ENVIRONMENT,
+            DetectionStatus.DETECTED,
+            environment_relation=EnvironmentRelation.UNCERTAIN,
+        )
+    )
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
+    assert "ENV-SITE-RELATION-REVIEW-001" in review.triggered_rule_ids
+    assert review.missing_requirements == []
+
+
+def test_model_manual_review_flag_suppresses_environment_auto_rejection() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    findings.append(
+        make_finding(
+            material.material_id,
+            RiskCategory.AGRICULTURE_ENVIRONMENT,
+            DetectionStatus.DETECTED,
+            environment_relation=EnvironmentRelation.PROJECT_SITE,
+            requires_manual_review=True,
+        )
+    )
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
+
+
+def test_low_confidence_site_environment_is_not_an_automatic_rejection() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    findings.append(
+        make_finding(
+            material.material_id,
+            RiskCategory.AGRICULTURE_ENVIRONMENT,
+            DetectionStatus.DETECTED,
+            environment_relation=EnvironmentRelation.PROJECT_SITE,
+            confidence=0.64,
+        )
+    )
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
+    assert any("0.64" in reason and "0.65" in reason for reason in review.reasons)
+
+
+def test_legacy_finding_without_environment_relation_is_not_auto_rejected() -> None:
+    material = make_material("panorama", MaterialCategory.PANORAMA)
+    finding_payload = make_finding(
+        material.material_id,
+        RiskCategory.FOREST_ENVIRONMENT,
+        DetectionStatus.DETECTED,
+    ).model_dump(mode="python")
+    finding_payload.pop("environment_relation")
+    legacy_finding = RiskFinding.model_validate(finding_payload)
+    findings = [
+        make_finding(material.material_id, category, DetectionStatus.NOT_DETECTED)
+        for category in EXPECTED_CHECKS_BY_MATERIAL[MaterialCategory.PANORAMA]
+    ]
+    findings.append(legacy_finding)
+
+    review = RuleEngine().evaluate_material(material, findings=findings)
+
+    assert legacy_finding.environment_relation is EnvironmentRelation.UNCERTAIN
+    assert review.action is MaterialReviewAction.WARNING
+    assert review.requires_manual_review is True
+    assert "ENV-EXCLUDED-001" not in review.triggered_rule_ids
 
 
 def test_watermarked_panorama_outside_fifteen_day_window_requests_more() -> None:

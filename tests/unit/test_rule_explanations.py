@@ -29,10 +29,13 @@ def test_every_literal_rule_id_has_a_user_facing_explanation() -> None:
 @pytest.mark.parametrize(
     ("rule_id", "expected_title"),
     [
-        ("CAT-WIND-CRITICAL", "风灾能力严重不足"),
-        ("CAT-HAIL-CAPACITY-SHORTFALL", "雹灾额定能力不足"),
-        ("CAT-SNOW-LIMITED-MARGIN", "雪灾安全余量有限"),
-        ("CAT-WIND-CAPACITY-ADEQUATE", "风灾当前指标筛查通过"),
+        ("CAT-WIND-CRITICAL", "风灾历史筛查判为严重不足"),
+        ("CAT-HAIL-CAPACITY-SHORTFALL", "雹灾历史筛查判为能力不足"),
+        ("CAT-SNOW-LIMITED-MARGIN", "雪灾历史筛查判为余量有限"),
+        ("CAT-WIND-CAPACITY-ADEQUATE", "风灾历史简化筛查结果"),
+        ("CAT-WIND-COMPARABILITY-UNVERIFIED", "风灾数据口径未验证"),
+        ("CAT-HAIL-COMPARABILITY-UNVERIFIED", "雹灾数据口径未验证"),
+        ("CAT-SNOW-COMPARABILITY-UNVERIFIED", "雪灾数据口径未验证"),
     ],
 )
 def test_generated_catastrophe_rule_ids_are_explained(

@@ -51,7 +51,7 @@ def test_loads_component_catalog_file(
     )
 
     profile = provider.lookup(
-        "pv module 580w"
+        "pv-module-580w"
     )
 
     assert profile is not None
@@ -113,3 +113,42 @@ def test_rejects_invalid_catalog_schema(
             CatalogComponentProvider
             .from_json_file(catalog_path)
         )
+
+
+def test_official_component_catalog_keeps_load_direction_and_provenance() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    catalog_path = project_root / "data/catalogs/component_catalog_2026-10-01.json"
+    reference_path = project_root / "data/reference/component_parameters_2026-10-01.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))
+    eligible = [record for record in reference["records"] if record["auto_match_eligible"]]
+    imported = [profile for profile in catalog if ", row " in profile["source_name"]]
+
+    assert len(eligible) == 69
+    assert len(imported) == len(eligible)
+    assert all(profile.get("front_static_load_pa") for profile in imported)
+    assert all(profile.get("back_static_load_pa") for profile in imported)
+    assert all("front_static_load_pa" in profile["parameter_sources"] for profile in imported)
+    assert all("back_static_load_pa" in profile["parameter_sources"] for profile in imported)
+    assert all(profile.get("wind_load_pa") is None for profile in imported)
+    assert all(profile.get("snow_load_pa") is None for profile in imported)
+
+
+def test_incomplete_model_returns_human_review_variant_without_auto_matching() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    catalog_path = project_root / "data/catalogs/component_catalog_2026-10-01.json"
+    provider = CatalogComponentProvider.from_json_file(catalog_path)
+
+    assert provider.lookup("JAM72D42-630W") is None
+    candidates = provider.find_variant_candidates("JAM72D42-630W")
+
+    assert [candidate.component_model for candidate in candidates] == [
+        "JAM72D42-630/LB"
+    ]
+    assert candidates[0].rated_power_w == 630
+    assert candidates[0].front_static_load_pa == 5400
+    assert candidates[0].back_static_load_pa == 2400
+    assert candidates[0].hail_resistance_mm is None
+    exact = provider.lookup("JAM72D42-630/LB")
+    assert exact is not None
+    assert exact.component_model == "JAM72D42-630/LB"

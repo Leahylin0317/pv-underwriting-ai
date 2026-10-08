@@ -7,9 +7,11 @@ from fastapi import HTTPException, status
 from app.providers import ProviderError
 from app.providers.component import (
     CatalogComponentProvider,
+    ComponentCatalogOverlayProvider,
     ComponentProvider,
     LocalFirstComponentProvider,
     RemoteCatalogComponentProvider,
+    SolarStackPartnerApiComponentProvider,
 )
 
 PROJECT_ROOT = (
@@ -71,9 +73,37 @@ def get_component_provider() -> ComponentProvider:
             ),
         ) from exc
 
+    correction_path = Path(
+        os.getenv(
+            "PV_COMPONENT_CORRECTIONS_PATH",
+            "outputs/component-corrections.json",
+        ).strip()
+        or "outputs/component-corrections.json"
+    ).expanduser()
+    if not correction_path.is_absolute():
+        correction_path = PROJECT_ROOT / correction_path
+    if correction_path.exists():
+        try:
+            corrections = CatalogComponentProvider.from_json_file(correction_path)
+        except ProviderError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Component correction catalog is invalid",
+            ) from exc
+        local = ComponentCatalogOverlayProvider(local, corrections)
+
+    provider: ComponentProvider = local
+
+    solar_stack_key = os.getenv("PV_SOLAR_STACK_API_KEY", "").strip()
+    if solar_stack_key:
+        provider = LocalFirstComponentProvider(
+            provider,
+            SolarStackPartnerApiComponentProvider(solar_stack_key),
+        )
+
     online_url = os.getenv("PV_COMPONENT_ONLINE_CATALOG_URL", "").strip()
     if not online_url:
-        return local
+        return provider
     domains = tuple(
         part.strip()
         for part in os.getenv(
@@ -92,4 +122,4 @@ def get_component_provider() -> ComponentProvider:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Online component catalog configuration is invalid",
         ) from exc
-    return LocalFirstComponentProvider(local, online)
+    return LocalFirstComponentProvider(provider, online)

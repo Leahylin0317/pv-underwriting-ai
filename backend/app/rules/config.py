@@ -9,6 +9,8 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.contracts import EnvironmentRelation
+
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RULES_PATH = PROJECT_ROOT / "data" / "rules" / "challenge_open_ai_01.json"
 
@@ -27,7 +29,13 @@ class BusinessRulesConfig(BaseModel):
     version: str = Field(min_length=1)
     source_note: str = Field(min_length=1)
     high_fire_risk_industries: tuple[str, ...] = ()
+    environment_auto_reject_relations: tuple[EnvironmentRelation, ...] = (
+        EnvironmentRelation.PROJECT_SITE,
+    )
+    environment_auto_reject_min_confidence: float = Field(default=0.65, ge=0.0, le=1.0)
     advanced_checks_enabled: bool = False
+    # Kept for reading older/demo rule files only. CatastropheAssessmentEngine
+    # does not apply these until comparable engineering inputs are approved.
     catastrophe_adequate_margin_ratio: float = Field(default=1.25, gt=1.0)
     catastrophe_critical_shortfall_ratio: float = Field(default=0.75, gt=0.0, lt=1.0)
 
@@ -36,6 +44,22 @@ class BusinessRulesConfig(BaseModel):
     def normalize_industries(cls, values: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(dict.fromkeys(value.strip() for value in values if value.strip()))
         return normalized
+
+    @field_validator("environment_auto_reject_relations")
+    @classmethod
+    def validate_environment_auto_reject_relations(
+        cls,
+        values: tuple[EnvironmentRelation, ...],
+    ) -> tuple[EnvironmentRelation, ...]:
+        allowed = {
+            EnvironmentRelation.PROJECT_SITE,
+            EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+        }
+        if any(value not in allowed for value in values):
+            raise ValueError(
+                "distant background and uncertain environment relations cannot trigger automatic rejection"
+            )
+        return tuple(dict.fromkeys(values))
 
     @model_validator(mode="after")
     def validate_catastrophe_thresholds(self) -> Self:

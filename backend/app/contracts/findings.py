@@ -1,7 +1,12 @@
 from pydantic import Field
 
 from .common import Bbox, ContractModel
-from .enums import DetectionStatus, RiskCategory, RiskSeverity
+from .enums import (
+    DetectionStatus,
+    EnvironmentRelation,
+    RiskCategory,
+    RiskSeverity,
+)
 
 
 class RiskFinding(ContractModel):
@@ -14,6 +19,7 @@ class RiskFinding(ContractModel):
     detection_status: DetectionStatus
     severity: RiskSeverity
     confidence: float = Field(ge=0.0, le=1.0)
+    environment_relation: EnvironmentRelation = EnvironmentRelation.UNCERTAIN
     bbox: Bbox | None = None
     evidence_text: str = Field(min_length=1)
     provider: str = Field(min_length=1)

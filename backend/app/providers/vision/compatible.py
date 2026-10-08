@@ -14,6 +14,7 @@ from pydantic import (
 from app.contracts import (
     Bbox,
     DetectionStatus,
+    EnvironmentRelation,
     RiskCategory,
     RiskFinding,
     RiskSeverity,
@@ -47,7 +48,7 @@ findings 必须是数组。
 
 每个风险点只能包含以下字段：
 category、label、detection_status、severity、confidence、bbox、
-evidence_text、requires_manual_review。
+environment_relation、evidence_text、requires_manual_review。
 
 category 只能是以下风险类别之一：
 {RISK_CATEGORY_VALUES}。
@@ -60,6 +61,15 @@ category 只能是以下风险类别之一：
 - 屋瓦、苔藓、污渍、远处植被不能直接判定为 flammable_material。
 - hazardous_material：必须能看到危险化学品、气瓶、油品容器或明确标识。
 - mountain_environment：项目现场本身位于山地，远处背景山体不算。
+- agriculture_environment：仅在光伏项目现场本身位于实际耕作农田时识别；远处田地、普通草地不算。
+- forest_environment：仅在项目现场本身属于林地/林业用地时识别；画面中零散树木、绿化树或远处树林不算。
+- livestock_environment：仅在项目现场本身位于畜牧养殖场时识别；远处牲畜或普通乡村景物不算。
+- fishery_environment：仅在项目现场本身位于水产养殖场/渔业设施时识别；普通水面或远处鱼塘不自动等同于渔业场景。
+- water_adjacent_environment、tidal_flat_environment、desertification_environment：说明该环境是否属于项目现场，不能只凭画面背景出现水体、滩涂或裸地作出现场结论。
+- 对以上 8 类环境，每项都必须填写 environment_relation：project_site（项目设施所在场地/用地本身）、operational_surroundings（邻近且可能影响项目的周边，但具体边界需人工确认）、distant_background（远处背景景物）、uncertain（无法判定关系）。
+- 环境类型与位置关系都要分别判断。若只是邻近环境或无法判断其与项目的关系，保留观察；是否需要人工复核和是否允许自动拒保按本次用户指令提供的“自动拒保环境配置”执行。
+- 只有 environment_relation 属于本次用户指令列出的自动拒保关系、图片证据清楚、confidence 不低于所给技术门槛且无其他歧义时，才能将 requires_manual_review 设为 false。未列入配置、uncertain、distant_background、证据模糊或存在疑义时，必须设为 true；不得自行把邻近环境扩展为现场环境。
+- 环境关系为 distant_background 时，必须说明它是背景景物，不得作为项目现场拒保事实。
 - missing_parapet_or_guardrail：仅适用于平屋顶、检修平台或通道，
   不能因为斜屋顶没有护栏就直接判定风险。
 - 无法确定风险类别时返回 uncertain，并要求人工复核。
@@ -127,6 +137,7 @@ class VisionFindingPayload(BaseModel):
         ge=0.0,
         le=1.0,
     )
+    environment_relation: EnvironmentRelation = EnvironmentRelation.UNCERTAIN
     bbox: Bbox | None = None
     evidence_text: str = Field(min_length=1)
     requires_manual_review: bool
@@ -174,17 +185,44 @@ class CompatibleVisionProvider(VisionProvider):
         confidence_threshold: float = (
             DEFAULT_CONFIDENCE_THRESHOLD
         ),
+        environment_auto_reject_relations: tuple[EnvironmentRelation, ...] = (
+            EnvironmentRelation.PROJECT_SITE,
+        ),
+        environment_auto_reject_min_confidence: float = DEFAULT_CONFIDENCE_THRESHOLD,
     ) -> None:
         if not 0.0 <= confidence_threshold <= 1.0:
             raise ValueError(
                 "confidence_threshold must be "
                 "between zero and one"
             )
+        if not 0.0 <= environment_auto_reject_min_confidence <= 1.0:
+            raise ValueError(
+                "environment_auto_reject_min_confidence must be "
+                "between zero and one"
+            )
+        allowed_environment_relations = {
+            EnvironmentRelation.PROJECT_SITE,
+            EnvironmentRelation.OPERATIONAL_SURROUNDINGS,
+        }
+        if any(
+            relation not in allowed_environment_relations
+            for relation in environment_auto_reject_relations
+        ):
+            raise ValueError(
+                "distant background and uncertain environment relations "
+                "cannot trigger automatic rejection"
+            )
 
         self._settings = settings
         self._transport = transport
         self._confidence_threshold = (
             confidence_threshold
+        )
+        self._environment_auto_reject_relations = tuple(
+            environment_auto_reject_relations
+        )
+        self._environment_auto_reject_min_confidence = (
+            environment_auto_reject_min_confidence
         )
 
     @property
@@ -234,6 +272,13 @@ class CompatibleVisionProvider(VisionProvider):
             "、".join(material_input.material.quality_issues)
             or "未发现明显预检异常；这不等于图片质量已通过"
         )
+        auto_reject_relations = (
+            "、".join(
+                item.value
+                for item in self._environment_auto_reject_relations
+            )
+            or "无"
+        )
 
         request_body = {
             "model": self.model_name,
@@ -253,6 +298,11 @@ class CompatibleVisionProvider(VisionProvider):
                                 f"{material_input.material.category.value}。"
                                 "文件预检质量提示："
                                 f"{quality_preflight}。"
+                                "自动拒保环境配置：允许自动拒保的现场关系为"
+                                f"{auto_reject_relations}；模型参考置信度最低门槛为"
+                                f"{self._environment_auto_reject_min_confidence:.2f}。"
+                                "只有关系属于允许列表、证据清晰且无歧义时，才不要要求人工复核；"
+                                "其他关系必须标记 requires_manual_review=true。"
                                 "请按照 JSON 格式返回识别结果。"
                             ),
                         },
@@ -462,6 +512,7 @@ class CompatibleVisionProvider(VisionProvider):
                     ),
                     severity=item.severity,
                     confidence=item.confidence,
+                    environment_relation=item.environment_relation,
                     bbox=item.bbox,
                     evidence_text=(
                         item.evidence_text

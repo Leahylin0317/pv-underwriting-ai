@@ -7,6 +7,7 @@ from .common import ContractModel
 from .equipment import EquipmentInventoryItem
 from .findings import RiskFinding
 from .inputs import Material, OcrField, ProjectInfo
+from .map_review import MapImageryReview
 from .outputs import (
     MaterialReview,
     PackageAssessment,
@@ -36,6 +37,7 @@ class UnderwritingCase(ContractModel):
     weather_profile: WeatherProfile | None = None
     catastrophe_assessment: CatastropheAssessment | None = None
     package_assessment: PackageAssessment | None = None
+    map_reviews: list[MapImageryReview] = Field(default_factory=list)
     material_reviews: list[MaterialReview]
     decision: UnderwritingDecision | None = None
     processing_trace: list[ProcessingTrace]
@@ -45,10 +47,12 @@ class UnderwritingCase(ContractModel):
         material_ids = [material.material_id for material in self.materials]
         ocr_field_ids = [field.field_id for field in self.ocr_fields]
         finding_ids = [finding.finding_id for finding in self.findings]
+        map_review_ids = [review.review_id for review in self.map_reviews]
 
         duplicate_material_ids = find_duplicate_ids(material_ids)
         duplicate_ocr_field_ids = find_duplicate_ids(ocr_field_ids)
         duplicate_finding_ids = find_duplicate_ids(finding_ids)
+        duplicate_map_review_ids = find_duplicate_ids(map_review_ids)
 
         if duplicate_material_ids:
             raise ValueError(f"duplicate material IDs: {duplicate_material_ids}")
@@ -56,6 +60,10 @@ class UnderwritingCase(ContractModel):
             raise ValueError(f"duplicate OCR field IDs: {duplicate_ocr_field_ids}")
         if duplicate_finding_ids:
             raise ValueError(f"duplicate finding IDs: {duplicate_finding_ids}")
+        if duplicate_map_review_ids:
+            raise ValueError(
+                f"duplicate map review IDs: {duplicate_map_review_ids}"
+            )
 
         material_id_set = set(material_ids)
         ocr_field_id_set = set(ocr_field_ids)

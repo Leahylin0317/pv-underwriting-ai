@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from app.contracts import UnderwritingCase
+from app.contracts import MapImageryReview, ProcessingTrace, UnderwritingCase
 
 
 class CaseRepositoryConflict(Exception):
@@ -134,6 +134,41 @@ class CaseRepository:
                     (case_id, reviewer_name, final_decision, comment, reviewed_at),
                 )
             return self.get_case(case_id)
+
+    def append_map_review(
+        self,
+        *,
+        case_id: str,
+        review: MapImageryReview,
+        trace: ProcessingTrace,
+    ) -> dict[str, Any] | None:
+        """Append an external map observation without changing the decision."""
+
+        with closing(sqlite3.connect(self.database_path, timeout=10)) as connection:
+            self._initialize(connection)
+            with connection:
+                row = connection.execute(
+                    "SELECT case_json FROM cases WHERE case_id = ?",
+                    (case_id,),
+                ).fetchone()
+                if row is None:
+                    return None
+
+                case = UnderwritingCase.model_validate(json.loads(row[0]))
+                if any(item.review_id == review.review_id for item in case.map_reviews):
+                    raise ValueError("map review ID already exists")
+                updated_case = case.model_copy(
+                    update={
+                        "map_reviews": [*case.map_reviews, review],
+                        "processing_trace": [*case.processing_trace, trace],
+                    }
+                )
+                connection.execute(
+                    "UPDATE cases SET case_json = ? WHERE case_id = ?",
+                    (updated_case.model_dump_json(), case_id),
+                )
+
+        return self.get_case(case_id)
 
     def purge_expired_cases(
         self,

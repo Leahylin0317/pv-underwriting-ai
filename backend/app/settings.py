@@ -65,6 +65,7 @@ class VlmSettings:
     api_key: str = field(repr=False)
     model: str
     timeout_seconds: float = 120.0
+    use_system_proxy: bool = False
 
     @classmethod
     def from_environment(
@@ -98,5 +99,116 @@ class VlmSettings:
                     "PV_VLM_TIMEOUT_SECONDS",
                     "120",
                 )
+            ),
+            use_system_proxy=(
+                os.getenv("PV_VLM_USE_SYSTEM_PROXY", "false").strip().lower()
+                in {"1", "true", "yes", "on"}
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class BaiduMapSettings:
+    """服务端调用百度地图地理编码 API 所需的配置。"""
+
+    api_key: str = field(repr=False)
+    timeout_seconds: float = 10.0
+
+    @classmethod
+    def from_environment(
+        cls,
+        env_file: str | Path = ".env",
+    ) -> Self:
+        load_dotenv(
+            dotenv_path=env_file,
+            override=False,
+        )
+        return cls(
+            api_key=_required_environment_value("PV_MAP_BAIDU_AK"),
+            timeout_seconds=_positive_float_environment_value(
+                "PV_MAP_TIMEOUT_SECONDS",
+                "10",
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AmapJsApiSettings:
+    """Browser-side Amap JS API credentials for the optional satellite layer."""
+
+    api_key: str = field(repr=False)
+    security_js_code: str = field(repr=False)
+
+    @classmethod
+    def from_environment(
+        cls,
+        env_file: str | Path = ".env",
+    ) -> Self:
+        load_dotenv(
+            dotenv_path=env_file,
+            override=False,
+        )
+        return cls(
+            api_key=_required_environment_value("PV_AMAP_JS_API_KEY"),
+            security_js_code=_required_environment_value(
+                "PV_AMAP_JS_SECURITY_CODE"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SentinelHubSettings:
+    """Server-side credentials and bounded query settings for Copernicus Sentinel Hub."""
+
+    client_id: str = field(repr=False)
+    client_secret: str = field(repr=False)
+    timeout_seconds: float = 45.0
+    lookback_days: int = 180
+    max_cloud_cover_percent: float = 40.0
+    radius_m: int = 1000
+    use_system_proxy: bool = False
+
+    @classmethod
+    def from_environment(
+        cls,
+        env_file: str | Path = ".env",
+    ) -> Self:
+        load_dotenv(dotenv_path=env_file, override=False)
+        try:
+            lookback_days = int(os.getenv("PV_SENTINEL_LOOKBACK_DAYS", "180"))
+            radius_m = int(os.getenv("PV_SENTINEL_RADIUS_M", "1000"))
+            cloud_cover = float(os.getenv("PV_SENTINEL_MAX_CLOUD_COVER_PERCENT", "40"))
+        except ValueError as exc:
+            raise ProviderConfigurationError(
+                "Sentinel lookback, radius, and cloud cover settings must be numbers"
+            ) from exc
+        timeout_seconds = _positive_float_environment_value(
+            "PV_SENTINEL_TIMEOUT_SECONDS",
+            "45",
+        )
+        if not 1 <= lookback_days <= 730:
+            raise ProviderConfigurationError(
+                "PV_SENTINEL_LOOKBACK_DAYS must be between 1 and 730"
+            )
+        if not 250 <= radius_m <= 2000:
+            raise ProviderConfigurationError(
+                "PV_SENTINEL_RADIUS_M must be between 250 and 2000"
+            )
+        if not 0 <= cloud_cover <= 100:
+            raise ProviderConfigurationError(
+                "PV_SENTINEL_MAX_CLOUD_COVER_PERCENT must be between 0 and 100"
+            )
+        return cls(
+            client_id=_required_environment_value("PV_SENTINEL_HUB_CLIENT_ID"),
+            client_secret=_required_environment_value(
+                "PV_SENTINEL_HUB_CLIENT_SECRET"
+            ),
+            timeout_seconds=timeout_seconds,
+            lookback_days=lookback_days,
+            max_cloud_cover_percent=cloud_cover,
+            radius_m=radius_m,
+            use_system_proxy=(
+                os.getenv("PV_SENTINEL_USE_SYSTEM_PROXY", "false").strip().lower()
+                in {"1", "true", "yes", "on"}
             ),
         )

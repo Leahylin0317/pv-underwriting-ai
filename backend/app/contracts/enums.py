@@ -21,6 +21,15 @@ class RiskSeverity(StrEnum):
     UNKNOWN = "unknown"
 
 
+class EnvironmentRelation(StrEnum):
+    """拒保环境相对光伏项目现场的位置关系。"""
+
+    PROJECT_SITE = "project_site"
+    OPERATIONAL_SURROUNDINGS = "operational_surroundings"
+    DISTANT_BACKGROUND = "distant_background"
+    UNCERTAIN = "uncertain"
+
+
 class RiskCategory(StrEnum):
     """第一阶段支持的图片风险类别。"""
 
@@ -169,6 +178,14 @@ class ExpectedLossRisk(StrEnum):
     CRITICAL = "critical"
     UNKNOWN = "unknown"
 
+
+class ParameterApplicabilityStatus(StrEnum):
+    """厂家参数对现场实际安装配置的核验状态。"""
+
+    USABLE = "usable"
+    NOT_APPLICABLE = "not_applicable"
+    PENDING_CONFIRMATION = "pending_confirmation"
+
 class MaterialReviewAction(StrEnum):
     """规则引擎对单份材料的处理动作。"""
 
@@ -191,6 +208,7 @@ class ProcessingStep(StrEnum):
     COMPONENT_LOOKUP = "component_lookup"
     WEATHER_LOOKUP = "weather_lookup"
     CATASTROPHE_ASSESSMENT = "catastrophe_assessment"
+    MAP_REVIEW = "map_review"
     RULE_ENGINE = "rule_engine"
     DECISION = "decision"
 

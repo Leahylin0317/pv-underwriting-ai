@@ -1,4 +1,6 @@
 import json
+import re
+import unicodedata
 from pathlib import Path
 
 from pydantic import (
@@ -16,18 +18,23 @@ _COMPONENT_PROFILE_LIST_ADAPTER = (
         list[ComponentProfile]
     )
 )
+MIN_AUTOMATIC_MODEL_MATCH_CONFIDENCE = 0.8
 
 
 def normalize_component_model(
     component_model: str,
 ) -> str:
-    """生成用于精确目录匹配的型号键。"""
+    """Normalize typography while preserving manufacturer-significant punctuation.
 
-    return "".join(
-        character.casefold()
-        for character in component_model.strip()
-        if character.isalnum()
-    )
+    Case, full-width forms, dash glyphs, and whitespace are presentation details.
+    Slashes, hyphens, dots, plus signs, and underscores can encode a model suffix
+    or product variant, so they remain part of the lookup key.
+    """
+
+    normalized = unicodedata.normalize("NFKC", component_model).casefold().strip()
+    for dash in "‐‑‒–—―−﹘﹣－":
+        normalized = normalized.replace(dash, "-")
+    return "".join(character for character in normalized if not character.isspace())
 
 
 class CatalogComponentProvider(
@@ -47,7 +54,7 @@ class CatalogComponentProvider(
         for profile in profiles:
             for model in (profile.component_model, *profile.model_aliases):
                 normalized_model = normalize_component_model(model)
-                if not normalized_model:
+                if not any(character.isalnum() for character in normalized_model):
                     raise ValueError("component model must contain letters or numbers")
                 if normalized_model in catalog:
                     raise ValueError(
@@ -114,14 +121,64 @@ class CatalogComponentProvider(
             )
         )
 
-        if not normalized_model:
+        if not any(character.isalnum() for character in normalized_model):
             return None
 
         profile = self._catalog.get(
             normalized_model
         )
 
-        if profile is None:
+        if (
+            profile is None
+            or profile.match_confidence < MIN_AUTOMATIC_MODEL_MATCH_CONFIDENCE
+        ):
             return None
 
         return profile.model_copy(deep=True)
+
+    def find_variant_candidates(
+        self,
+        component_model: str,
+        *,
+        limit: int = 8,
+    ) -> list[ComponentProfile]:
+        """Return near-exact catalogue variants for human identity review only.
+
+        A trailing watt unit and a slash-delimited variant suffix can be absent
+        from equipment inventories even though they are significant on the
+        nameplate. These candidates must never be used by ``lookup``.
+        """
+        if limit <= 0:
+            return []
+        requested = normalize_component_model(component_model)
+        requested_key = _variant_search_key(requested)
+        if len(requested_key) < 7:
+            return []
+
+        matches: dict[str, ComponentProfile] = {}
+        for profile in self._catalog.values():
+            exact = normalize_component_model(profile.component_model)
+            if exact == requested:
+                continue
+            if profile.match_confidence < MIN_AUTOMATIC_MODEL_MATCH_CONFIDENCE:
+                continue
+            candidate_key = _variant_search_key(exact)
+            if not candidate_key.startswith(requested_key):
+                continue
+            matches[exact] = profile
+
+        ordered = sorted(
+            matches.values(),
+            key=lambda item: (
+                _variant_search_key(item.component_model) != requested_key,
+                -item.match_confidence,
+                item.component_model.casefold(),
+            ),
+        )
+        return [item.model_copy(deep=True) for item in ordered[:limit]]
+
+
+def _variant_search_key(normalized_model: str) -> str:
+    """Remove only a trailing watt unit and slash suffix for candidate search."""
+    without_watt = re.sub(r"(?<=\d)w$", "", normalized_model)
+    return without_watt.split("/", maxsplit=1)[0]
