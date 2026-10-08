@@ -1,0 +1,48 @@
+{
+  "scope": "真实模型输出；坐标修复后仅重算规则，未伪造或补齐识别事实、组件或气象参数",
+  "minimum_gate_passed": true,
+  "scene_photo_count": 5,
+  "document_image_count": 1,
+  "parsed_coordinates": [
+    {
+      "material_id": "front",
+      "longitude": 113.1189,
+      "latitude": 23.0345
+    },
+    {
+      "material_id": "top",
+      "longitude": 113.1189,
+      "latitude": 23.0345
+    },
+    {
+      "material_id": "roof",
+      "longitude": 113.1189,
+      "latitude": 23.0345
+    },
+    {
+      "material_id": "ground",
+      "longitude": 113.1189,
+      "latitude": 23.0345
+    },
+    {
+      "material_id": "module",
+      "longitude": 113.1189,
+      "latitude": 23.0345
+    }
+  ],
+  "decision": "request_more",
+  "missing_requirements": [
+    "补拍光线充足、清晰且完整展示检查区域的照片",
+    "补充可清晰识别的字段：component_model, rated_power_w, serial_number"
+  ],
+  "remaining_reasons": [
+    "图片风险判断不确定：通道阻塞；当前视角主要展示车棚外部结构及下方停车位，未直接展示光伏组件阵列之间的内部检修通道细节，无法判断是否存在线缆或杂物阻塞。建议补拍阵列间通道照片。",
+    "发现待核保人确认的风险：轻微遮挡；左侧厂房建筑的屋檐在光伏组件阵列的最左端投下了明显的阴影，属于局部实物遮挡。",
+    "图片风险判断不确定：通道阻塞；当前视角主要展示光伏组件阵列上方及侧面，无法清晰观察阵列下方或组件之间的检修通道内部情况（如是否有杂物堆积），需补充近距离地面视角照片以确认通道状况。",
+    "模型要求人工复核：图片质量；图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+    "图片质量不足，无法可靠检查：图片左上角存在明显的“SIMULATED / TEST ONLY”水印，表明该图片为模拟测试数据而非真实现场拍摄照片。虽然图像清晰度足以辨识设备细节，但作为核保证据其有效性存疑。",
+    "材料中的关键字段缺失或 OCR 置信度不足",
+    "部分组件或气象灾害数据缺失，当前无法完成综合抗灾判断。",
+    "自动识别服务未完整执行"
+  ]
+}

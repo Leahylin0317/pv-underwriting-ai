@@ -1,3 +1,5 @@
+from app.rules.config import BusinessRulesConfig
+
 from app.contracts import (
     CatastropheAssessment,
     ComponentProfile,
@@ -11,6 +13,11 @@ from app.contracts import (
 
 class CatastropheAssessmentEngine:
     """Summarize source evidence without comparing unlike engineering quantities."""
+
+    def __init__(self, config: BusinessRulesConfig | None = None) -> None:
+        rules = config or BusinessRulesConfig.load()
+        self.adequate_margin_ratio = rules.catastrophe_adequate_margin_ratio
+        self.critical_shortfall_ratio = rules.catastrophe_critical_shortfall_ratio
 
     def assess(
         self,
@@ -45,7 +52,22 @@ class CatastropheAssessmentEngine:
             "夹持位置和支撑条件逐项匹配；未知条件不会按满足处理。"
         )
 
+        # Keep the raw numbers visible in the case report while withholding
+        # a ratio verdict until weather, engineering and mounting conditions
+        # have been shown to be comparable.
+        comparisons = [
+            {
+                **row,
+                "ratio": None,
+                "status": "insufficient",
+                "risk": ExpectedLossRisk.UNKNOWN.value,
+                "rule_ids": [],
+                "reason": "安装条件与灾害指标口径尚未核验，不能作为核保能力比",
+            }
+            for row in self.comparisons(component, weather)
+        ]
         return CatastropheAssessment(
+            comparisons=comparisons,
             resistance_level=ResistanceLevel.UNKNOWN,
             expected_loss_risk=ExpectedLossRisk.UNKNOWN,
             factors=factors,
@@ -261,3 +283,53 @@ class CatastropheAssessmentEngine:
         )
         rule_ids.append("CAT-SNOW-COMPARABILITY-UNVERIFIED")
         missing.append("经核验的屋面规范雪荷载与组件安装条件")
+
+    def comparisons(
+        self,
+        component: ComponentProfile | None,
+        weather: WeatherProfile | None,
+    ) -> list[dict]:
+        """Experimental numerical screen for the risk laboratory only.
+
+        These ratios do not establish an underwriting grade or replace the
+        installation and engineering comparability checks in ``assess``.
+        """
+        rows = []
+        for hazard, capacity_field, event_field, unit in (
+            ("wind", "wind_load_pa", "historical_max_wind_m_s", "Pa"),
+            ("hail", "hail_resistance_mm", "historical_max_hail_mm", "mm"),
+            ("snow", "snow_load_pa", "historical_max_snow_load_pa", "Pa"),
+        ):
+            capacity = getattr(component, capacity_field, None)
+            event = getattr(weather, event_field, None)
+            demand = 0.613 * event**2 if hazard == "wind" and event is not None else event
+            ratio = capacity / demand if capacity is not None and demand is not None and demand > 0 else None
+            if ratio is None:
+                risk = ExpectedLossRisk.UNKNOWN
+                rule_ids: list[str] = []
+                reason = "缺少可比较的正值；安装和数据口径也需人工核验"
+            elif ratio < self.critical_shortfall_ratio:
+                risk = ExpectedLossRisk.CRITICAL
+                rule_ids = [f"CAT-{hazard.upper()}-CRITICAL"]
+                reason = "仅供实验室筛查，不能直接用于核保结论"
+            elif ratio < 1:
+                risk = ExpectedLossRisk.HIGH
+                rule_ids = [f"CAT-{hazard.upper()}-CAPACITY-SHORTFALL"]
+                reason = "仅供实验室筛查，不能直接用于核保结论"
+            elif ratio < self.adequate_margin_ratio:
+                risk = ExpectedLossRisk.MEDIUM
+                rule_ids = [f"CAT-{hazard.upper()}-LIMITED-MARGIN"]
+                reason = "仅供实验室筛查，不能直接用于核保结论"
+            else:
+                risk = ExpectedLossRisk.LOW
+                rule_ids = [f"CAT-{hazard.upper()}-CAPACITY-ADEQUATE"]
+                reason = "仅供实验室筛查，不能直接用于核保结论"
+            rows.append({
+                "hazard": hazard, "capacity": capacity, "event": event,
+                "demand": demand, "unit": unit, "ratio": ratio,
+                "status": "calculated" if ratio is not None else "insufficient",
+                "risk": risk.value, "rule_ids": rule_ids, "reason": reason,
+                "formula": "0.613 × 最大阵风²；能力 ÷ 动压" if hazard == "wind"
+                           else "组件能力 ÷ 历史灾害指标",
+            })
+        return rows

@@ -44,9 +44,10 @@ BBOX_COORDINATE_FIELDS = (
 
 CATEGORY_FIELD_GUIDANCE = {
     MaterialCategory.PANORAMA: (
-        "如有现场水印，检查并提取 watermark_present（true/false）、"
-        "watermark_date（YYYY-MM-DD）、watermark_longitude、watermark_latitude。"
-        "没有水印时明确返回 watermark_present=false；坐标或日期看不清时不要猜。"
+        "视觉模型已确认现场水印存在；仅提取水印中的 "
+        "watermark_date（YYYY-MM-DD）、watermark_longitude、watermark_latitude、"
+        "watermark_address（仅水印确有文字地址时提取）。"
+        "坐标或日期看不清时不要猜。"
     ),
     MaterialCategory.FILING_CERTIFICATE: (
         "重点提取 project_name、project_entity、insured_name、site_address、insured_address、"
@@ -65,8 +66,9 @@ CATEGORY_FIELD_GUIDANCE = {
         "maximum_input_voltage_v、serial_number 等逆变器铭牌信息。"
     ),
     MaterialCategory.ELECTRICAL_GROUNDING: (
-        "重点提取 grounding_resistance_ohm、inspection_date、"
-        "inspection_result 等接地检测信息。"
+        "接地照片只提取实际可见的设备标识或文字；没有检测记录时不要求电阻值。"
+        "若材料明确为接地检测记录，再提取 grounding_resistance_ohm、inspection_date、"
+        "inspection_result。禁止根据接地排外观推算电阻。"
     ),
     MaterialCategory.MONITORING_OPTIONAL: (
         "如材料直接证明监控系统存在或运行状态，提取 monitoring_present、"
@@ -94,8 +96,8 @@ bbox、evidence_text。
 
 字段要求：
 - field_name 使用简短的英文 snake_case。
-- 全景照必须明确返回 watermark_present=true 或 false；有水印时尽量提取
-  watermark_date、watermark_longitude、watermark_latitude。无法确认时返回 uncertain。
+- 按本次任务范围提取：拍摄水印任务只读拍摄信息，业务文字任务只读材料对应的业务字段。
+  无法确认时返回 uncertain，不混合两类任务。
 - 每个语义字段最多返回一次。
 - raw_value 保存图片中直接读取到的原文。
 - normalized_value 保存标准化后的值；无法可靠标准化时与 raw_value 相同。
@@ -262,6 +264,7 @@ class CompatibleOcrProvider(OcrProvider):
         settings: VlmSettings,
         *,
         transport: httpx.BaseTransport | None = None,
+        system_prompt: str | None = None,
         confidence_threshold: float = (
             DEFAULT_CONFIDENCE_THRESHOLD
         ),
@@ -272,6 +275,7 @@ class CompatibleOcrProvider(OcrProvider):
                 "between zero and one"
             )
 
+        self._system_prompt = system_prompt
         self._settings = settings
         self._transport = transport
         self._confidence_threshold = confidence_threshold
@@ -325,12 +329,21 @@ class CompatibleOcrProvider(OcrProvider):
             DEFAULT_FIELD_GUIDANCE,
         )
 
+        if material_input.ocr_task == 'watermark':
+            from .tasks import WATERMARK_GUIDANCE
+            field_guidance = WATERMARK_GUIDANCE
+        elif material_input.ocr_task == "business":
+            field_guidance += ' 本次只提取业务文字，不返回任何 watermark_ 开头字段，拍摄水印由独立任务处理。'
+        from app.material_catalog import DOCUMENT_CATEGORIES
+        from app.prompts.documents import material_prompt
+        actual_prompt = self._system_prompt or (material_prompt(material_input.material.category, SYSTEM_PROMPT)
+            if material_input.material.category in DOCUMENT_CATEGORIES else SYSTEM_PROMPT)
         request_body = {
             "model": self.model_name,
             "messages": [
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT,
+                    "content": actual_prompt,
                 },
                 {
                     "role": "user",
@@ -371,6 +384,7 @@ class CompatibleOcrProvider(OcrProvider):
                     ),
                 ),
                 transport=self._transport,
+                trust_env=self._settings.trust_env,
             ) as client:
                 response = post_with_connect_retry(
                     client,

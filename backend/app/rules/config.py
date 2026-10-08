@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -36,6 +36,7 @@ class BusinessRulesConfig(BaseModel):
     advanced_checks_enabled: bool = False
     # Kept for reading older/demo rule files only. CatastropheAssessmentEngine
     # does not apply these until comparable engineering inputs are approved.
+    package_requirement_profile: Literal["demo_minimum", "full_intake"] = "demo_minimum"
     catastrophe_adequate_margin_ratio: float = Field(default=1.25, gt=1.0)
     catastrophe_critical_shortfall_ratio: float = Field(default=0.75, gt=0.0, lt=1.0)
 

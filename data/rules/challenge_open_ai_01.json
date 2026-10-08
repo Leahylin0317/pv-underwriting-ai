@@ -8,6 +8,7 @@
   ],
   "environment_auto_reject_min_confidence": 0.65,
   "advanced_checks_enabled": false,
+  "package_requirement_profile": "demo_minimum",
   "catastrophe_adequate_margin_ratio": 1.25,
   "catastrophe_critical_shortfall_ratio": 0.75
 }

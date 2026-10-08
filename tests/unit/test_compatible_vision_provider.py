@@ -452,3 +452,29 @@ def test_rejects_invalid_confidence_threshold() -> None:
             make_settings(),
             confidence_threshold=1.1,
         )
+
+
+def test_retries_malformed_output_once_with_validation_feedback():
+    requests = []
+    def handler(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        content = 'not-json' if len(requests) == 1 else '{"findings": [], "watermark_present": false}'
+        return httpx.Response(200, json={'choices': [{'message': {'content': content}}]})
+    provider = CompatibleVisionProvider(make_settings(), transport=httpx.MockTransport(handler))
+    result = provider.analyze_with_watermark(make_material_input())
+    assert result.watermark_present is False
+    assert len(requests) == 2
+    assert '上次输出未通过格式校验' in requests[1]['messages'][-1]['content']
+    assert requests[0]['messages'][1] == requests[1]['messages'][1]
+
+
+def test_does_not_retry_authentication_failure():
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(401, json={'error': 'secret upstream body'})
+    provider = CompatibleVisionProvider(make_settings(), transport=httpx.MockTransport(handler))
+    with pytest.raises(ProviderError, match='HTTP 401'):
+        provider.analyze(make_material_input())
+    assert len(calls) == 1

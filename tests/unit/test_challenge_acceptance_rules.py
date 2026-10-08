@@ -126,7 +126,7 @@ def test_package_gate_checks_photo_count_certificate_and_both_views() -> None:
         "combiner_box",
     ]
     assert "至少提交5张图片材料（当前4张）" in assessment.missing_requirements
-    assert any("并网许可或调度协议" in item for item in assessment.missing_requirements)
+    assert "并网许可或调度协议" in assessment.coverage_requirements
 
 
 def test_carport_package_does_not_require_rooftop_workshop_material() -> None:
@@ -428,14 +428,14 @@ def test_watermarked_panorama_outside_fifteen_day_window_requests_more() -> None
     assert "补拍拟起保日前15日内的全景照片" in review.missing_requirements
 
 
-def test_grounding_record_requires_test_fields_and_visual_coverage() -> None:
+def test_grounding_photo_requires_visual_coverage_without_document_fields() -> None:
     material = make_material("grounding", MaterialCategory.ELECTRICAL_GROUNDING)
 
     review = RuleEngine().evaluate_material(material)
 
     assert review.action is MaterialReviewAction.REQUEST_MORE
     assert "ENV-COVERAGE-001" in review.triggered_rule_ids
-    assert "DOC-REQUIRED-FIELDS-001" in review.triggered_rule_ids
+    assert "DOC-REQUIRED-FIELDS-001" not in review.triggered_rule_ids
 
 
 def test_poor_image_quality_requests_replacement_even_when_other_checks_are_clear() -> None:

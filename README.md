@@ -30,7 +30,8 @@
 - 对 8 类明确拒保环境记录项目现场/邻近周边/远处背景关系；只对证据明确关联项目现场的环境自动建议拒保，其他可疑环境转人工核验
 - 多张互补全景按案件合并检查覆盖，只对所有全景均未给出结果的项目要求补充对应视角
 - 对每张视觉材料强制检查清晰度；模糊、过暗、关键区域缺失或视角不适用时要求补拍
-- 从全景照片 OCR 提取水印状态、拍摄日期和坐标；当前赛题阶段缺少水印只提示建议补充，已识别日期仍按 15 日窗口校验
+- 先用视觉模型识别全景照风险并判断是否有水印；仅确认有水印时运行 OCR 提取拍摄日期和坐标，校验是否处于拟起保日前 15 天内
+- 对投保标的地址、备案/并网项目地址及照片水印地址或坐标做位置核验：单一来源要求补证，明显冲突先预警和人工复核，不根据自动比对直接拒保；经人工确认异地后可用案件复核接口记录拒保结论
 - 交叉核验备案证中的项目名称、项目单位、地址和被保险人；禁投关键词命中时给出拒保建议
 - 从组件铭牌 OCR 提取型号、额定功率和序列号，并核对型号与案件信息是否一致
 - 检查屋顶连接件、组件、逆变器、接地和汇流箱的可见异常；不根据普通照片推断电气性能或接地电阻
@@ -103,6 +104,8 @@ PV_CASE_DB_PATH=outputs/pv-underwriting.sqlite3
 填写 `PV_AMAP_WEB_SERVICE_KEY` 后，工作台可从材料 OCR 地址或手动地址查询高德地理编码候选。核保员确认候选后，系统使用高德坐标近似反算出的 WGS84 坐标，在正式核保时请求 Open-Meteo Historical Weather API，读取历史 10 米最大日阵风、最大日持续风速、单日总降水、单日降雨、单日有降水时数和最大单日降雪量；结果保留逐变量有效日数、单位、查询时段、实际网格、高程和网格距离。地址变更时已选坐标会自动清空。近似坐标只用于风险筛查，不是测绘结果。
 
 图片质量不合格时，工作台可把 OCR 地址或项目地址交由高德 Web 服务解析，并在核保员确认后展示卫星图层供人工复核。卫星图层需要单独申请 Web 端（JS API）Key 和安全密钥，配置到 `PV_AMAP_JS_API_KEY`、`PV_AMAP_JS_SECURITY_CODE`；当前 Web 服务 Key 不能代替 JS API Key。JS API 凭证会在同意地图复核后交给浏览器，因此应在高德控制台限制允许域名。卫星影像并非实时数据，可能看不到拍摄日期。高德服务协议禁止抓取、存储或截图地图内容；系统因此不把地图画面转发给视觉模型，也不让卫星影像自动改变核保结论。详见 **docs/地图影像辅助复核.md**。
+填写 `PV_AMAP_WEB_SERVICE_KEY` 后，工作台可按项目地址查询高德地理编码候选。用户必须核对并点击候选项，系统才会把近似转换后的 WGS84 经纬度用于 Open-Meteo 历史天气查询；地址变更时已选坐标会自动清空。该坐标只用于风险筛查，不是测绘结果。
+同一个 Key 也用于把中国境内的详细项目地址与照片水印位置作保守比对。自动流程只采用唯一且达到门牌号、兴趣点或楼宇级别的候选；单一位置来源仍标为未经交叉核验，明显冲突只触发人工复核。仅项目所在地地址会发送给地图服务，位置距离的 1/5 公里分界只用于筛查，**不是业务认可的自动拒保阈值**。
 
 **PV_COMPONENT_CATALOG_PATH** 留空时会使用 **data/catalogs/component_catalog_2026-10-01.json**。该目录保留原有的两个示例条目，并从《光伏组件抗灾参数目录_2026-10-01.xlsx》导入 69 条中国市场且官网逐项列示的型号；全部 364 条原始记录保存在 **data/reference/component_parameters_2026-10-01.json** 供复核，其他市场版本、简写及范围展开型号不参与自动匹配。导入脚本为 **scripts/import_component_workbook.py**，更新源表后可重新生成两份 JSON。正反面最大静态载荷作为独立参考字段保存，不会换算成抗风或雪载；空缺的灾害参数仍会触发人工复核。导入数据尚需逐条核对官网版本和安装条件，不能直接作为生产核保依据。
 
@@ -114,13 +117,15 @@ PV_CASE_DB_PATH=outputs/pv-underwriting.sqlite3
 
 ## 启动服务
 
+队友测试请按 [README_队友测试.md](README_队友测试.md) 配置环境，并用以下通用命令启动：
+
 ~~~powershell
-python -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ~~~
 
 启动后访问：
 
-- 核保工作台：<http://127.0.0.1:8000/>
+- 材料评测台：<http://127.0.0.1:8000/>
 - Swagger UI：<http://127.0.0.1:8000/docs>
 - OpenAPI：<http://127.0.0.1:8000/openapi.json>
 - 健康检查：<http://127.0.0.1:8000/health>
@@ -134,7 +139,8 @@ python -m uvicorn app.main:app --reload
 | GET | /api/v1/components/sources?model=... | 查询厂商资料候选，供人工核对和入库 |
 | POST | /api/v1/components/corrections | 保存带逐字段 HTTPS 来源的人工核验组件参数，供后续案件补齐空字段 |
 | GET | /api/v1/locations/resolve?address=... | 查询项目地址候选和天气查询用近似坐标 |
-| GET | / | 本地核保工作台 |
+| POST | /api/v1/weather/history | 按详细地址或 WGS84 经纬度查询历史风、雨、雪、气温和气压；冰雹缺少可信数据源时明确标记未取得 |
+| GET | / | 本地材料评测台 |
 | POST | /api/v1/files/inspect | 检查上传文件 |
 | POST | /api/v1/ocr/extract | 对单个图片或 PDF 执行真实 OCR |
 | POST | /api/v1/vision/analyze | 对单张图片执行真实风险识别 |
@@ -160,6 +166,7 @@ python -m uvicorn app.main:app --reload
 工作台可下载带机器与人工复核信息的 Markdown 报告，也可使用浏览器“打印 / 保存为 PDF”。
 
 当图片质量预检或视觉模型标记图片模糊/信息不足时，核保员可选择地图辅助复核。该功能用高德地理编码解析用户确认的地址；配置 Web 端 JS API Key 和安全密钥后，工作台展示卫星图层供核保员人工核对。影像不是实时画面，日期可能未知；系统不抓取、截图或转发地图影像，也不把影像发给视觉模型。地图观察单独留痕，不自动覆盖原图结论或改变机器核保建议。完整配置及边界见 [地图影像辅助复核说明](docs/地图影像辅助复核.md)。
+历史气象接口的输入、字段和数据边界见 [气象历史查询接口说明](docs/weather-history-api.md)。
 
 整单真实核保接口使用 **multipart/form-data**：
 
@@ -262,3 +269,33 @@ The map-review panel can request Copernicus Sentinel-2 L2A imagery for a confirm
 
 Configure the server-side Copernicus OAuth client in `.env` using `PV_SENTINEL_HUB_CLIENT_ID` and `PV_SENTINEL_HUB_CLIENT_SECRET`. See [the Sentinel-2 auxiliary review guide](docs/sentinel2-environment-review.md) for limits, consent, the API request, audit fields, and official references. Do not commit `.env`.
 
+## 风险识别实验室
+
+访问 `/vision-lab`，或从材料测试页点击“风险识别实验室”。支持 JPEG/PNG 图片的单张与批量风险识别、风险框和水印框与分析字段联动、提示词版本编辑、人工评价与漏检标注、同图同模型记录对比及 JSON 导出。本模块不调用 OCR。测试原图和历史保存在当前浏览器的 IndexedDB；清理浏览器站点数据会删除它们。只有显式点击“应用为工作台默认”才会改变正式图片识别的默认提示词，配置保存在 `data/vision_prompt_default.json`。
+
+### 视觉提示词 V2
+
+风险识别使用公共规则 + 当前材料专属模板 + 统一 JSON 规范。模板位于
+`backend/app/prompts/vision/`；必检清单来自规则引擎现有配置。
+风险识别实验室分别展示并支持编辑公共/专属提示词，实时预览当前图片实际组合文本。
+另存版本会保存全部材料模板；批量运行按每张图片类别选择模板。
+V1 完整提示词保留供历史对比。工作台默认版本为 V2；自定义组合可显式应用为正式默认，
+存储在 `data/vision_prompt_default.json`。测试记录包含公共规则、所用专属规则和实际完整提示词。
+
+视觉模型接口默认直连（`PV_VLM_TRUST_ENV=false`），避免继承系统代理导致请求超时；
+网络环境必须使用代理时可设为 `true`。模型返回非法 JSON 或不符合字段约束时，
+自动附带校验反馈重试一次；仍失败则明确报错，不生成替代风险结论。
+实验室错误提示区分网络连接、响应超时、上游 HTTP 错误和输出格式错误。
+
+### 自动推荐照片类别
+
+风险识别实验室上传 JPEG/PNG 后默认调用独立分类接口
+`POST /api/v1/vision/lab/classify`。返回主类别、可见依据和最多三个其他候选用途。
+实验室自动应用推荐类别，无需人工确认；模型参考分不代表分类准确率。
+可关闭“上传后自动推荐类别”，或点击“重新分类”。分类失败时保留手动选择。
+所用类别和分类建议随图片保存在当前浏览器；风险测试记录保留当时的分类建议和所用类别。
+此功能接入风险识别实验室，不自动修改正式案件材料。
+
+实验室支持“一键运行”（当前图片自动分类→风险识别）和“批量一键运行”。
+分类失败或返回 other 时停止该流程并提示手动选择，不沿用旧类别生成风险结论。
+“仅识别风险”使用当前选择的类别，适合手动指定类别或提示词对比。

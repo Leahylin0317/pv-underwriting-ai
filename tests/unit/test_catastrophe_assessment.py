@@ -137,3 +137,23 @@ def test_missing_profiles_are_explicit() -> None:
         "CAT-COMPONENT-PROFILE-MISSING",
         "CAT-WEATHER-PROFILE-MISSING",
     ]
+
+
+def test_zero_hail_and_snow_demand_do_not_divide_by_zero():
+    engine=CatastropheAssessmentEngine()
+    source=weather(hail_mm=0,snow_load_pa=0)
+    result=engine.assess(component=component(),weather=source)
+    assert result.expected_loss_risk is ExpectedLossRisk.UNKNOWN
+    rows=engine.comparisons(component(),source)
+    assert [r['status'] for r in rows]==['calculated','insufficient','insufficient']
+    assert rows[1]['ratio'] is None
+
+
+def test_detailed_ratios_match_engine_thresholds():
+    engine=CatastropheAssessmentEngine()
+    c=component(wind_load_pa=0.613*30**2)
+    rows=engine.comparisons(c,weather())
+    assert rows[0]['ratio']==1
+    assert rows[0]['risk']=='medium'
+    assert rows[0]['rule_ids']==['CAT-WIND-LIMITED-MARGIN']
+    assert engine.assess(component=c,weather=weather()).expected_loss_risk is ExpectedLossRisk.UNKNOWN

@@ -1,0 +1,8 @@
+【唯一输出规范】
+仅返回合法 JSON 对象，不返回 Markdown、代码块或额外说明。
+顶层必须且只能包含 findings、watermark_present。
+findings 是数组；每条必须且只能包含 category、label、detection_status、severity、confidence、bbox、evidence_text、requires_manual_review。
+category 使用允许枚举，label 为可读中文名称。detection_status 只能是 detected、not_detected、uncertain、not_applicable；severity 只能是 info、low、medium、high、critical、unknown；confidence 为0到1的小数；requires_manual_review 为布尔值。
+bbox 为 null 或对象：x_min、y_min、x_max、y_max、coordinate_space。
+必须满足 0<=x_min<x_max<=1，0<=y_min<y_max<=1；coordinate_space 固定 normalized_0_1。
+watermark_present 为 true、false 或 null。

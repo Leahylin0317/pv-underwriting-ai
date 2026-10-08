@@ -121,11 +121,25 @@ class InstallationParameterReview(ContractModel):
     explanation: str = Field(min_length=1)
     required_evidence: list[str]
     triggered_rule_id: str = Field(min_length=1)
+class HazardComparison(ContractModel):
+    """Persisted numerical evidence from the engine, never reconstructed by the UI."""
+    hazard: Literal['wind','hail','snow']
+    capacity: float | None = None
+    event: float | None = None
+    demand: float | None = None
+    unit: Literal['Pa','mm']
+    ratio: float | None = None
+    status: Literal['calculated','insufficient']
+    risk: ExpectedLossRisk
+    rule_ids: list[str] = Field(default_factory=list)
+    reason: str = ''
+    formula: str
 
 
 class CatastropheAssessment(ContractModel):
     """组件能力与当地自然灾害数据的比较结果。"""
 
+    comparisons: list[HazardComparison] = Field(default_factory=list)
     resistance_level: ResistanceLevel
     expected_loss_risk: ExpectedLossRisk
     factors: list[str]

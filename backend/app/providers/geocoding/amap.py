@@ -86,10 +86,18 @@ class AmapGeocodingProvider:
         self._transport = transport
         self._trust_env = trust_env
 
-    def lookup(self, address: str) -> list[GeocodeCandidate]:
+    def lookup(
+        self,
+        address: str,
+        *,
+        city: str | None = None,
+    ) -> list[GeocodeCandidate]:
         address = address.strip()
         if not 4 <= len(address) <= 200:
             raise ValueError("address must be between 4 and 200 characters")
+        params = {"key": self._api_key, "address": address, "output": "JSON"}
+        if city and city.strip():
+            params["city"] = city.strip()
         try:
             with httpx.Client(
                 timeout=self._timeout_seconds,
@@ -98,7 +106,7 @@ class AmapGeocodingProvider:
             ) as client:
                 response = client.get(
                     AMAP_GEOCODING_URL,
-                    params={"key": self._api_key, "address": address, "output": "JSON"},
+                    params=params,
                 )
                 response.raise_for_status()
                 payload = response.json()

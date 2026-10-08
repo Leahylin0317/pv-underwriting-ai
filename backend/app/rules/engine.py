@@ -82,9 +82,7 @@ EXPECTED_CHECKS_BY_MATERIAL = {
             RiskCategory.ELECTRICAL_GROUNDING_ABNORMAL,
         }
     ) | SUPPLEMENT_REQUIRED_CHECKS,
-    MaterialCategory.COMPONENT_NAMEPLATE: frozenset(
-        {RiskCategory.MODULE_DAMAGE}
-    ) | SUPPLEMENT_REQUIRED_CHECKS,
+    MaterialCategory.COMPONENT_NAMEPLATE: SUPPLEMENT_REQUIRED_CHECKS,
     MaterialCategory.INVERTER_NAMEPLATE: frozenset(
         {RiskCategory.INVERTER_ABNORMAL}
     ) | SUPPLEMENT_REQUIRED_CHECKS,
@@ -222,10 +220,17 @@ class RuleEngine:
         *,
         project_type: ProjectType | None = None,
     ) -> PackageAssessment:
+        document_categories = {
+            MaterialCategory.FILING_CERTIFICATE,
+            MaterialCategory.GRID_CONNECTION_DOCUMENT,
+            MaterialCategory.PROJECT_DOCUMENT,
+            MaterialCategory.EQUIPMENT_INVENTORY,
+        }
         images = [
             item
             for item in materials
             if item.media_type in {"image/jpeg", "image/png"}
+            and item.category not in document_categories
         ]
         panoramas = [
             item
@@ -260,14 +265,17 @@ class RuleEngine:
             missing.append(f"至少提交2张电站全景照（当前{len(panoramas)}张）")
         if not has_filing_certificate:
             missing.append("补充电站备案证")
-        if missing_categories:
-            missing.append("补充缺失的必需材料类别：" + "、".join(
-                self._material_category_label(item) for item in missing_categories
-            ))
         if panoramas and not has_front:
             missing.append("标注或补拍一张正面平视全景照")
         if panoramas and not has_overhead:
             missing.append("标注或补拍一张俯拍全景照")
+
+        minimum_gate_passed = not missing
+        coverage_requirements = [
+            self._material_category_label(item) for item in missing_categories
+        ]
+        if self.config.package_requirement_profile == "full_intake" and missing_categories:
+            missing.append("补充完整投保清单中的材料类别：" + "、".join(coverage_requirements))
 
         return PackageAssessment(
             image_count=len(images),
@@ -277,6 +285,13 @@ class RuleEngine:
             has_overhead_panorama=has_overhead,
             missing_material_categories=missing_categories,
             missing_requirements=missing,
+            requirement_profile=self.config.package_requirement_profile,
+            minimum_gate_passed=minimum_gate_passed,
+            document_image_count=sum(
+                item.media_type in {"image/jpeg", "image/png"}
+                and item.category in document_categories for item in materials
+            ),
+            coverage_requirements=coverage_requirements,
         )
 
     def evaluate_materials(
@@ -632,15 +647,17 @@ class RuleEngine:
                 missing.append("补充清晰材料或完成未覆盖项目的人工检查：" + names)
                 manual_review = True
 
-        if material.category is MaterialCategory.FILING_CERTIFICATE:
+        if material.category in {MaterialCategory.FILING_CERTIFICATE, MaterialCategory.PROJECT_DOCUMENT}:
             self._require_ocr_fields(
                 ocr_fields,
-                ("project_name", "site_address", "insured_name"),
+                (("project_name", "site_address", "insured_name", "document_type") if material.category is MaterialCategory.PROJECT_DOCUMENT else ("project_name", "site_address", "insured_name")),
                 rule_ids,
                 reasons,
                 missing,
                 actions,
             )
+        elif material.category is MaterialCategory.EQUIPMENT_INVENTORY and material.media_type in {"image/jpeg", "image/png", "application/pdf"}:
+            self._require_ocr_fields(ocr_fields, ("row_1_equipment_name",), rule_ids, reasons, missing, actions)
         elif material.category is MaterialCategory.COMPONENT_NAMEPLATE:
             self._require_ocr_fields(
                 ocr_fields,
@@ -668,7 +685,10 @@ class RuleEngine:
                 missing,
                 actions,
             )
-        elif material.category is MaterialCategory.ELECTRICAL_GROUNDING:
+        elif (
+            material.category is MaterialCategory.ELECTRICAL_GROUNDING
+            and material.media_type == "application/pdf"
+        ):
             self._require_ocr_fields(
                 ocr_fields,
                 ("grounding_resistance_ohm", "inspection_date", "inspection_result"),
@@ -723,10 +743,7 @@ class RuleEngine:
             if material.watermark_status is not WatermarkStatus.PRESENT:
                 rule_ids.append(self.WATERMARK_RULE_ID)
                 actions.append(MaterialReviewAction.WARNING)
-                reasons.append(
-                    "当前赛题阶段将未确认水印作为改进建议，不单独阻断材料；"
-                    "建议后续补充带日期及经纬度水印的现场照片"
-                )
+                reasons.append("未能确认照片含有日期及经纬度水印，建议补充带水印的现场照片")
             else:
                 missing_watermark_fields = []
                 if material.captured_at is None:
@@ -912,6 +929,7 @@ class RuleEngine:
             for material_id, category in material_categories.items()
             if category
             in {
+                MaterialCategory.PROJECT_DOCUMENT,
                 MaterialCategory.FILING_CERTIFICATE,
                 MaterialCategory.GRID_CONNECTION_DOCUMENT,
             }

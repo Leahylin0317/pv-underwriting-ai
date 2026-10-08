@@ -3,6 +3,8 @@ from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
+from app.location.assessment import LocationAssessment
+
 from .common import ContractModel
 from .equipment import EquipmentInventoryItem
 from .findings import RiskFinding
@@ -36,6 +38,7 @@ class UnderwritingCase(ContractModel):
     component_profile: ComponentProfile | None = None
     weather_profile: WeatherProfile | None = None
     catastrophe_assessment: CatastropheAssessment | None = None
+    location_assessment: LocationAssessment | None = None
     package_assessment: PackageAssessment | None = None
     map_reviews: list[MapImageryReview] = Field(default_factory=list)
     material_reviews: list[MaterialReview]
