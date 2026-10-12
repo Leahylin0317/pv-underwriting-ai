@@ -119,6 +119,7 @@ def test_pipeline_adds_component_profile() -> None:
     assert trace.provider == (
         "local-component-catalog"
     )
+    assert trace.output_status == "available"
     assert len(case.processing_trace) == 5
 
 
@@ -157,6 +158,7 @@ def test_unknown_component_is_not_provider_failure() -> None:
         is ProcessingStatus.SUCCESS
     )
     assert trace.error_code is None
+    assert trace.output_status == "missing"
 
 
 def test_component_provider_failure_is_sanitized() -> None:
@@ -200,3 +202,24 @@ def test_component_provider_failure_is_sanitized() -> None:
         "SYS-PROVIDER-FAILURE"
         in case.decision.decisive_rule_ids
     )
+
+
+def test_component_parameter_result_is_partial_when_hail_and_snow_missing() -> None:
+    partial_profile = component_profile().model_copy(update={
+        "hail_resistance_mm": None,
+        "snow_load_pa": None,
+    })
+    pipeline = UnderwritingPipeline(
+        ocr_provider=MockOcrProvider(),
+        vision_provider=MockVisionProvider(),
+        component_provider=CatalogComponentProvider(profiles=[partial_profile]),
+    )
+    case = pipeline.run(
+        case_id="case-component-partial",
+        project=project_info(),
+        materials=[],
+    )
+    trace = next(item for item in case.processing_trace
+                 if item.step is ProcessingStep.COMPONENT_LOOKUP)
+    assert trace.status is ProcessingStatus.SUCCESS
+    assert trace.output_status == "partial"

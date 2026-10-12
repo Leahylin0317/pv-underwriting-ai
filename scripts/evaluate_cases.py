@@ -135,6 +135,23 @@ def evaluate_cases(
     suite_counts: dict[str, dict[str, int]] = {}
     trace_latency_by_case: list[int] = []
     misses: list[dict[str, str]] = []
+    confirmed_compliant_cases = 0
+    compliant_false_positive_cases = 0
+    wrongful_rejections = 0
+    wrongful_releases = 0
+    caught_missed_risks = 0
+    unnecessary_review_or_supplement = 0
+    manual_review_cases = 0
+    supplement_cases = 0
+    wind_calculated_cases = 0
+    wind_recalculation_errors = 0
+    wind_recalculable_cases = 0
+    risk_missed_cases: set[str] = set()
+    high_risk_by_category: dict[str, dict[str, int]] = {}
+    auto_eligible_cases = 0
+    auto_eligible_correct_cases = 0
+    evidence_reference_checked_cases = 0
+    invalid_evidence_references = 0
 
     for case_id, expected in expected_by_id.items():
         actual = predicted_by_id.get(case_id)
@@ -172,26 +189,109 @@ def evaluate_cases(
                 misses.append({"case_id": case_id, "item": f"decision:{expected_decision}"})
 
         findings = _detected_findings(actual) if actual else []
+        # Count a hazard once per case and category, even when several photos
+        # show the same fact. Material IDs constrain valid evidence locations.
+        required_by_category: dict[str, set[str | None]] = {}
         for required in _expected_items(expected.get("required_high_risk_categories")):
+            required_by_category.setdefault(required["category"], set()).add(
+                required.get("material_id")
+            )
+        risk_missed_here = False
+        for category, accepted_material_ids in required_by_category.items():
             critical_total += 1
+            category_counts = high_risk_by_category.setdefault(category, {
+                "expected": 0, "detected": 0, "missed": 0,
+            })
+            category_counts["expected"] += 1
             if suite_metrics is not None:
                 suite_metrics["high_risk_total"] += 1
             found = any(
-                finding.get("category") == required["category"]
+                finding.get("category") == category
                 and (
-                    required.get("material_id") is None
-                    or finding.get("material_id") == required["material_id"]
+                    None in accepted_material_ids
+                    or finding.get("material_id") in accepted_material_ids
                 )
                 for finding in findings
             )
             if found:
                 critical_detected += 1
+                category_counts["detected"] += 1
                 if suite_metrics is not None:
                     suite_metrics["high_risk_detected"] += 1
             else:
-                misses.append(
-                    {"case_id": case_id, "item": f"high_risk:{required['category']}"}
-                )
+                risk_missed_here = True
+                category_counts["missed"] += 1
+                risk_missed_cases.add(case_id)
+                misses.append({"case_id": case_id, "item": f"high_risk:{category}"})
+
+        decision = actual.get("decision") if actual else None
+        actual_decision = decision.get("decision") if isinstance(decision, dict) else decision
+        release_actions = {"accept", "conditional_accept", "surcharge"}
+        if actual_decision == "manual_review":
+            manual_review_cases += 1
+        if actual_decision == "request_more":
+            supplement_cases += 1
+        if expected_decision == "recommend_reject":
+            if actual_decision in release_actions:
+                wrongful_releases += 1
+            if risk_missed_here and actual_decision in {"manual_review", "request_more"}:
+                caught_missed_risks += 1
+        if expected.get("compliant") is True:
+            confirmed_compliant_cases += 1
+            risk_categories = set(required_by_category)
+            false_risk = any(
+                finding.get("category") in risk_categories
+                for finding in findings
+            ) if risk_categories else any(
+                finding.get("category") in {
+                    "agriculture_environment", "forest_environment", "livestock_environment",
+                    "fishery_environment", "water_adjacent_environment", "tidal_flat_environment",
+                    "mountain_environment", "desertification_environment",
+                    "severe_shading", "unprotected_cable",
+                }
+                for finding in findings
+            )
+            if false_risk:
+                compliant_false_positive_cases += 1
+            if actual_decision == "recommend_reject":
+                wrongful_rejections += 1
+        if expected.get("eligible_for_auto_decision") is True:
+            auto_eligible_cases += 1
+            if actual_decision in {"manual_review", "request_more"}:
+                unnecessary_review_or_supplement += 1
+            elif expected_decision is not None and actual_decision == expected_decision:
+                auto_eligible_correct_cases += 1
+
+        if actual and isinstance(actual.get("materials"), list):
+            evidence_reference_checked_cases += 1
+            material_ids = {
+                item.get("material_id") for item in actual["materials"]
+                if isinstance(item, dict) and isinstance(item.get("material_id"), str)
+            }
+            for finding in findings:
+                if finding.get("material_id") not in material_ids:
+                    invalid_evidence_references += 1
+                    misses.append({"case_id": case_id, "item": "invalid_evidence_material_id"})
+
+        assessment = actual.get("catastrophe_assessment") if actual else None
+        wind = assessment.get("wind_comparison") if isinstance(assessment, dict) else None
+        if isinstance(wind, dict) and wind.get("status") == "calculated":
+            wind_calculated_cases += 1
+        expected_wind = expected.get("expected_wind_comparison")
+        if isinstance(expected_wind, dict) and expected_wind.get("status") == "calculated":
+            for key in ("r_historical_over_capacity", "f_exceedance_percent"):
+                if not isinstance(expected_wind.get(key), (int, float)):
+                    raise ValueError(
+                        f"ground_truth case {case_id} has no numeric expected_wind_comparison.{key}"
+                    )
+            wind_recalculable_cases += 1
+            if not isinstance(wind, dict) or wind.get("status") != "calculated" or any(
+                not isinstance(wind.get(key), (int, float))
+                or abs(wind[key] - expected_wind[key]) > 1e-6
+                for key in ("r_historical_over_capacity", "f_exceedance_percent")
+            ):
+                wind_recalculation_errors += 1
+                misses.append({"case_id": case_id, "item": "wind_recalculation"})
 
         if expected.get("findings_complete") is True:
             expected_findings = expected.get("expected_findings")
@@ -352,7 +452,48 @@ def evaluate_cases(
         "high_risk_recall": high_risk_recall,
         "high_risk_scenes_expected": critical_total,
         "high_risk_scenes_detected": critical_detected,
+        "high_risk_by_category": {
+            category: {
+                **counts,
+                "recall": counts["detected"] / counts["expected"] if counts["expected"] else None,
+            }
+            for category, counts in sorted(high_risk_by_category.items())
+        },
         "finding_annotation_cases": finding_annotation_cases,
+        "risk_missed_cases": len(risk_missed_cases),
+        "missed_risks_caught_by_review_or_supplement": caught_missed_risks,
+        "wrongful_release_cases": wrongful_releases,
+        "wrongful_release_rate": (
+            wrongful_releases / sum(
+                item.get("expected_decision") == "recommend_reject"
+                for item in expected_by_id.values()
+            ) if any(
+                item.get("expected_decision") == "recommend_reject"
+                for item in expected_by_id.values()
+            ) else None
+        ),
+        "wrongful_rejection_cases": wrongful_rejections,
+        "confirmed_compliant_cases": confirmed_compliant_cases,
+        "compliant_false_positive_cases": compliant_false_positive_cases,
+        "compliant_false_positive_rate": (
+            compliant_false_positive_cases / confirmed_compliant_cases
+            if confirmed_compliant_cases else None
+        ),
+        "manual_review_cases": manual_review_cases,
+        "supplement_cases": supplement_cases,
+        "unnecessary_review_or_supplement_cases": unnecessary_review_or_supplement,
+        "auto_eligible_cases": auto_eligible_cases,
+        "auto_eligible_correct_cases": auto_eligible_correct_cases,
+        "auto_eligible_correct_rate": (
+            auto_eligible_correct_cases / auto_eligible_cases if auto_eligible_cases else None
+        ),
+        "evidence_reference_checked_cases": evidence_reference_checked_cases,
+        "invalid_evidence_references": (
+            invalid_evidence_references if evidence_reference_checked_cases else None
+        ),
+        "wind_calculated_cases": wind_calculated_cases,
+        "wind_recalculable_cases": wind_recalculable_cases,
+        "wind_recalculation_errors": wind_recalculation_errors,
         "finding_precision": finding_precision,
         "finding_recall": finding_recall,
         "finding_false_positives": finding_false_positive,

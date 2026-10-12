@@ -842,3 +842,48 @@ def test_records_provider_failure_without_leaking_details(
         "SYS-PROVIDER-FAILURE"
         in result["decision"]["decisive_rule_ids"]
     )
+
+
+def test_real_upload_preserves_wind_evidence_and_reports_incomplete_comparison(
+    override_real_providers: ProviderOverride,
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The actual multipart route carries evidence through storage and report."""
+    monkeypatch.setenv("PV_CASE_DB_PATH", str(tmp_path / "wind-cases.sqlite3"))
+    override_real_providers(RecordingOcrProvider(), RecordingVisionProvider())
+    manifest = manifest_payload()
+    manifest["case_id"] = "case-wind-evidence-api-001"
+    manifest["wind_evidence"] = {
+        "component_model": manifest["project"]["component_model"],
+        "manufacturer": "synthetic example",
+        "manual_url": "https://example.org/manual.pdf",
+        "manual_version": "v1",
+        "manual_page": "8",
+        "capacity_pa": 1000,
+        "capacity_definition": "synthetic pressure basis",
+        "required_mounting": "four clamp points",
+        "observed_mounting": "not yet checked",
+        "mounting_match": None,
+        "mounting_material_ids": ["material-panorama-001"],
+    }
+    response = client.post(
+        "/api/v1/underwriting/analyze",
+        data={"manifest": json.dumps(manifest, ensure_ascii=False)},
+        files=[
+            ("files", ("nameplate.png", png_bytes("white"), "image/png")),
+            ("files", ("panorama.png", png_bytes("gray"), "image/png")),
+        ],
+    )
+    assert response.status_code == 200, response.text
+    case = response.json()
+    assert case["wind_evidence"]["manual_version"] == "v1"
+    assert case["catastrophe_assessment"]["wind_comparison"]["status"] in {
+        "incomplete", "incompatible"
+    }
+    saved = client.get("/api/v1/cases/case-wind-evidence-api-001")
+    assert saved.status_code == 200
+    assert saved.json()["case"]["wind_evidence"]["manual_url"] == "https://example.org/manual.pdf"
+    report = client.get("/api/v1/cases/case-wind-evidence-api-001/report")
+    assert report.status_code == 200
+    assert "风灾工程证据与年度复算" in report.text

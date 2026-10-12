@@ -23,6 +23,7 @@ from app.contracts import (
     UnderwritingDecision,
     WatermarkStatus,
     WeatherProfile,
+    WindEngineeringEvidence,
 )
 from app.decision import DecisionEngine
 from app.intake.equipment_inventory import (
@@ -80,6 +81,7 @@ class UnderwritingPipeline:
         case_id: str,
         project: ProjectInfo,
         materials: list[MaterialInput],
+        wind_evidence: WindEngineeringEvidence | None = None,
     ) -> UnderwritingCase:
         self._notify_progress("正在识别图片风险与水印", 5)
         findings, vision_trace = self._run_vision(materials)
@@ -133,6 +135,8 @@ class UnderwritingPipeline:
             catastrophe_assessment, catastrophe_trace = self._run_catastrophe_assessment(
                 component_profile,
                 weather_profile,
+                wind_evidence=wind_evidence,
+                project_model=project.component_model,
             )
             processing_traces.append(catastrophe_trace)
             self._notify_progress("自然灾害评估完成", 84)
@@ -159,6 +163,7 @@ class UnderwritingPipeline:
             equipment_inventory=equipment_inventory,
             ocr_fields=ocr_fields,
             findings=findings,
+            wind_evidence=wind_evidence,
             component_profile=component_profile,
             weather_profile=weather_profile,
             catastrophe_assessment=catastrophe_assessment,
@@ -291,6 +296,12 @@ class UnderwritingPipeline:
 
         return component_profile, ProcessingTrace(
             step=ProcessingStep.COMPONENT_LOOKUP,
+            output_status=(
+                "missing" if component_profile is None else
+                "available" if all(getattr(component_profile, field) is not None for field in (
+                    "wind_load_pa", "hail_resistance_mm", "snow_load_pa"
+                )) else "partial"
+            ),
             provider=self.component_provider.name,
             model=None,
             started_at=started_at,
@@ -329,6 +340,12 @@ class UnderwritingPipeline:
 
         return weather_profile, ProcessingTrace(
             step=ProcessingStep.WEATHER_LOOKUP,
+            output_status=(
+                "missing" if weather_profile is None else
+                "available" if all(getattr(weather_profile, field) is not None for field in (
+                    "historical_max_wind_m_s", "historical_max_hail_mm", "historical_max_snow_load_pa"
+                )) else "partial"
+            ),
             provider=self.weather_provider.name,
             model=None,
             started_at=started_at,
@@ -343,6 +360,9 @@ class UnderwritingPipeline:
         self,
         component_profile: ComponentProfile | None,
         weather_profile: WeatherProfile | None,
+        *,
+        wind_evidence: WindEngineeringEvidence | None = None,
+        project_model: str | None = None,
     ) -> tuple[CatastropheAssessment, ProcessingTrace]:
         if self.catastrophe_engine is None:
             raise RuntimeError("catastrophe assessment engine is not configured")
@@ -352,10 +372,15 @@ class UnderwritingPipeline:
         assessment = self.catastrophe_engine.assess(
             component=component_profile,
             weather=weather_profile,
+            wind_evidence=wind_evidence,
+            project_model=project_model,
         )
 
         return assessment, ProcessingTrace(
             step=ProcessingStep.CATASTROPHE_ASSESSMENT,
+            # Wind may be calculated, but hail/snow and the approved grade
+            # mapping remain open. The full assessment is therefore partial.
+            output_status="partial",
             provider="builtin-catastrophe-assessment",
             model=None,
             started_at=started_at,

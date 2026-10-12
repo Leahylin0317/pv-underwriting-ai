@@ -13,6 +13,8 @@ from app.contracts.enums import (
 )
 from app.rules.explanations import explain_rule
 
+OUTPUT_STATUS_LABELS = {"available": "数据已取得", "partial": "数据不完整", "missing": "无可用数据"}
+
 DECISION_LABELS = {
     DecisionType.ACCEPT: "建议承保",
     DecisionType.RECOMMEND_REJECT: "建议拒保",
@@ -671,6 +673,46 @@ def generate_markdown_report(
                 )
             lines.append("")
 
+    if case.wind_evidence is not None:
+        evidence = case.wind_evidence
+        lines.extend([
+            "### 风灾工程证据与年度复算",
+            "",
+            f"- 完整型号：{_table_cell(evidence.component_model)}；厂家：{_table_cell(evidence.manufacturer)}",
+            f"- 厂家原件：{_table_cell(evidence.manual_url)}；版本：{_table_cell(evidence.manual_version)}；页码：{_table_cell(evidence.manual_page)}",
+            f"- 抗风能力：{_display(evidence.capacity_pa)} Pa；定义：{_table_cell(evidence.capacity_definition)}",
+            f"- 厂家要求安装：{_table_cell(evidence.required_mounting)}；现场安装：{_table_cell(evidence.observed_mounting)}",
+            f"- 安装证据材料：{_table_cell('、'.join(evidence.mounting_material_ids))}；核验人：{_table_cell(evidence.installation_reviewer)}；核验时间：{_display(evidence.installation_reviewed_at)}",
+            f"- 项目位置核验：{'已由提交人确认' if evidence.project_location_confirmed else '未确认'}；证据：{_table_cell(evidence.location_evidence)}",
+            f"- 比较口径：{_table_cell(evidence.comparison_basis)}；方法依据：{_table_cell(evidence.comparison_method_reference)}；核验人：{_table_cell(evidence.comparison_reviewer)}；核验时间：{_display(evidence.comparison_reviewed_at)}",
+            "- 上述核验记录由材料提交方提供，系统仅校验字段与一致性，未独立认证原件。",
+            "",
+        ])
+        result = case.catastrophe_assessment.wind_comparison if case.catastrophe_assessment else None
+        if result is not None:
+            status_label = {"calculated": "已复算", "incomplete": "证据不足", "incompatible": "证据不适用"}[result.status]
+            lines.extend([
+                f"- 比较状态：{status_label}；技术观察：{_table_cell(result.technical_result)}",
+                f"- R = 完整年度历史最大工程风压 / 经核验能力 = {_display(result.r_historical_over_capacity)}",
+                f"- F = 超过能力的完整年份数 / 有效完整年份数 × 100% = {_display(result.f_exceedance_percent)}%；有效年份 {result.valid_year_count}；排除年份 {result.excluded_year_count}",
+                f"- 说明：{_table_cell(result.explanation)}",
+                "- R/F 不是出险概率；未取得正式等级与核保动作映射前，不能据此自动承保或拒保。",
+                "",
+                "| 年份 | 年最大工程风压 Pa | 有效天数 / 应有天数 | 参与复算 | 数据集和网格 | 来源 |",
+                "| --- | ---: | ---: | --- | --- | --- |",
+            ])
+            for row in result.annual_results:
+                lines.append(
+                    f"| {row.year} | {_display(row.maximum_pa)} | {row.valid_days} / {row.expected_days} "
+                    f"| {'是' if row.included else '否：' + _table_cell(row.reason)} "
+                    f"| {_table_cell(row.dataset)}；{_table_cell(row.grid_reference)} | {_table_cell(row.source_url)} |"
+                )
+            lines.append("")
+            for missing in result.missing_requirements:
+                lines.append(f"- 待补证据：{_table_cell(missing)}")
+            if result.missing_requirements:
+                lines.append("")
+
     if case.catastrophe_assessment is not None:
         rows = case.catastrophe_assessment.comparisons
         if rows:
@@ -904,8 +946,8 @@ def generate_markdown_report(
             "",
             "## 7. 处理留痕",
             "",
-            "| 步骤 | 执行方 | 模型 | 状态 | 耗时（毫秒） |",
-            "| --- | --- | --- | --- | --- |",
+            "| 步骤 | 执行方 | 模型 | 执行状态 | 数据结果 | 耗时（毫秒） |",
+            "| --- | --- | --- | --- | --- | --- |",
         ]
     )
 
@@ -916,10 +958,11 @@ def generate_markdown_report(
                 f"| {_table_cell(trace.provider)} "
                 f"| {_table_cell(trace.model)} "
                 f"| {PROCESSING_STATUS_LABELS[trace.status]} "
+                f"| {OUTPUT_STATUS_LABELS.get(trace.output_status, '—')} "
                 f"| {trace.latency_ms} |"
             )
     else:
-        lines.append("| 无 | 无 | 无 | 无 | 无 |")
+        lines.append("| 无 | 无 | 无 | 无 | 无 | 无 |")
 
     lines.extend(
         [

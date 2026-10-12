@@ -81,6 +81,7 @@ class ProcessingTrace(ContractModel):
     finished_at: datetime
     latency_ms: int = Field(ge=0)
     status: ProcessingStatus
+    output_status: Literal["available", "partial", "missing"] | None = None
     task_executions: list[OcrTaskExecution] = Field(default_factory=list)
     error_code: str | None = None
     error_message: str | None = None

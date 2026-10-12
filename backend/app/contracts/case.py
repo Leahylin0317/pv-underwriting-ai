@@ -5,6 +5,7 @@ from pydantic import Field, model_validator
 
 from app.location.assessment import LocationAssessment
 
+from .catastrophe_evidence import WindEngineeringEvidence
 from .common import ContractModel
 from .equipment import EquipmentInventoryItem
 from .findings import RiskFinding
@@ -35,6 +36,7 @@ class UnderwritingCase(ContractModel):
     equipment_inventory: list[EquipmentInventoryItem] = Field(default_factory=list)
     ocr_fields: list[OcrField]
     findings: list[RiskFinding]
+    wind_evidence: WindEngineeringEvidence | None = None
     component_profile: ComponentProfile | None = None
     weather_profile: WeatherProfile | None = None
     catastrophe_assessment: CatastropheAssessment | None = None
@@ -69,6 +71,10 @@ class UnderwritingCase(ContractModel):
             )
 
         material_id_set = set(material_ids)
+        if self.wind_evidence is not None:
+            unknown = sorted(set(self.wind_evidence.mounting_material_ids) - material_id_set)
+            if unknown:
+                raise ValueError(f'wind evidence references unknown materials: {unknown}')
         ocr_field_id_set = set(ocr_field_ids)
         finding_id_set = set(finding_ids)
 

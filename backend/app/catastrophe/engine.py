@@ -1,4 +1,5 @@
 from app.rules.config import BusinessRulesConfig
+from app.catastrophe.wind import assess_wind_evidence
 
 from app.contracts import (
     CatastropheAssessment,
@@ -8,6 +9,7 @@ from app.contracts import (
     ParameterApplicabilityStatus,
     ResistanceLevel,
     WeatherProfile,
+    WindEngineeringEvidence,
 )
 
 
@@ -24,13 +26,40 @@ class CatastropheAssessmentEngine:
         *,
         component: ComponentProfile | None,
         weather: WeatherProfile | None,
+        wind_evidence: WindEngineeringEvidence | None = None,
+        project_model: str | None = None,
     ) -> CatastropheAssessment:
         factors: list[str] = []
         rule_ids: list[str] = []
         missing: list[str] = []
         installation_reviews = self._installation_reviews()
+        wind_result = None
+        if wind_evidence is not None:
+            wind_status, wind_result = assess_wind_evidence(
+                wind_evidence, component=component, project_model=project_model
+            )
+            replacement = {
+                'status': wind_status,
+                'explanation': wind_result.explanation,
+                'required_evidence': wind_result.missing_requirements,
+                'triggered_rule_id': (
+                    'CAT-WIND-HISTORICAL-COMPARISON-CALCULATED'
+                    if wind_result.status == 'calculated'
+                    else 'CAT-WIND-EVIDENCE-INCOMPATIBLE'
+                    if wind_result.status == 'incompatible'
+                    else 'CAT-WIND-EVIDENCE-INCOMPLETE'
+                ),
+            }
+            installation_reviews[0] = installation_reviews[0].model_copy(update=replacement)
         rule_ids.extend(review.triggered_rule_id for review in installation_reviews)
-        missing.append("组件灾害参数与现场安装配置的逐项适用性证据")
+        if wind_result is None or wind_result.status != 'calculated':
+            missing.append("组件灾害参数与现场安装配置的逐项适用性证据")
+        else:
+            factors.append(
+                f'风灾历史比较已复算：R={wind_result.r_historical_over_capacity:.4f}；'
+                f'F={wind_result.f_exceedance_percent:.2f}%（{wind_result.valid_year_count} 个完整年份）；'
+                '未据此生成业务等级或自动承保动作'
+            )
 
         if component is None:
             missing.append("可核验的组件型号及厂家参数")
@@ -40,17 +69,25 @@ class CatastropheAssessmentEngine:
             rule_ids.append("CAT-WEATHER-PROFILE-MISSING")
 
         if component is not None and weather is not None:
-            self._assess_wind(component, weather, factors, rule_ids, missing)
+            self._assess_wind(
+                component, weather, factors, rule_ids, missing,
+                comparable_wind=wind_result is not None and wind_result.status == 'calculated',
+            )
             self._assess_hail(component, weather, factors, rule_ids, missing)
             self._assess_snow(component, weather, factors, rule_ids, missing)
 
         if missing:
             factors.append("人工复核事项：" + "；".join(dict.fromkeys(missing)))
 
-        factors.append(
-            "安装参数适用性待确认：组件型号参数尚未与厂家手册中的固定方式、固定边、固定点、"
-            "夹持位置和支撑条件逐项匹配；未知条件不会按满足处理。"
-        )
+        if wind_result is not None:
+            rule_ids.append(installation_reviews[0].triggered_rule_id)
+        if wind_result is None or wind_result.status != "calculated":
+            factors.append(
+                "安装参数适用性待确认：组件型号参数尚未与厂家手册中的固定方式、固定边、固定点、"
+                "夹持位置和支撑条件逐项匹配；未知条件不会按满足处理。"
+            )
+        else:
+            factors.append("风灾安装参数经提交的厂家手册与现场材料核对；冰雹、积雪仍待独立核验")
 
         # Keep the raw numbers visible in the case report while withholding
         # a ratio verdict until weather, engineering and mounting conditions
@@ -68,10 +105,15 @@ class CatastropheAssessmentEngine:
         ]
         return CatastropheAssessment(
             comparisons=comparisons,
+            wind_comparison=wind_result,
             resistance_level=ResistanceLevel.UNKNOWN,
             expected_loss_risk=ExpectedLossRisk.UNKNOWN,
             factors=factors,
             explanation=(
+                "风灾已按提交的工程证据完成历史 R/F 复算；该证据为人工提交并核验，"
+                "系统没有独立认证原件，冰雹和积雪也未完成同口径比较。尚无业务批准的"
+                "分级及核保动作映射，因此整案仍需人工复核。"
+                if wind_result is not None and wind_result.status == "calculated" else
                 "目前没有经核验的厂家安装配置证据，也没有可与组件参数逐年比较的同口径风、雹、雪历史序列；"
                 "系统不生成 A/B/C 或 R1/R2/R3 候选等级，也不计算真实出险概率。请先核对精确型号、"
                 "厂家手册版本、安装配置和对应证据，再补齐可比历史数据。未知表示尚不能评估，不表示已经通过或超限。"
@@ -150,6 +192,8 @@ class CatastropheAssessmentEngine:
         factors: list[str],
         rule_ids: list[str],
         missing: list[str],
+        *,
+        comparable_wind: bool = False,
     ) -> None:
         if weather.historical_max_wind_m_s is None:
             missing.append("历史最大阵风")
@@ -195,12 +239,15 @@ class CatastropheAssessmentEngine:
                 "不会换算成项目设计风压"
             )
 
-        factors.append(
-            "风灾未计算能力比：10米历史阵风不是屋面项目设计风压；"
-            "还需当地规范风荷载、地形/高度、阵风和体型系数、组件安装及支架条件"
-        )
-        rule_ids.append("CAT-WIND-COMPARABILITY-UNVERIFIED")
-        missing.append("经核验的项目设计风压与组件安装/试验口径")
+        if comparable_wind:
+            factors.append("原始10米阵风仅作气候背景；本次 R/F 使用独立提交的同口径年度工程风压")
+        else:
+            factors.append(
+                "风灾未计算能力比：10米历史阵风不是屋面项目设计风压；"
+                "还需当地规范风荷载、地形/高度、阵风和体型系数、组件安装及支架条件"
+            )
+            rule_ids.append("CAT-WIND-COMPARABILITY-UNVERIFIED")
+            missing.append("经核验的项目设计风压与组件安装/试验口径")
 
     @staticmethod
     def _assess_hail(

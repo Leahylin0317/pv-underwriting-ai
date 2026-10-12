@@ -3,6 +3,7 @@ from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
+from .catastrophe_evidence import WindComparisonResult
 from .common import ContractModel
 from .enums import ExpectedLossRisk, ParameterApplicabilityStatus, ResistanceLevel
 
@@ -140,6 +141,7 @@ class CatastropheAssessment(ContractModel):
     """组件能力与当地自然灾害数据的比较结果。"""
 
     comparisons: list[HazardComparison] = Field(default_factory=list)
+    wind_comparison: WindComparisonResult | None = None
     resistance_level: ResistanceLevel
     expected_loss_risk: ExpectedLossRisk
     factors: list[str]

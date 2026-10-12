@@ -1,5 +1,6 @@
 """Public data contracts used by the underwriting pipeline."""
 
+from .catastrophe_evidence import AnnualWindPressure, WindComparisonResult, WindEngineeringEvidence
 from .case import UnderwritingCase
 from .common import Bbox, ContractModel
 from .enums import (
@@ -47,7 +48,10 @@ from .profiles import (
 )
 
 __all__ = [
+    "AnnualWindPressure",
     "Bbox",
+    "WindComparisonResult",
+    "WindEngineeringEvidence",
     "CaptureView",
     "CatastropheAssessment",
     "ComponentProfile",

@@ -23,6 +23,7 @@ from app.contracts import (
     MaterialQualityStatus,
     ProjectInfo,
     UnderwritingCase,
+    WindEngineeringEvidence,
 )
 from app.intake import (
     MAX_FILE_SIZE_BYTES,
@@ -332,6 +333,7 @@ def _run_analysis_job(
     case_id: str,
     project: ProjectInfo,
     materials: list[MaterialInput],
+    wind_evidence: WindEngineeringEvidence | None,
     ocr_provider: OcrProvider,
     vision_provider: VisionProvider,
     component_provider: ComponentProvider,
@@ -366,6 +368,7 @@ def _run_analysis_job(
             case_id=case_id,
             project=project,
             materials=materials,
+            wind_evidence=wind_evidence,
         )
         CaseRepository().save_case(case)
         jobs.update_job(
@@ -465,6 +468,7 @@ async def analyze_uploaded_case(
         case_id=parsed_manifest.case_id,
         project=parsed_manifest.project,
         materials=material_inputs,
+        wind_evidence=parsed_manifest.wind_evidence,
     )
     try:
         await run_in_threadpool(CaseRepository().save_case, case)
@@ -518,6 +522,7 @@ async def submit_underwriting_job(
             case_id=parsed_manifest.case_id,
             project=parsed_manifest.project,
             materials=material_inputs,
+            wind_evidence=parsed_manifest.wind_evidence,
             ocr_provider=ocr_provider,
             vision_provider=vision_provider,
             component_provider=component_provider,

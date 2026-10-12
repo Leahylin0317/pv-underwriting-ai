@@ -13,6 +13,7 @@ from app.contracts import (
     MaterialCategory,
     ProjectInfo,
     SentinelContextRecord,
+    WindEngineeringEvidence,
 )
 
 
@@ -41,6 +42,7 @@ class RealAnalyzeManifest(ContractModel):
 
     case_id: str = Field(min_length=1)
     project: ProjectInfo
+    wind_evidence: WindEngineeringEvidence | None = None
     materials: list[
         UploadedMaterialManifest
     ] = Field(min_length=1)
@@ -59,6 +61,10 @@ class RealAnalyzeManifest(ContractModel):
             if count > 1
         )
 
+        if self.wind_evidence is not None:
+            unknown = sorted(set(self.wind_evidence.mounting_material_ids) - set(material_ids))
+            if unknown:
+                raise ValueError(f'wind evidence references unknown materials: {unknown}')
         if duplicate_ids:
             raise ValueError(
                 "duplicate material IDs in "
